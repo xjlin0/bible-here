@@ -15,7 +15,7 @@
  * @wordpress-plugin
  * Plugin Name:       Bible here
  * Plugin URI:        https://wordpress.org/plugins/bible-here
- * Description:       A Wordpress plugin to show Christian Bible scriptures, including admin page to download versions of Bible, a frontend page for users to read the verse, and auto/manual-tagging scriptures in all Pages/Posts.
+ * Description:       A Wordpress plugin to show Christian Bible scriptures, including admin pages to download versions of Bible installed locally without calling remote API, a frontend page for users to read the verse, and auto/manual-tagging scriptures in all Pages/Posts.
  * Version:           1.0.0
  * Author:            Jack Lin
  * Author URI:        https://github.com/xjlin0/

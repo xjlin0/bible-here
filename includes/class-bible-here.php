@@ -90,6 +90,7 @@ class Bible_Here {
 	 * - Bible_Here_i18n. Defines internationalization functionality.
 	 * - Bible_Here_Admin. Defines all hooks for the admin area.
 	 * - Bible_Here_Public. Defines all hooks for the public side of the site.
+	 * - Bible_Here_XML_Importer. Handles XML import functionality.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -121,6 +122,11 @@ class Bible_Here {
 		 * side of the site.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-bible-here-public.php';
+
+		/**
+		 * The class responsible for XML import functionality.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-bible-here-xml-importer.php';
 
 		$this->loader = new Bible_Here_Loader();
 
@@ -156,6 +162,17 @@ class Bible_Here {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_plugin_admin_menu' );
+
+		// Register AJAX hooks for XML import
+		$this->loader->add_action( 'wp_ajax_bible_here_import_kjv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_niv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_esv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_nlt', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_nasb', $plugin_admin, 'handle_ajax_import' );
+		
+		// Register AJAX hook for deleting Bible versions
+		$this->loader->add_action( 'wp_ajax_bible_here_delete_version', $plugin_admin, 'handle_ajax_delete_version' );
 
 	}
 
