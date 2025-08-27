@@ -265,83 +265,83 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_import() {
-		error_log('Bible_Here_Admin: ========== AJAX匯入請求開始 ==========');
-		error_log('Bible_Here_Admin: 收到AJAX匯入請求，時間戳: ' . date('Y-m-d H:i:s'));
-		error_log('Bible_Here_Admin: 請求來源IP: ' . $_SERVER['REMOTE_ADDR']);
-		error_log('Bible_Here_Admin: 用戶代理: ' . $_SERVER['HTTP_USER_AGENT']);
+		error_log('Bible_Here_Admin: ========== AJAX Import Request Started ==========');
+		error_log('Bible_Here_Admin: Received AJAX import request, timestamp: ' . date('Y-m-d H:i:s'));
+		error_log('Bible_Here_Admin: Request source IP: ' . $_SERVER['REMOTE_ADDR']);
+		error_log('Bible_Here_Admin: User agent: ' . $_SERVER['HTTP_USER_AGENT']);
 		
 		// Log all POST data for debugging
-		error_log('Bible_Here_Admin: POST數據: ' . print_r($_POST, true));
+		error_log('Bible_Here_Admin: POST data: ' . print_r($_POST, true));
 		
 		// Get language and version from POST parameters
 		$language = sanitize_text_field($_POST['language'] ?? 'en');
 		$version = sanitize_text_field($_POST['version'] ?? 'kjv');
 		
-		error_log('Bible_Here_Admin: 從POST參數獲取 -> 語言: ' . $language . ', 版本: ' . $version);
+		error_log('Bible_Here_Admin: Retrieved from POST parameters -> Language: ' . $language . ', Version: ' . $version);
 		
 		// Verify nonce
-		error_log('Bible_Here_Admin: 開始Nonce驗證...');
+		error_log('Bible_Here_Admin: Starting nonce verification...');
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			error_log('Bible_Here_Admin: ❌ Nonce驗證失敗');
-			error_log('Bible_Here_Admin: 提供的Nonce: ' . $_POST['nonce']);
+			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
+			error_log('Bible_Here_Admin: Provided nonce: ' . $_POST['nonce']);
 			wp_die('Security check failed');
 		}
-		error_log('Bible_Here_Admin: ✅ Nonce驗證成功');
+		error_log('Bible_Here_Admin: ✅ Nonce verification successful');
 		
 		// Check user permissions
-		error_log('Bible_Here_Admin: 開始用戶權限檢查...');
+		error_log('Bible_Here_Admin: Starting user permission check...');
 		if (!current_user_can('manage_options')) {
-			error_log('Bible_Here_Admin: ❌ 用戶權限不足，當前用戶ID: ' . get_current_user_id());
+			error_log('Bible_Here_Admin: ❌ Insufficient user permissions, current user ID: ' . get_current_user_id());
 			wp_die('Insufficient permissions');
 		}
-		error_log('Bible_Here_Admin: ✅ 用戶權限檢查通過，用戶ID: ' . get_current_user_id());
+		error_log('Bible_Here_Admin: ✅ User permission check passed, user ID: ' . get_current_user_id());
 		
 		// Initialize XML importer
 		$xml_importer_file = plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-xml-importer.php';
-		error_log('Bible_Here_Admin: XML匯入器檔案路徑: ' . $xml_importer_file);
-		error_log('Bible_Here_Admin: 檢查檔案是否存在...');
+		error_log('Bible_Here_Admin: XML importer file path: ' . $xml_importer_file);
+		error_log('Bible_Here_Admin: Checking if file exists...');
 		
 		if (!file_exists($xml_importer_file)) {
-			error_log('Bible_Here_Admin: ❌ XML匯入器檔案不存在');
-			error_log('Bible_Here_Admin: 當前工作目錄: ' . getcwd());
-			error_log('Bible_Here_Admin: 插件目錄: ' . plugin_dir_path(dirname(__FILE__)));
+			error_log('Bible_Here_Admin: ❌ XML importer file does not exist');
+			error_log('Bible_Here_Admin: Current working directory: ' . getcwd());
+			error_log('Bible_Here_Admin: Plugin directory: ' . plugin_dir_path(dirname(__FILE__)));
 			wp_send_json_error('XML importer file not found');
 			return;
 		}
 		
-		error_log('Bible_Here_Admin: ✅ XML匯入器檔案存在，開始載入...');
+		error_log('Bible_Here_Admin: ✅ XML importer file exists, starting to load...');
 		require_once $xml_importer_file;
 		
 		try {
 			$xml_importer = new Bible_Here_XML_Importer($this->plugin_name, $this->version);
-			error_log('Bible_Here_Admin: ✅ XML匯入器初始化成功');
+			error_log('Bible_Here_Admin: ✅ XML importer initialization successful');
 		} catch (Exception $e) {
-			error_log('Bible_Here_Admin: ❌ XML匯入器初始化失敗: ' . $e->getMessage());
-			error_log('Bible_Here_Admin: 錯誤堆疊: ' . $e->getTraceAsString());
+			error_log('Bible_Here_Admin: ❌ XML importer initialization failed: ' . $e->getMessage());
+			error_log('Bible_Here_Admin: Error stack trace: ' . $e->getTraceAsString());
 			wp_send_json_error('XML importer initialization failed: ' . $e->getMessage());
 			return;
 		}
 		
 		// Import based on language and version
-		error_log('Bible_Here_Admin: 開始執行版本匯入，語言: ' . $language . ', 版本: ' . $version);
+		error_log('Bible_Here_Admin: Starting version import, language: ' . $language . ', version: ' . $version);
 		$import_start_time = microtime(true);
 		
 		// Determine import method based on language and version
 		if ($language === 'en' && $version === 'kjv') {
-			error_log('Bible_Here_Admin: 執行英文KJV聖經匯入...');
+			error_log('Bible_Here_Admin: Executing English KJV Bible import...');
 			try {
 				$result = $xml_importer->import_kjv_bible();
-				error_log('Bible_Here_Admin: KJV匯入方法執行完成');
+				error_log('Bible_Here_Admin: KJV import method execution completed');
 			} catch (Exception $e) {
-				error_log('Bible_Here_Admin: ❌ KJV匯入過程中發生異常: ' . $e->getMessage());
-				error_log('Bible_Here_Admin: 異常堆疊: ' . $e->getTraceAsString());
+				error_log('Bible_Here_Admin: ❌ Exception occurred during KJV import process: ' . $e->getMessage());
+				error_log('Bible_Here_Admin: Exception stack trace: ' . $e->getTraceAsString());
 				$result = [
 					'success' => false,
 					'message' => 'Import failed with exception: ' . $e->getMessage()
 				];
 			}
 		} else {
-			error_log('Bible_Here_Admin: ❌ 不支援的語言/版本組合: ' . $language . '/' . $version);
+			error_log('Bible_Here_Admin: ❌ Unsupported language/version combination: ' . $language . '/' . $version);
 			$result = [
 				'success' => false,
 				'message' => 'Import for language "' . strtoupper($language) . '" and version "' . strtoupper($version) . '" is not yet implemented.'
@@ -349,26 +349,26 @@ class Bible_Here_Admin {
 		}
 		
 		$import_duration = microtime(true) - $import_start_time;
-		error_log('Bible_Here_Admin: 匯入流程完成，耗時: ' . round($import_duration, 2) . ' 秒');
-		error_log('Bible_Here_Admin: 匯入結果: ' . ($result['success'] ? '✅ 成功' : '❌ 失敗'));
+		error_log('Bible_Here_Admin: Import process completed, duration: ' . round($import_duration, 2) . ' seconds');
+		error_log('Bible_Here_Admin: Import result: ' . ($result['success'] ? '✅ Success' : '❌ Failed'));
 		
 		if (!$result['success']) {
 			if (isset($result['data'])) {
-				error_log('Bible_Here_Admin: 錯誤數據: ' . print_r($result['data'], true));
+				error_log('Bible_Here_Admin: Error data: ' . print_r($result['data'], true));
 			}
 			if (isset($result['message'])) {
-				error_log('Bible_Here_Admin: 錯誤訊息: ' . $result['message']);
+				error_log('Bible_Here_Admin: Error message: ' . $result['message']);
 			}
 		} else {
 			if (isset($result['message'])) {
-				error_log('Bible_Here_Admin: 成功訊息: ' . $result['message']);
+				error_log('Bible_Here_Admin: Success message: ' . $result['message']);
 			}
 			if (isset($result['imported_count'])) {
-				error_log('Bible_Here_Admin: 匯入數量: ' . $result['imported_count'] . ' 節經文');
+				error_log('Bible_Here_Admin: Import count: ' . $result['imported_count'] . ' verses');
 			}
 		}
 		
-		error_log('Bible_Here_Admin: ========== AJAX匯入請求結束 ==========');
+		error_log('Bible_Here_Admin: ========== AJAX Import Request Ended ==========');
 		
 		// Send JSON response
 		if ($result['success']) {
@@ -384,25 +384,25 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_delete_version() {
-		error_log('Bible_Here_Admin: ========== AJAX刪除版本請求開始 ==========');
-		error_log('Bible_Here_Admin: 收到AJAX刪除版本請求，時間戳: ' . date('Y-m-d H:i:s'));
+		error_log('Bible_Here_Admin: ========== AJAX Delete Version Request Started ==========');
+		error_log('Bible_Here_Admin: Received AJAX delete version request, timestamp: ' . date('Y-m-d H:i:s'));
 		
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			error_log('Bible_Here_Admin: ❌ Nonce驗證失敗');
+			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
 			wp_send_json(array('success' => false, 'message' => 'Security check failed'));
 			return;
 		}
 		
 		// Check user permissions
 		if (!current_user_can('manage_options')) {
-			error_log('Bible_Here_Admin: ❌ 用戶權限不足');
+			error_log('Bible_Here_Admin: ❌ Insufficient user permissions');
 			wp_send_json(array('success' => false, 'message' => 'Insufficient permissions'));
 			return;
 		}
 		
 		$version = sanitize_text_field($_POST['version']);
-		error_log('Bible_Here_Admin: 要刪除的版本: ' . $version);
+		error_log('Bible_Here_Admin: Version to delete: ' . $version);
 		
 		global $wpdb;
 		
@@ -415,29 +415,29 @@ class Bible_Here_Admin {
 			));
 			
 			if (!$version_info) {
-				error_log('Bible_Here_Admin: ❌ 找不到版本: ' . $version);
+				error_log('Bible_Here_Admin: ❌ Cannot find version: ' . $version);
 				wp_send_json(array('success' => false, 'message' => 'Version not found'));
 				return;
 			}
 			
 			// Check if version is imported (rank is not null)
 			if (is_null($version_info->rank)) {
-				error_log('Bible_Here_Admin: ❌ 版本未匯入，無需刪除: ' . $version);
+				error_log('Bible_Here_Admin: ❌ Version not imported, no need to delete: ' . $version);
 				wp_send_json(array('success' => false, 'message' => 'Version is not imported'));
 				return;
 			}
 			
 			// Drop the content table
 			$content_table = $wpdb->prefix . $version_info->table_name;
-			error_log('Bible_Here_Admin: 準備刪除內容表格: ' . $content_table);
+			error_log('Bible_Here_Admin: Preparing to delete content table: ' . $content_table);
 			
 			$drop_result = $wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
 			if ($drop_result === false) {
-				error_log('Bible_Here_Admin: ❌ 刪除內容表格失敗: ' . $wpdb->last_error);
+				error_log('Bible_Here_Admin: ❌ Failed to delete content table: ' . $wpdb->last_error);
 				wp_send_json(array('success' => false, 'message' => 'Failed to delete content table'));
 				return;
 			}
-			error_log('Bible_Here_Admin: ✅ 內容表格刪除成功');
+			error_log('Bible_Here_Admin: ✅ Content table deleted successfully');
 			
 			// Reset rank to null in versions table
 			$update_result = $wpdb->update(
@@ -449,11 +449,11 @@ class Bible_Here_Admin {
 			);
 			
 			if ($update_result === false) {
-				error_log('Bible_Here_Admin: ❌ 重置rank失敗: ' . $wpdb->last_error);
+				error_log('Bible_Here_Admin: ❌ Failed to reset rank: ' . $wpdb->last_error);
 				wp_send_json(array('success' => false, 'message' => 'Failed to reset version status'));
 				return;
 			}
-			error_log('Bible_Here_Admin: ✅ 版本rank重置成功');
+			error_log('Bible_Here_Admin: ✅ Version rank reset successfully');
 			
 			$result = array(
 				'success' => true,
@@ -461,15 +461,15 @@ class Bible_Here_Admin {
 			);
 			
 		} catch (Exception $e) {
-			error_log('Bible_Here_Admin: ❌ 刪除版本過程中發生異常: ' . $e->getMessage());
+			error_log('Bible_Here_Admin: ❌ Exception occurred during version deletion: ' . $e->getMessage());
 			$result = array(
 				'success' => false,
 				'message' => 'Delete failed with exception: ' . $e->getMessage()
 			);
 		}
 		
-		error_log('Bible_Here_Admin: 刪除版本結果: ' . print_r($result, true));
-		error_log('Bible_Here_Admin: ========== AJAX刪除版本請求結束 ==========');
+		error_log('Bible_Here_Admin: Delete version result: ' . print_r($result, true));
+		error_log('Bible_Here_Admin: ========== AJAX Delete Version Request Ended ==========');
 		
 		// Send JSON response
 		wp_send_json($result);
@@ -539,19 +539,19 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_reload_csv() {
-		error_log('Bible_Here_Admin: ========== AJAX重新載入CSV請求開始 ==========');
-		error_log('Bible_Here_Admin: 收到AJAX重新載入CSV請求，時間戳: ' . date('Y-m-d H:i:s'));
+		error_log('Bible_Here_Admin: ========== AJAX Reload CSV Request Started ==========');
+		error_log('Bible_Here_Admin: Received AJAX reload CSV request, timestamp: ' . date('Y-m-d H:i:s'));
 		
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			error_log('Bible_Here_Admin: ❌ Nonce驗證失敗');
+			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
 			wp_send_json_error('Security check failed');
 			return;
 		}
 		
 		// Check user permissions
 		if (!current_user_can('manage_options')) {
-			error_log('Bible_Here_Admin: ❌ 用戶權限不足');
+			error_log('Bible_Here_Admin: ❌ Insufficient user permissions');
 			wp_send_json_error('Insufficient permissions');
 			return;
 		}
@@ -560,7 +560,7 @@ class Bible_Here_Admin {
 			// Load the activator class to use its CSV loading functionality
 			$activator_file = plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-activator.php';
 			if (!file_exists($activator_file)) {
-				error_log('Bible_Here_Admin: ❌ Activator檔案不存在');
+				error_log('Bible_Here_Admin: ❌ Activator file does not exist');
 				wp_send_json_error('Activator file not found');
 				return;
 			}
@@ -568,24 +568,24 @@ class Bible_Here_Admin {
 			require_once $activator_file;
 			
 			// Call the CSV loading method with force reload
-			error_log('Bible_Here_Admin: 開始重新載入CSV資料...');
+			error_log('Bible_Here_Admin: Starting to reload CSV data...');
 			$result = Bible_Here_Activator::load_csv_data(true);
 			
 			if ($result) {
-				error_log('Bible_Here_Admin: ✅ CSV資料重新載入成功');
+				error_log('Bible_Here_Admin: ✅ CSV data reload successful');
 				wp_send_json_success('CSV data reloaded successfully! Books, genres, and versions have been updated from CSV files.');
 			} else {
-				error_log('Bible_Here_Admin: ❌ CSV資料重新載入失敗');
+				error_log('Bible_Here_Admin: ❌ CSV data reload failed');
 				wp_send_json_error('Failed to reload CSV data');
 			}
 			
 		} catch (Exception $e) {
-			error_log('Bible_Here_Admin: ❌ 重新載入CSV過程中發生異常: ' . $e->getMessage());
-			error_log('Bible_Here_Admin: 異常堆疊: ' . $e->getTraceAsString());
+			error_log('Bible_Here_Admin: ❌ Exception occurred during CSV reload: ' . $e->getMessage());
+			error_log('Bible_Here_Admin: Exception stack trace: ' . $e->getTraceAsString());
 			wp_send_json_error('CSV reload failed with exception: ' . $e->getMessage());
 		}
 		
-		error_log('Bible_Here_Admin: ========== AJAX重新載入CSV請求結束 ==========');
+		error_log('Bible_Here_Admin: ========== AJAX Reload CSV Request Ended ==========');
 	}
 
 }

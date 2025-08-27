@@ -51,7 +51,7 @@ class Bible_Here_XML_Importer {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-		error_log('Bible_Here_XML_Importer: 類別初始化完成');
+		error_log('Bible_Here_XML_Importer: Class initialization completed');
 	}
 
 	/**
@@ -61,7 +61,7 @@ class Bible_Here_XML_Importer {
 	 * @return   array    Result array with success status and message
 	 */
 	public function import_kjv_bible() {
-		error_log('Bible_Here_XML_Importer: 開始KJV聖經匯入流程');
+		error_log('Bible_Here_XML_Importer: Starting Bible download and import process');
 		
 		$start_time = microtime(true);
 		
@@ -69,98 +69,98 @@ class Bible_Here_XML_Importer {
 			// Step 1: Get KJV download URL from database
 			$download_url = $this->get_kjv_download_url();
 			if (!$download_url) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - 無法取得經文下載URL');
-				return array('success' => false, 'message' => '無法取得經文下載URL');
+				error_log('Bible_Here_XML_Importer: Error - Unable to get scripture download URL');
+				return array('success' => false, 'message' => 'Unable to get scripture download URL');
 			}
-			error_log('Bible_Here_XML_Importer: 經文下載URL取得成功: ' . $download_url);
+			error_log('Bible_Here_XML_Importer: Scripture download URL obtained successfully: ' . $download_url);
 
 			// Step 2: Download ZIP file
 			$zip_file_path = $this->download_zip_file($download_url);
 			if (!$zip_file_path) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - ZIP檔案下載失敗');
-				return array('success' => false, 'message' => 'ZIP檔案下載失敗');
+				error_log('Bible_Here_XML_Importer: Error - ZIP file download failed');
+				return array('success' => false, 'message' => 'ZIP file download failed');
 			}
-			error_log('Bible_Here_XML_Importer: ZIP檔案下載成功: ' . $zip_file_path);
+			error_log('Bible_Here_XML_Importer: ZIP file downloaded successfully: ' . $zip_file_path);
 
 			// Additional download confirmation log
 			if (file_exists($zip_file_path)) {
 				$file_size = filesize($zip_file_path);
 				$file_size_kb = round($file_size / 1024, 2);
 				$file_size_mb = round($file_size / (1024 * 1024), 2);
-				error_log('Bible_Here_XML_Importer: 檔案下載確認 - 檔案存在: ' . $zip_file_path);
-				error_log('Bible_Here_XML_Importer: 檔案下載確認 - 檔案大小: ' . $file_size . ' bytes (' . $file_size_kb . ' KB, ' . $file_size_mb . ' MB)');
+				error_log('Bible_Here_XML_Importer: File download confirmation - File exists: ' . $zip_file_path);
+				error_log('Bible_Here_XML_Importer: File download confirmation - File size: ' . $file_size . ' bytes (' . $file_size_kb . ' KB, ' . $file_size_mb . ' MB)');
 				
 				// Check if file is readable
 				if (is_readable($zip_file_path)) {
-					error_log('Bible_Here_XML_Importer: 檔案下載確認 - 檔案可讀取');
+					error_log('Bible_Here_XML_Importer: File download confirmation - File is readable');
 				} else {
-					error_log('Bible_Here_XML_Importer: 檔案下載確認 - 警告：檔案無法讀取');
+					error_log('Bible_Here_XML_Importer: File download confirmation - Warning: File is not readable');
 				}
 				
 				// Verify file is not empty
 				if ($file_size > 0) {
-					error_log('Bible_Here_XML_Importer: 檔案下載確認 - 檔案非空');
+					error_log('Bible_Here_XML_Importer: File download confirmation - File is not empty');
 				} else {
-					error_log('Bible_Here_XML_Importer: 檔案下載確認 - 錯誤：檔案為空');
+					error_log('Bible_Here_XML_Importer: File download confirmation - Error: File is empty');
 				}
 			} else {
-				error_log('Bible_Here_XML_Importer: 檔案下載確認 - 錯誤：檔案不存在: ' . $zip_file_path);
+				error_log('Bible_Here_XML_Importer: File download confirmation - Error: File does not exist: ' . $zip_file_path);
 			}
 
 			// Step 3: Extract XML file from ZIP
 			$xml_file_path = $this->extract_xml_from_zip($zip_file_path);
 			if (!$xml_file_path) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - XML檔案解壓縮失敗');
-				return array('success' => false, 'message' => 'XML檔案解壓縮失敗');
+				error_log('Bible_Here_XML_Importer: Error - XML file extraction failed');
+				return array('success' => false, 'message' => 'XML file extraction failed');
 			}
-			error_log('Bible_Here_XML_Importer: XML檔案解壓縮成功: ' . $xml_file_path);
+			error_log('Bible_Here_XML_Importer: XML file extracted successfully: ' . $xml_file_path);
 
 			// Step 4: Parse XML file
 			$bible_data = $this->parse_zefania_xml($xml_file_path);
 			if (!$bible_data) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - XML解析失敗');
-				return array('success' => false, 'message' => 'XML解析失敗');
+				error_log('Bible_Here_XML_Importer: Error - XML parsing failed');
+				return array('success' => false, 'message' => 'XML parsing failed');
 			}
-			error_log('Bible_Here_XML_Importer: XML解析成功，共解析 ' . count($bible_data) . ' 節經文');
+			error_log('Bible_Here_XML_Importer: XML parsing successful, parsed ' . count($bible_data) . ' verses');
 
 			// Step 5: Create version-specific content table
 			$table_created = $this->create_version_content_table('kjv');
 			if (!$table_created) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - 經文內容表格創建失敗');
-				return array('success' => false, 'message' => '經文內容表格創建失敗');
+				error_log('Bible_Here_XML_Importer: Error - Scripture content table creation failed');
+				return array('success' => false, 'message' => 'Scripture content table creation failed');
 			}
-			error_log('Bible_Here_XML_Importer: 經文內容表格創建成功');
+			error_log('Bible_Here_XML_Importer: Scripture content table created successfully');
 
 			// Step 6: Import bible data to database
 			$import_result = $this->import_bible_data($bible_data, 'kjv');
 			if (!$import_result['success']) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - 聖經數據匯入失敗: ' . $import_result['message']);
+				error_log('Bible_Here_XML_Importer: Error - Bible data import failed: ' . $import_result['message']);
 				return $import_result;
 			}
-			error_log('Bible_Here_XML_Importer: 聖經數據匯入成功，共匯入 ' . $import_result['imported_count'] . ' 節經文');
+			error_log('Bible_Here_XML_Importer: Bible data imported successfully, imported ' . $import_result['imported_count'] . ' verses');
 
 			// Step 7: Update version rank to 0 after successful import
 			$this->update_version_rank('kjv', 0);
-			error_log('Bible_Here_XML_Importer: 經文版本rank已更新為0');
+			error_log('Bible_Here_XML_Importer: Scripture version rank updated to 0');
 
 			// Step 8: Clean up temporary files
 			$this->cleanup_temp_files($zip_file_path, $xml_file_path);
-			error_log('Bible_Here_XML_Importer: 臨時檔案清理完成');
+			error_log('Bible_Here_XML_Importer: Temporary files cleanup completed');
 
 			$end_time = microtime(true);
 			$execution_time = round($end_time - $start_time, 2);
-			error_log('Bible_Here_XML_Importer: 聖經匯入流程完成，總耗時: ' . $execution_time . ' 秒');
+			error_log('Bible_Here_XML_Importer: Bible import process completed, total time: ' . $execution_time . ' seconds');
 
 			return array(
 				'success' => true, 
-				'message' => 'KJV聖經匯入成功',
+				'message' => 'KJV Bible import successful',
 				'imported_count' => $import_result['imported_count'],
 				'execution_time' => $execution_time
 			);
 
 		} catch (Exception $e) {
-			error_log('Bible_Here_XML_Importer: 匯入過程發生異常: ' . $e->getMessage());
-			return array('success' => false, 'message' => '匯入過程發生異常: ' . $e->getMessage());
+			error_log('Bible_Here_XML_Importer: Exception occurred during import process: ' . $e->getMessage());
+			return array('success' => false, 'message' => 'Exception occurred during import process: ' . $e->getMessage());
 		}
 	}
 
@@ -173,7 +173,7 @@ class Bible_Here_XML_Importer {
 	private function get_kjv_download_url() {
 		global $wpdb;
 		
-		error_log('Bible_Here_XML_Importer: 開始從資料庫取得KJV下載URL');
+		error_log('Bible_Here_XML_Importer: Starting to get KJV download URL from database');
 		
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$result = $wpdb->get_var(
@@ -187,20 +187,20 @@ class Bible_Here_XML_Importer {
 		if ($result && strpos($result, 'github.com') !== false && strpos($result, '/blob/') !== false) {
 			$result = str_replace('github.com', 'raw.githubusercontent.com', $result);
 			$result = str_replace('/blob/', '/', $result);
-			error_log('Bible_Here_XML_Importer: 轉換GitHub URL為直接下載連結: ' . $result);
+			error_log('Bible_Here_XML_Importer: Converting GitHub URL to direct download link: ' . $result);
 		}
 		
 		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: 資料庫查詢錯誤: ' . $wpdb->last_error);
+			error_log('Bible_Here_XML_Importer: Database query error: ' . $wpdb->last_error);
 			return false;
 		}
 		
 		if (!$result) {
-			error_log('Bible_Here_XML_Importer: 未找到KJV版本的下載URL');
+			error_log('Bible_Here_XML_Importer: KJV version download URL not found');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: 成功取得KJV下載URL');
+		error_log('Bible_Here_XML_Importer: Successfully obtained KJV download URL');
 		return $result;
 	}
 
@@ -212,7 +212,7 @@ class Bible_Here_XML_Importer {
 	 * @return   string|false    Local file path or false on failure
 	 */
 	private function download_zip_file($url) {
-		error_log('Bible_Here_XML_Importer: 開始下載ZIP檔案: ' . $url);
+		error_log('Bible_Here_XML_Importer: Starting ZIP file download: ' . $url);
 		
 		$upload_dir = wp_upload_dir();
 		$temp_dir = $upload_dir['basedir'] . '/bible-here-temp/';
@@ -220,17 +220,17 @@ class Bible_Here_XML_Importer {
 		// Create temp directory if not exists
 		if (!file_exists($temp_dir)) {
 			wp_mkdir_p($temp_dir);
-			error_log('Bible_Here_XML_Importer: 創建臨時目錄: ' . $temp_dir);
+			error_log('Bible_Here_XML_Importer: Creating temporary directory: ' . $temp_dir);
 		}
 		
 		$zip_filename = 'kjv_bible_' . date('Y-m-d_H-i-s') . '.zip';
 		$zip_file_path = $temp_dir . $zip_filename;
 		
-		error_log('Bible_Here_XML_Importer: 目標檔案路徑: ' . $zip_file_path);
+		error_log('Bible_Here_XML_Importer: Target file path: ' . $zip_file_path);
 		
 		// Use WordPress HTTP API for download
-		error_log('Bible_Here_XML_Importer: 開始HTTP請求，URL: ' . $url);
-		error_log('Bible_Here_XML_Importer: 請求參數 - timeout: 300, stream: true, filename: ' . $zip_file_path);
+		error_log('Bible_Here_XML_Importer: Starting HTTP request, URL: ' . $url);
+		error_log('Bible_Here_XML_Importer: Request parameters - timeout: 300, stream: true, filename: ' . $zip_file_path);
 		
 		$response = wp_remote_get($url, array(
 			'timeout' => 300, // 5 minutes timeout
@@ -238,16 +238,16 @@ class Bible_Here_XML_Importer {
 			'filename' => $zip_file_path
 		));
 		
-		error_log('Bible_Here_XML_Importer: HTTP請求完成');
+		error_log('Bible_Here_XML_Importer: HTTP request completed');
 		
 		if (is_wp_error($response)) {
 			$error_code = $response->get_error_code();
 			$error_message = $response->get_error_message();
 			$error_data = $response->get_error_data();
-			error_log('Bible_Here_XML_Importer: 下載失敗 - WP錯誤代碼: ' . $error_code);
-			error_log('Bible_Here_XML_Importer: 下載失敗 - WP錯誤訊息: ' . $error_message);
+			error_log('Bible_Here_XML_Importer: Download failed - WP error code: ' . $error_code);
+			error_log('Bible_Here_XML_Importer: Download failed - WP error message: ' . $error_message);
 			if ($error_data) {
-				error_log('Bible_Here_XML_Importer: 下載失敗 - WP錯誤數據: ' . print_r($error_data, true));
+				error_log('Bible_Here_XML_Importer: Download failed - WP error data: ' . print_r($error_data, true));
 			}
 			return false;
 		}
@@ -256,38 +256,38 @@ class Bible_Here_XML_Importer {
 		$response_message = wp_remote_retrieve_response_message($response);
 		$response_headers = wp_remote_retrieve_headers($response);
 		
-		error_log('Bible_Here_XML_Importer: HTTP響應狀態碼: ' . $response_code);
-		error_log('Bible_Here_XML_Importer: HTTP響應訊息: ' . $response_message);
+		error_log('Bible_Here_XML_Importer: HTTP response status code: ' . $response_code);
+		error_log('Bible_Here_XML_Importer: HTTP response message: ' . $response_message);
 		
 		// 詳細記錄響應標頭
 		if (isset($response_headers['content-length'])) {
 			$expected_size = (int)$response_headers['content-length'];
 			$expected_size_kb = round($expected_size / 1024, 2);
 			$expected_size_mb = round($expected_size / (1024 * 1024), 2);
-			error_log('Bible_Here_XML_Importer: 響應Content-Length: ' . $expected_size . ' bytes (' . $expected_size_kb . ' KB, ' . $expected_size_mb . ' MB)');
+			error_log('Bible_Here_XML_Importer: Response Content-Length: ' . $expected_size . ' bytes (' . $expected_size_kb . ' KB, ' . $expected_size_mb . ' MB)');
 		}
 		if (isset($response_headers['content-type'])) {
 			$content_type = $response_headers['content-type'];
-			error_log('Bible_Here_XML_Importer: 響應Content-Type: ' . $content_type);
+			error_log('Bible_Here_XML_Importer: Response Content-Type: ' . $content_type);
 			
-			// 檢查 Content-Type 是否為 ZIP 檔案
+			// Check if Content-Type is ZIP file
 			if (strpos($content_type, 'application/zip') === false && 
 			    strpos($content_type, 'application/x-zip') === false && 
 			    strpos($content_type, 'application/octet-stream') === false) {
-				error_log('Bible_Here_XML_Importer: 警告 - Content-Type 不是 ZIP 檔案格式: ' . $content_type);
-				error_log('Bible_Here_XML_Importer: 可能下載到錯誤頁面或非ZIP檔案');
+				error_log('Bible_Here_XML_Importer: Warning - Content-Type is not ZIP file format: ' . $content_type);
+				error_log('Bible_Here_XML_Importer: May have downloaded error page or non-ZIP file');
 			}
 		}
 		
 		// 檢查 HTTP 狀態碼
 		if ($response_code !== 200) {
-			error_log('Bible_Here_XML_Importer: 下載失敗 - HTTP狀態碼: ' . $response_code . ' (' . $response_message . ')');
+			error_log('Bible_Here_XML_Importer: Download failed - HTTP status code: ' . $response_code . ' (' . $response_message . ')');
 			if ($response_code === 404) {
-				error_log('Bible_Here_XML_Importer: 檔案不存在 (404)，請檢查下載URL是否正確');
+				error_log('Bible_Here_XML_Importer: File does not exist (404), please check if download URL is correct');
 			} elseif ($response_code === 403) {
-				error_log('Bible_Here_XML_Importer: 存取被拒絕 (403)，請檢查檔案權限');
+				error_log('Bible_Here_XML_Importer: Access denied (403), please check file permissions');
 			} elseif ($response_code >= 500) {
-				error_log('Bible_Here_XML_Importer: 伺服器錯誤 (' . $response_code . ')，請稍後再試');
+				error_log('Bible_Here_XML_Importer: Server error (' . $response_code . '), please try again later');
 			}
 			return false;
 		}
@@ -297,10 +297,10 @@ class Bible_Here_XML_Importer {
 			return false;
 		}
 		
-		// 檢查下載後的檔案是否存在
+		// Check if downloaded file exists
 		if (!file_exists($zip_file_path)) {
-			error_log('Bible_Here_XML_Importer: 下載失敗 - 檔案不存在: ' . $zip_file_path);
-			error_log('Bible_Here_XML_Importer: 可能原因：下載失敗、權限問題或磁碟空間不足');
+			error_log('Bible_Here_XML_Importer: Download failed - file does not exist: ' . $zip_file_path);
+			error_log('Bible_Here_XML_Importer: Possible causes: download failed, permission issues, or insufficient disk space');
 			return false;
 		}
 		
@@ -308,69 +308,69 @@ class Bible_Here_XML_Importer {
 		$file_size_kb = round($file_size / 1024, 2);
 		$file_size_mb = round($file_size / (1024 * 1024), 2);
 		
-		error_log('Bible_Here_XML_Importer: ZIP檔案下載成功');
-		error_log('Bible_Here_XML_Importer: 檔案路徑: ' . $zip_file_path);
-		error_log('Bible_Here_XML_Importer: 實際檔案大小: ' . $file_size . ' bytes (' . $file_size_kb . ' KB, ' . $file_size_mb . ' MB)');
+		error_log('Bible_Here_XML_Importer: ZIP file download successful');
+		error_log('Bible_Here_XML_Importer: File path: ' . $zip_file_path);
+		error_log('Bible_Here_XML_Importer: Actual file size: ' . $file_size . ' bytes (' . $file_size_kb . ' KB, ' . $file_size_mb . ' MB)');
 		
-		// 與預期大小比較（如果有 Content-Length）
+		// Compare with expected size (if Content-Length is available)
 		if (isset($expected_size) && $expected_size > 0) {
 			if ($file_size !== $expected_size) {
-				error_log('Bible_Here_XML_Importer: 警告 - 檔案大小不符預期');
-				error_log('Bible_Here_XML_Importer: 預期大小: ' . $expected_size . ' bytes, 實際大小: ' . $file_size . ' bytes');
-				error_log('Bible_Here_XML_Importer: 差異: ' . abs($expected_size - $file_size) . ' bytes');
+				error_log('Bible_Here_XML_Importer: Warning - file size does not match expected');
+				error_log('Bible_Here_XML_Importer: Expected size: ' . $expected_size . ' bytes, actual size: ' . $file_size . ' bytes');
+				error_log('Bible_Here_XML_Importer: Difference: ' . abs($expected_size - $file_size) . ' bytes');
 			} else {
-				error_log('Bible_Here_XML_Importer: 檔案大小驗證通過，與預期大小一致');
+				error_log('Bible_Here_XML_Importer: File size validation passed, matches expected size');
 			}
 		}
 		
-		// 檢查檔案大小是否合理（大於 500KB）
+		// Check if file size is reasonable (greater than 500KB)
 		if ($file_size < 512000) { // 500KB = 512000 bytes
-			error_log('Bible_Here_XML_Importer: 下載失敗 - 檔案大小過小 (' . $file_size_kb . ' KB)，預期應大於 500KB');
-			error_log('Bible_Here_XML_Importer: 可能原因：下載不完整、檔案損壞或伺服器返回錯誤頁面');
+			error_log('Bible_Here_XML_Importer: Download failed - file size too small (' . $file_size_kb . ' KB), expected to be greater than 500KB');
+			error_log('Bible_Here_XML_Importer: Possible causes: incomplete download, corrupted file, or server returned error page');
 			
-			// 檢查檔案內容前幾個字節
+			// Check first few bytes of file content
 			$file_content = file_get_contents($zip_file_path, false, null, 0, 100);
 			if ($file_content) {
-				error_log('Bible_Here_XML_Importer: 檔案前100字節內容: ' . substr($file_content, 0, 100));
+				error_log('Bible_Here_XML_Importer: First 100 bytes of file content: ' . substr($file_content, 0, 100));
 				if (strpos($file_content, '<html') !== false || strpos($file_content, '<!DOCTYPE') !== false) {
-					error_log('Bible_Here_XML_Importer: 檔案內容似乎是HTML頁面，不是ZIP檔案');
+					error_log('Bible_Here_XML_Importer: File content appears to be HTML page, not ZIP file');
 				}
 			}
 			
-			// 清理無效檔案
+			// Clean up invalid file
 			unlink($zip_file_path);
 			return false;
 		}
 		
-		// 驗證 ZIP 檔案簽名（前4個字節應該是 "PK"）
+		// Validate ZIP file signature (first 4 bytes should be "PK")
 		$file_signature = file_get_contents($zip_file_path, false, null, 0, 4);
 		if ($file_signature) {
 			$hex_signature = bin2hex($file_signature);
-			error_log('Bible_Here_XML_Importer: 檔案簽名（前4字節）: ' . $hex_signature);
+			error_log('Bible_Here_XML_Importer: File signature (first 4 bytes): ' . $hex_signature);
 			
-			// ZIP 檔案的魔術數字：50 4B 03 04 (PK..)
+			// ZIP file magic number: 50 4B 03 04 (PK..)
 			if (substr($hex_signature, 0, 4) !== '504b') {
-				error_log('Bible_Here_XML_Importer: 警告 - 檔案簽名不符合ZIP格式');
-				error_log('Bible_Here_XML_Importer: 預期簽名: 504b (PK), 實際簽名: ' . substr($hex_signature, 0, 4));
-				error_log('Bible_Here_XML_Importer: 檔案可能不是有效的ZIP檔案');
+				error_log('Bible_Here_XML_Importer: Warning - file signature does not match ZIP format');
+				error_log('Bible_Here_XML_Importer: Expected signature: 504b (PK), actual signature: ' . substr($hex_signature, 0, 4));
+				error_log('Bible_Here_XML_Importer: File may not be a valid ZIP file');
 				
-				// 顯示檔案前100字節以供調試
+				// Show first 100 bytes of file for debugging
 				$debug_content = file_get_contents($zip_file_path, false, null, 0, 100);
 				if ($debug_content) {
-					error_log('Bible_Here_XML_Importer: 檔案前100字節內容: ' . $debug_content);
+					error_log('Bible_Here_XML_Importer: First 100 bytes of file content: ' . $debug_content);
 				}
 				
-				// 清理無效檔案
+				// Clean up invalid file
 				unlink($zip_file_path);
 				return false;
 			} else {
-				error_log('Bible_Here_XML_Importer: ZIP檔案簽名驗證通過');
+				error_log('Bible_Here_XML_Importer: ZIP file signature validation passed');
 			}
 		} else {
-			error_log('Bible_Here_XML_Importer: 警告 - 無法讀取檔案簽名');
+			error_log('Bible_Here_XML_Importer: Warning - unable to read file signature');
 		}
 		
-		error_log('Bible_Here_XML_Importer: 檔案大小檢查通過 (' . $file_size_kb . ' KB > 500KB)');
+		error_log('Bible_Here_XML_Importer: File size check passed (' . $file_size_kb . ' KB > 500KB)');
 		
 		return $zip_file_path;
 	}

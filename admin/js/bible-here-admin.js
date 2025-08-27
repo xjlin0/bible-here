@@ -365,23 +365,23 @@
 		
 		var logElement = $('#import-log');
 		if (logElement.length > 0) {
-			// 使用 HTML 內容和 <br> 標籤來確保換行
+			// Use HTML content and <br> tags to ensure line breaks
 			var currentContent = logElement.html();
 			logElement.html(currentContent + (currentContent ? '<br>' : '') + logEntry);
-			// 安全檢查元素是否存在再存取 scrollHeight
+			// Safety check if element exists before accessing scrollHeight
 			var logDomElement = logElement[0];
 			if (logDomElement && typeof logDomElement.scrollHeight !== 'undefined') {
 				logElement.scrollTop(logDomElement.scrollHeight);
 			}
 		} else {
-			// 如果找不到 #import-log 元素，嘗試確保其父容器可見
+			// If #import-log element not found, try to ensure parent container is visible
 			var statusElement = $('#import-status');
 			if (statusElement.length > 0) {
 				statusElement.show();
-				// 再次嘗試找到 #import-log 元素
+				// Try to find #import-log element again
 				logElement = $('#import-log');
 				if (logElement.length > 0) {
-					// 使用 HTML 內容和 <br> 標籤來確保換行
+					// Use HTML content and <br> tags to ensure line breaks
 					var currentContent = logElement.html();
 					logElement.html(currentContent + (currentContent ? '<br>' : '') + logEntry);
 					var logDomElement = logElement[0];
@@ -405,29 +405,29 @@
 	function showNotice(message, type) {
 		console.log('Bible Here: Showing notice:', message, type);
 		
-		// 使用正確的 ID 選擇器
+		// Use correct ID selector
 		var statusElement = $('#import-status');
 		if (statusElement.length) {
-			// 確保元素可見
+			// Ensure element is visible
 			statusElement.show();
 			
-			// 創建通知訊息元素，但不覆蓋現有內容
+			// Create notice message element without overwriting existing content
 			var noticeHtml = '';
 			if (type === 'error') {
-				noticeHtml = '<div class="bible-here-notice bible-here-error" style="color: #d63384; background: #f8d7da; border: 1px solid #f5c2c7; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Error：</strong>' + message + '</div>';
+				noticeHtml = '<div class="bible-here-notice bible-here-error" style="color: #d63384; background: #f8d7da; border: 1px solid #f5c2c7; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Error:</strong>' + message + '</div>';
 			} else if (type === 'success') {
-				noticeHtml = '<div class="bible-here-notice bible-here-success" style="color: #0f5132; background: #d1e7dd; border: 1px solid #badbcc; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Success：</strong>' + message + '</div>';
+				noticeHtml = '<div class="bible-here-notice bible-here-success" style="color: #0f5132; background: #d1e7dd; border: 1px solid #badbcc; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Success:</strong>' + message + '</div>';
 			} else {
 				noticeHtml = '<div class="bible-here-notice bible-here-info" style="color: #055160; background: #cff4fc; border: 1px solid #b6effb; padding: 10px; margin: 10px 0; border-radius: 4px;">' + message + '</div>';
 			}
 			
-			// 移除之前的通知訊息（如果存在）
+			// Remove previous notice messages (if any)
 			statusElement.find('.bible-here-notice').remove();
 			
-			// 將通知訊息附加到現有內容下方，而不是覆蓋
+			// Append notice message below existing content instead of overwriting
 			statusElement.append(noticeHtml);
 			
-			// 滾動到底部以顯示新的通知
+			// Scroll to bottom to show new notice
 			var statusDomElement = statusElement[0];
 			if (statusDomElement && typeof statusDomElement.scrollHeight !== 'undefined') {
 				statusElement.scrollTop(statusDomElement.scrollHeight);
