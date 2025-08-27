@@ -129,7 +129,7 @@ class Bible_Here_XML_Importer {
 				error_log('Bible_Here_XML_Importer: 錯誤 - KJV內容表格創建失敗');
 				return array('success' => false, 'message' => 'KJV內容表格創建失敗');
 			}
-			error_log('Bible_Here_XML_Importer: KJV內容表格創建成功');
+			error_log('Bible_Here_XML_Importer: 經文內容表格創建成功');
 
 			// Step 6: Import bible data to database
 			$import_result = $this->import_bible_data($bible_data, 'kjv');

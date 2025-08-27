@@ -150,157 +150,178 @@ class Bible_Here_Activator {
 	 * @since    1.0.0
 	 */
 	private static function insert_initial_data() {
+		self::load_csv_data();
+	}
+
+	/**
+	 * Load data from CSV files and insert into database.
+	 *
+	 * @since    1.0.0
+	 * @param    bool    $force_reload    Whether to force reload data even if it exists
+	 * @return   bool                     True on success, false on failure
+	 */
+	public static function load_csv_data($force_reload = false) {
 		global $wpdb;
 
-		// Insert all 66 Bible books
+		// Get plugin directory path
+		$plugin_dir = plugin_dir_path(dirname(__FILE__));
+		$data_dir = $plugin_dir . 'data/';
+		$success = true;
+
+		// Load books data from CSV
 		$books_table = $wpdb->prefix . 'bible_here_books';
-		$books_data = [
-			// Old Testament - Law (Torah)
-			['en', 1, 1, 'Gen', 'Genesis', 50],
-			['en', 1, 2, 'Exod', 'Exodus', 40],
-			['en', 1, 3, 'Lev', 'Leviticus', 27],
-			['en', 1, 4, 'Num', 'Numbers', 36],
-			['en', 1, 5, 'Deut', 'Deuteronomy', 34],
-			// Old Testament - History
-			['en', 2, 6, 'Josh', 'Joshua', 24],
-			['en', 2, 7, 'Judg', 'Judges', 21],
-			['en', 2, 8, 'Ruth', 'Ruth', 4],
-			['en', 2, 9, '1Sam', '1 Samuel', 31],
-			['en', 2, 10, '2Sam', '2 Samuel', 24],
-			['en', 2, 11, '1Kgs', '1 Kings', 22],
-			['en', 2, 12, '2Kgs', '2 Kings', 25],
-			['en', 2, 13, '1Chr', '1 Chronicles', 29],
-			['en', 2, 14, '2Chr', '2 Chronicles', 36],
-			['en', 2, 15, 'Ezra', 'Ezra', 10],
-			['en', 2, 16, 'Neh', 'Nehemiah', 13],
-			['en', 2, 17, 'Esth', 'Esther', 10],
-			// Old Testament - Wisdom
-			['en', 3, 18, 'Job', 'Job', 42],
-			['en', 3, 19, 'Ps', 'Psalms', 150],
-			['en', 3, 20, 'Prov', 'Proverbs', 31],
-			['en', 3, 21, 'Eccl', 'Ecclesiastes', 12],
-			['en', 3, 22, 'Song', 'Song of Solomon', 8],
-			// Old Testament - Prophets
-			['en', 4, 23, 'Isa', 'Isaiah', 66],
-			['en', 4, 24, 'Jer', 'Jeremiah', 52],
-			['en', 4, 25, 'Lam', 'Lamentations', 5],
-			['en', 4, 26, 'Ezek', 'Ezekiel', 48],
-			['en', 4, 27, 'Dan', 'Daniel', 12],
-			['en', 4, 28, 'Hos', 'Hosea', 14],
-			['en', 4, 29, 'Joel', 'Joel', 3],
-			['en', 4, 30, 'Amos', 'Amos', 9],
-			['en', 4, 31, 'Obad', 'Obadiah', 1],
-			['en', 4, 32, 'Jonah', 'Jonah', 4],
-			['en', 4, 33, 'Mic', 'Micah', 7],
-			['en', 4, 34, 'Nah', 'Nahum', 3],
-			['en', 4, 35, 'Hab', 'Habakkuk', 3],
-			['en', 4, 36, 'Zeph', 'Zephaniah', 3],
-			['en', 4, 37, 'Hag', 'Haggai', 2],
-			['en', 4, 38, 'Zech', 'Zechariah', 14],
-			['en', 4, 39, 'Mal', 'Malachi', 4],
-			// New Testament - Gospels
-			['en', 5, 40, 'Matt', 'Matthew', 28],
-			['en', 5, 41, 'Mark', 'Mark', 16],
-			['en', 5, 42, 'Luke', 'Luke', 24],
-			['en', 5, 43, 'John', 'John', 21],
-			// New Testament - Acts
-			['en', 6, 44, 'Acts', 'Acts', 28],
-			// New Testament - Epistles
-			['en', 7, 45, 'Rom', 'Romans', 16],
-			['en', 7, 46, '1Cor', '1 Corinthians', 16],
-			['en', 7, 47, '2Cor', '2 Corinthians', 13],
-			['en', 7, 48, 'Gal', 'Galatians', 6],
-			['en', 7, 49, 'Eph', 'Ephesians', 6],
-			['en', 7, 50, 'Phil', 'Philippians', 4],
-			['en', 7, 51, 'Col', 'Colossians', 4],
-			['en', 7, 52, '1Thess', '1 Thessalonians', 5],
-			['en', 7, 53, '2Thess', '2 Thessalonians', 3],
-			['en', 7, 54, '1Tim', '1 Timothy', 6],
-			['en', 7, 55, '2Tim', '2 Timothy', 4],
-			['en', 7, 56, 'Titus', 'Titus', 3],
-			['en', 7, 57, 'Phlm', 'Philemon', 1],
-			['en', 7, 58, 'Heb', 'Hebrews', 13],
-			['en', 7, 59, 'Jas', 'James', 5],
-			['en', 7, 60, '1Pet', '1 Peter', 5],
-			['en', 7, 61, '2Pet', '2 Peter', 3],
-			['en', 7, 62, '1John', '1 John', 5],
-			['en', 7, 63, '2John', '2 John', 1],
-			['en', 7, 64, '3John', '3 John', 1],
-			['en', 7, 65, 'Jude', 'Jude', 1],
-			// New Testament - Apocalyptic
-			['en', 8, 66, 'Rev', 'Revelation', 22]
-		];
-
-		// Check if books data already exists
-		$existing_books = $wpdb->get_var("SELECT COUNT(*) FROM $books_table");
-		if ($existing_books == 0) {
-			foreach ($books_data as $book) {
-				$wpdb->insert(
-					$books_table,
-					[
-						'language' => $book[0],
-						'genre_number' => $book[1],
-						'book_number' => $book[2],
-						'title_short' => $book[3],
-						'title_full' => $book[4],
-						'chapters' => $book[5]
-					],
-					['%s', '%d', '%d', '%s', '%s', '%d']
-				);
+		$books_csv = $data_dir . 'books.csv';
+		if (file_exists($books_csv)) {
+			$books_data = self::parse_csv($books_csv);
+			if (!empty($books_data)) {
+				// Check if books data already exists
+				$existing_books = $wpdb->get_var("SELECT COUNT(*) FROM $books_table");
+				if ($existing_books == 0 || $force_reload) {
+					// Clear existing data if force reload
+					if ($force_reload && $existing_books > 0) {
+						$wpdb->query("DELETE FROM $books_table");
+					}
+					foreach ($books_data as $book) {
+						$result = $wpdb->insert(
+							$books_table,
+							[
+								'language' => $book['language'] ?? '',
+								'genre_number' => intval($book['genre_number'] ?? 0),
+								'book_number' => intval($book['book_number'] ?? 0),
+								'title_short' => $book['title_short'] ?? '',
+								'title_full' => $book['title_full'] ?? '',
+								'chapters' => intval($book['chapters'] ?? 0)
+							],
+							['%s', '%d', '%d', '%s', '%s', '%d']
+						);
+						if ($result === false) {
+							$success = false;
+						}
+					}
+				}
 			}
+		} else {
+			$success = false;
 		}
 
-		// Insert genres data
+		// Load genres data from CSV
 		$genres_table = $wpdb->prefix . 'bible_here_genres';
-		$genres_data = [
-			[1, 'en', 'ot', 1, 'Law'],
-			[2, 'en', 'ot', 2, 'History'],
-			[3, 'en', 'ot', 3, 'Wisdom'],
-			[4, 'en', 'ot', 4, 'Prophets'],
-			[5, 'en', 'nt', 5, 'Gospels'],
-			[6, 'en', 'nt', 6, 'Acts'],
-			[7, 'en', 'nt', 7, 'Epistles'],
-			[8, 'en', 'nt', 8, 'Apocalyptic']
-		];
-
-		// Check if genres data already exists
-		$existing_genres = $wpdb->get_var("SELECT COUNT(*) FROM $genres_table");
-		if ($existing_genres == 0) {
-			foreach ($genres_data as $genre) {
-				$wpdb->insert(
-					$genres_table,
-					[
-						'id' => $genre[0],
-						'language' => $genre[1],
-						'type' => $genre[2],
-						'genre_number' => $genre[3],
-						'name' => $genre[4]
-					],
-					['%d', '%s', '%s', '%d', '%s']
-				);
+		$genres_csv = $data_dir . 'genres.csv';
+		if (file_exists($genres_csv)) {
+			$genres_data = self::parse_csv($genres_csv);
+			if (!empty($genres_data)) {
+				// Check if genres data already exists
+				$existing_genres = $wpdb->get_var("SELECT COUNT(*) FROM $genres_table");
+				if ($existing_genres == 0 || $force_reload) {
+					// Clear existing data if force reload
+					if ($force_reload && $existing_genres > 0) {
+						$wpdb->query("DELETE FROM $genres_table");
+					}
+					foreach ($genres_data as $genre) {
+						$result = $wpdb->insert(
+							$genres_table,
+							[
+								'language' => $genre['language'] ?? '',
+								'type' => $genre['type'] ?? '',
+								'genre_number' => intval($genre['genre_number'] ?? 0),
+								'name' => $genre['name'] ?? ''
+							],
+							['%s', '%s', '%d', '%s']
+						);
+						if ($result === false) {
+							$success = false;
+						}
+					}
+				}
 			}
+		} else {
+			$success = false;
 		}
 
-		// Insert default KJV version
+		// Load versions data from CSV
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
-		$existing_kjv = $wpdb->get_var($wpdb->prepare(
-			"SELECT COUNT(*) FROM $versions_table WHERE abbreviation = %s AND language = %s",
-			'kjv', 'en'
-		));
-		if ($existing_kjv == 0) {
-			$wpdb->insert(
-				$versions_table,
-				[
-					'name' => 'King James Version',
-					'abbreviation' => 'kjv',
-					'language' => 'en',
-					'table_name' => 'bible_here_en_kjv',
-					'download_url' => 'https://github.com/biblenerd/Zefania-XML-Preservation/raw/refs/heads/main/zefania-sharp-sourceforge-backup/Bibles/ENG/King%20James/King%20James%20Version/SF_2009-01-23_ENG_KJV_(KING%20JAMES%20VERSION).zip',
-					'rank' => null
-				],
-				['%s', '%s', '%s', '%s', '%s', '%d']
-			);
+		$versions_csv = $data_dir . 'versions.csv';
+		if (file_exists($versions_csv)) {
+			$versions_data = self::parse_csv($versions_csv);
+			if (!empty($versions_data)) {
+				// Check if versions data already exists
+				$existing_versions = $wpdb->get_var("SELECT COUNT(*) FROM $versions_table");
+				if ($existing_versions == 0 || $force_reload) {
+					// For versions, we need to be more careful - preserve rank for imported versions
+					if ($force_reload && $existing_versions > 0) {
+						// Get existing versions with their ranks to preserve imported status
+						$existing_ranks = $wpdb->get_results(
+							"SELECT abbreviation, rank FROM $versions_table WHERE rank IS NOT NULL",
+							ARRAY_A
+						);
+						$rank_map = [];
+						foreach ($existing_ranks as $existing_rank) {
+							$rank_map[$existing_rank['abbreviation']] = $existing_rank['rank'];
+						}
+						$wpdb->query("DELETE FROM $versions_table");
+					}
+					foreach ($versions_data as $version) {
+						// Preserve existing rank if version was already imported
+						$rank = null;
+						if ($force_reload && isset($rank_map) && isset($rank_map[$version['abbreviation']])) {
+							$rank = $rank_map[$version['abbreviation']];
+						} elseif (!empty($version['rank'])) {
+							$rank = intval($version['rank']);
+						}
+						
+						$result = $wpdb->insert(
+							$versions_table,
+							[
+								'table_name' => $version['table_name'] ?? '',
+								'language' => $version['language'] ?? '',
+								'abbreviation' => $version['abbreviation'] ?? '',
+								'name' => $version['name'] ?? '',
+								'info_text' => $version['info_text'] ?? '',
+								'info_url' => $version['info_url'] ?? '',
+								'publisher' => $version['publisher'] ?? '',
+								'copyright' => $version['copyright'] ?? '',
+								'download_url' => $version['download_url'] ?? '',
+								'rank' => $rank
+							],
+							['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']
+						);
+						if ($result === false) {
+							$success = false;
+						}
+					}
+				}
+			}
+		} else {
+			$success = false;
 		}
+
+		return $success;
+	}
+
+	/**
+	 * Parse CSV file and return associative array.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $file_path    Path to CSV file
+	 * @return   array                   Parsed CSV data
+	 */
+	private static function parse_csv($file_path) {
+		$data = [];
+		if (($handle = fopen($file_path, 'r')) !== FALSE) {
+			$header = fgetcsv($handle, 1000, ',');
+			if ($header !== FALSE && !empty($header)) {
+				while (($row = fgetcsv($handle, 1000, ',')) !== FALSE) {
+					if (count($header) === count($row) && !empty($row)) {
+						$combined = array_combine($header, $row);
+						if ($combined !== FALSE) {
+							$data[] = $combined;
+						}
+					}
+				}
+			}
+			fclose($handle);
+		}
+		return $data;
 	}
 
 }

@@ -1,0 +1,9 @@
+id,language,type,genre_number,name
+1,en,ot,1,Law
+2,en,ot,2,History
+3,en,ot,3,Wisdom
+4,en,ot,4,Prophets
+5,en,nt,5,Gospels
+6,en,nt,6,Acts
+7,en,nt,7,Epistles
+8,en,nt,8,Apocalyptic

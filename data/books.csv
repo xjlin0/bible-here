@@ -1,0 +1,67 @@
+language,genre_number,book_number,title_short,title_full,chapters
+en,1,1,Gen,Genesis,50
+en,1,2,Exod,Exodus,40
+en,1,3,Lev,Leviticus,27
+en,1,4,Num,Numbers,36
+en,1,5,Deut,Deuteronomy,34
+en,2,6,Josh,Joshua,24
+en,2,7,Judg,Judges,21
+en,2,8,Ruth,Ruth,4
+en,2,9,1Sam,1 Samuel,31
+en,2,10,2Sam,2 Samuel,24
+en,2,11,1Kgs,1 Kings,22
+en,2,12,2Kgs,2 Kings,25
+en,2,13,1Chr,1 Chronicles,29
+en,2,14,2Chr,2 Chronicles,36
+en,2,15,Ezra,Ezra,10
+en,2,16,Neh,Nehemiah,13
+en,2,17,Esth,Esther,10
+en,3,18,Job,Job,42
+en,3,19,Ps,Psalms,150
+en,3,20,Prov,Proverbs,31
+en,3,21,Eccl,Ecclesiastes,12
+en,3,22,Song,Song of Solomon,8
+en,4,23,Isa,Isaiah,66
+en,4,24,Jer,Jeremiah,52
+en,4,25,Lam,Lamentations,5
+en,4,26,Ezek,Ezekiel,48
+en,4,27,Dan,Daniel,12
+en,4,28,Hos,Hosea,14
+en,4,29,Joel,Joel,3
+en,4,30,Amos,Amos,9
+en,4,31,Obad,Obadiah,1
+en,4,32,Jonah,Jonah,4
+en,4,33,Mic,Micah,7
+en,4,34,Nah,Nahum,3
+en,4,35,Hab,Habakkuk,3
+en,4,36,Zeph,Zephaniah,3
+en,4,37,Hag,Haggai,2
+en,4,38,Zech,Zechariah,14
+en,4,39,Mal,Malachi,4
+en,5,40,Matt,Matthew,28
+en,5,41,Mark,Mark,16
+en,5,42,Luke,Luke,24
+en,5,43,John,John,21
+en,6,44,Acts,Acts,28
+en,7,45,Rom,Romans,16
+en,7,46,1Cor,1 Corinthians,16
+en,7,47,2Cor,2 Corinthians,13
+en,7,48,Gal,Galatians,6
+en,7,49,Eph,Ephesians,6
+en,7,50,Phil,Philippians,4
+en,7,51,Col,Colossians,4
+en,7,52,1Thess,1 Thessalonians,5
+en,7,53,2Thess,2 Thessalonians,3
+en,7,54,1Tim,1 Timothy,6
+en,7,55,2Tim,2 Timothy,4
+en,7,56,Titus,Titus,3
+en,7,57,Phlm,Philemon,1
+en,7,58,Heb,Hebrews,13
+en,7,59,Jas,James,5
+en,7,60,1Pet,1 Peter,5
+en,7,61,2Pet,2 Peter,3
+en,7,62,1John,1 John,5
+en,7,63,2John,2 John,1
+en,7,64,3John,3 John,1
+en,7,65,Jude,Jude,1
+en,8,66,Rev,Revelation,22

@@ -59,10 +59,8 @@
 			
 			var version = $(this).data('version');
 			var language = $(this).data('language');
-			var action = $(this).data('action');
-			var actionText = action === 'reimport' ? 're-import' : 'import';
 			
-			if (!confirm('Are you sure you want to ' + actionText + ' the ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible? This may take several minutes and will replace existing data.')) {
+			if (!confirm('Are you sure you want to import the ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible? This may take several minutes.')) {
 				return;
 			}
 			
@@ -85,6 +83,15 @@
 			if (importInProgress) {
 				cancelImport();
 			}
+		});
+		
+		// Handle reload CSV data button click
+		$('#reload-csv-btn').on('click', function() {
+			if (!confirm('Are you sure you want to reload all CSV data? This will update books, genres, and versions from the CSV files.')) {
+				return;
+			}
+			
+			reloadCSVData();
 		});
 	});
 
@@ -124,7 +131,9 @@
 			url: bible_here_ajax.ajax_url,
 			type: 'POST',
 			data: {
-				action: 'bible_here_import_' + language + '_' + version,
+				action: 'bible_here_import',
+				language: language,
+				version: version,
 				nonce: bible_here_ajax.nonce
 			},
 			timeout: 600000, // 10 minutes timeout
@@ -168,11 +177,9 @@
 			// Ensure progress text shows success with green color
 			$('#progress-text').css('color', '#00a32a'); // Green color for success
 			
-			// Update the button for this version to show "Re-import"
+			// Update the status for this version
 			if (currentImportVersion) {
-				var btn = $('.bible-download-btn[data-version="' + currentImportVersion + '"]');
-				btn.text('Re-import').data('action', 'reimport');
-				btn.closest('tr').find('.status-cell').text('Imported');
+				// The page will reload to show updated status
 			}
 			
 			// Show success message
@@ -428,6 +435,49 @@
 		} else {
 			console.error('Bible Here: Download and Import status element (#import-status) not found');
 		}
+	}
+
+	/**
+	 * Reload CSV data
+	 */
+	function reloadCSVData() {
+		console.log('Bible Here: Starting CSV data reload process');
+		
+		// Disable the reload button during operation
+		$('#reload-csv-btn').prop('disabled', true).text('Reloading...');
+		
+		// Make AJAX request to reload CSV data
+		$.ajax({
+			url: bible_here_ajax.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'bible_here_reload_csv',
+				nonce: bible_here_ajax.nonce
+			},
+			timeout: 30000, // 30 seconds timeout
+			success: function(response) {
+				console.log('Bible Here: CSV reload response received', response);
+				
+				if (response.success) {
+					showNotice('CSV data reloaded successfully! ' + (response.message || ''), 'success');
+					
+					// Refresh page after 2 seconds to update UI
+					setTimeout(function() {
+						location.reload();
+					}, 2000);
+				} else {
+					showNotice('Failed to reload CSV data: ' + (response.message || 'Unknown error'), 'error');
+					// Re-enable button on error
+					$('#reload-csv-btn').prop('disabled', false).text('🔄 Reload All CSV Data');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Bible Here: CSV reload request failed', status, error);
+				showNotice('CSV reload request failed: ' + status + ' - ' + error, 'error');
+				// Re-enable button on error
+				$('#reload-csv-btn').prop('disabled', false).text('🔄 Reload All CSV Data');
+			}
+		});
 	}
 
 })( jQuery );

@@ -102,9 +102,9 @@ class Bible_Here_Admin {
 		wp_localize_script( $this->plugin_name, 'bible_here_ajax', array(
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'bible_here_ajax_nonce' ),
-			'importing_text' => __( '正在匯入...', 'bible-here' ),
-			'import_success' => __( '匯入成功！', 'bible-here' ),
-			'import_error' => __( '匯入失敗', 'bible-here' )
+			'importing_text' => __( 'Downloading...', 'bible-here' ),
+			'import_success' => __( 'Import Complete', 'bible-here' ),
+			'import_error' => __( 'Import Failed', 'bible-here' )
 		));
 
 	}
@@ -120,7 +120,7 @@ class Bible_Here_Admin {
 			'Bible Here',
 			'manage_options',
 			'bible-here',
-			array($this, 'display_versions_page'),
+			array($this, 'display_admin_page'),
 			'dashicons-book-alt',
 			30
 		);
@@ -130,7 +130,7 @@ class Bible_Here_Admin {
 			'Versions',
 			'Versions',
 			'manage_options',
-			'bible-here',
+			'bible-here-versions',
 			array($this, 'display_versions_page')
 		);
 
@@ -150,6 +150,11 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function display_admin_page() {
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have sufficient permissions to access this page.'));
+		}
+		
 		global $wpdb;
 
 		// Get statistics
@@ -166,6 +171,11 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function display_versions_page() {
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have sufficient permissions to access this page.'));
+		}
+		
 		global $wpdb;
 
 		// Get all Bible versions
@@ -188,6 +198,13 @@ class Bible_Here_Admin {
 
 		echo '<div class="wrap">';
 		echo '<h1>Download versions</h1>';
+		
+		// Reload CSV data button
+		echo '<div style="margin-bottom: 20px;">';
+		echo '<button id="reload-csv-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer;">🔄 Reload All CSV Data</button>';
+		echo '<p style="margin-top: 5px; color: #666; font-style: italic;">Click to reload books, genres, and versions data from CSV files</p>';
+		echo '</div>';
+		
 		echo '<div class="bible-versions-list">';
 
 		if ($versions) {
@@ -256,22 +273,11 @@ class Bible_Here_Admin {
 		// Log all POST data for debugging
 		error_log('Bible_Here_Admin: POST數據: ' . print_r($_POST, true));
 		
-		// Extract language and version from action name
-		$action = $_POST['action'];
-		$action_suffix = str_replace('bible_here_import_', '', $action);
+		// Get language and version from POST parameters
+		$language = sanitize_text_field($_POST['language'] ?? 'en');
+		$version = sanitize_text_field($_POST['version'] ?? 'kjv');
 		
-		// Parse language and version from action suffix (format: language_version)
-		$parts = explode('_', $action_suffix);
-		if (count($parts) >= 2) {
-			$language = $parts[0];
-			$version = $parts[1];
-		} else {
-			// Fallback for old format (just version)
-			$language = 'en'; // default language
-			$version = $action_suffix;
-		}
-		
-		error_log('Bible_Here_Admin: 解析動作: ' . $action . ' -> 語言: ' . $language . ', 版本: ' . $version);
+		error_log('Bible_Here_Admin: 從POST參數獲取 -> 語言: ' . $language . ', 版本: ' . $version);
 		
 		// Verify nonce
 		error_log('Bible_Here_Admin: 開始Nonce驗證...');
@@ -475,6 +481,11 @@ class Bible_Here_Admin {
 	 * @since    1.0.0
 	 */
 	public function display_settings_page() {
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have sufficient permissions to access this page.'));
+		}
+		
 		global $wpdb;
 		
 		// 查詢所有聖經版本，按 rank 排序
@@ -520,6 +531,61 @@ class Bible_Here_Admin {
 			</form>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Handle AJAX reload CSV data request
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_reload_csv() {
+		error_log('Bible_Here_Admin: ========== AJAX重新載入CSV請求開始 ==========');
+		error_log('Bible_Here_Admin: 收到AJAX重新載入CSV請求，時間戳: ' . date('Y-m-d H:i:s'));
+		
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			error_log('Bible_Here_Admin: ❌ Nonce驗證失敗');
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			error_log('Bible_Here_Admin: ❌ 用戶權限不足');
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		try {
+			// Load the activator class to use its CSV loading functionality
+			$activator_file = plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-activator.php';
+			if (!file_exists($activator_file)) {
+				error_log('Bible_Here_Admin: ❌ Activator檔案不存在');
+				wp_send_json_error('Activator file not found');
+				return;
+			}
+			
+			require_once $activator_file;
+			
+			// Call the CSV loading method with force reload
+			error_log('Bible_Here_Admin: 開始重新載入CSV資料...');
+			$result = Bible_Here_Activator::load_csv_data(true);
+			
+			if ($result) {
+				error_log('Bible_Here_Admin: ✅ CSV資料重新載入成功');
+				wp_send_json_success('CSV data reloaded successfully! Books, genres, and versions have been updated from CSV files.');
+			} else {
+				error_log('Bible_Here_Admin: ❌ CSV資料重新載入失敗');
+				wp_send_json_error('Failed to reload CSV data');
+			}
+			
+		} catch (Exception $e) {
+			error_log('Bible_Here_Admin: ❌ 重新載入CSV過程中發生異常: ' . $e->getMessage());
+			error_log('Bible_Here_Admin: 異常堆疊: ' . $e->getTraceAsString());
+			wp_send_json_error('CSV reload failed with exception: ' . $e->getMessage());
+		}
+		
+		error_log('Bible_Here_Admin: ========== AJAX重新載入CSV請求結束 ==========');
 	}
 
 }
