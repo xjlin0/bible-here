@@ -44,32 +44,28 @@ define( 'BIBLE_HERE_VERSION', '1.0.0' );
 function activate_bible_here() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-bible-here-activator.php';
 	Bible_Here_Activator::activate();
-	
+
 	// Set activation notice transient
 	set_transient( 'bible_here_activation_notice', true, 5 );
-	
-	// Redirect to avoid showing default WordPress activation message
-	// if ( ! wp_doing_ajax() && ! wp_doing_cron() ) {
-	// 	$versions_url = admin_url( 'admin.php?page=bible-here-versions&activated=true' );
-	// 	wp_safe_redirect( $versions_url );
-	// 	exit;
-	// }
 }
 
 /**
  * Display activation notice with link to versions page.
  */
 function bible_here_activation_notice() {
-	// Check if we're on the versions page and activation parameter is set
-	if ( isset( $_GET['page'] ) && $_GET['page'] === 'bible-here-versions' && isset( $_GET['activated'] ) && $_GET['activated'] === 'true' ) {
+	// Check if activation notice transient exists
+	if ( get_transient( 'bible_here_activation_notice' ) ) {
+		// Delete the transient to prevent showing the notice again
+		delete_transient( 'bible_here_activation_notice' );
+		
+		// Remove any default WordPress activation messages
+		unset( $_GET['activate'] );
+		
+		// Show activation notice with link to versions page
 		echo '<div class="notice notice-success is-dismissible">';
-		echo '<p>Plugin activated successfully! You can now download and install Bible versions.</p>';
+		echo '<p>Plugin activated successfully! Please <a href="' . admin_url( 'admin.php?page=bible-here-versions' ) . '">visit Versions page</a> to download Bible versions.</p>';
 		echo '</div>';
-		return;
 	}
-	
-	// Don't show fallback notice to avoid duplicate messages
-	// The redirect will handle showing the notice on the correct page
 }
 
 /**

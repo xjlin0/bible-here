@@ -69,10 +69,10 @@ class Bible_Here_XML_Importer {
 			// Step 1: Get KJV download URL from database
 			$download_url = $this->get_kjv_download_url();
 			if (!$download_url) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - 無法取得KJV下載URL');
-				return array('success' => false, 'message' => '無法取得KJV下載URL');
+				error_log('Bible_Here_XML_Importer: 錯誤 - 無法取得經文下載URL');
+				return array('success' => false, 'message' => '無法取得經文下載URL');
 			}
-			error_log('Bible_Here_XML_Importer: KJV下載URL取得成功: ' . $download_url);
+			error_log('Bible_Here_XML_Importer: 經文下載URL取得成功: ' . $download_url);
 
 			// Step 2: Download ZIP file
 			$zip_file_path = $this->download_zip_file($download_url);
@@ -126,8 +126,8 @@ class Bible_Here_XML_Importer {
 			// Step 5: Create version-specific content table
 			$table_created = $this->create_version_content_table('kjv');
 			if (!$table_created) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - KJV內容表格創建失敗');
-				return array('success' => false, 'message' => 'KJV內容表格創建失敗');
+				error_log('Bible_Here_XML_Importer: 錯誤 - 經文內容表格創建失敗');
+				return array('success' => false, 'message' => '經文內容表格創建失敗');
 			}
 			error_log('Bible_Here_XML_Importer: 經文內容表格創建成功');
 
@@ -141,7 +141,7 @@ class Bible_Here_XML_Importer {
 
 			// Step 7: Update version rank to 0 after successful import
 			$this->update_version_rank('kjv', 0);
-			error_log('Bible_Here_XML_Importer: KJV版本rank已更新為0');
+			error_log('Bible_Here_XML_Importer: 經文版本rank已更新為0');
 
 			// Step 8: Clean up temporary files
 			$this->cleanup_temp_files($zip_file_path, $xml_file_path);
@@ -149,7 +149,7 @@ class Bible_Here_XML_Importer {
 
 			$end_time = microtime(true);
 			$execution_time = round($end_time - $start_time, 2);
-			error_log('Bible_Here_XML_Importer: KJV聖經匯入流程完成，總耗時: ' . $execution_time . ' 秒');
+			error_log('Bible_Here_XML_Importer: 聖經匯入流程完成，總耗時: ' . $execution_time . ' 秒');
 
 			return array(
 				'success' => true, 
