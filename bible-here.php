@@ -118,7 +118,7 @@ function bible_here_deactivation_warning() {
 			e.preventDefault();
 			var originalUrl = this.href;
 			
-			var userInput = prompt('Sad to see you want to deactivate the plugin. Please let us know if you also want to delete all its data：\n- Enter "deactivate and delete" to deactivate the plugin and delete all its data\n- Enter all other text & click OK will still deactivate the plugin but keep its data.\n- Click Cancel to abort the deactivation', 'deactivate and delete');
+			var userInput = prompt('Sad to see you want to deactivate the plugin. Please let us know if you also want to delete all its data:\n- Enter "deactivate and delete" to deactivate the plugin and delete all its data.\n- Enter all other text & click OK will still deactivate the plugin but keep its data.\n- Click Cancel to abort the deactivation', 'deactivate and delete');
 			
 			if (userInput === null) {
 				// User clicked Cancel, do nothing

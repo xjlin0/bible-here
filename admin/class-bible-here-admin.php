@@ -211,7 +211,7 @@ class Bible_Here_Admin {
 				echo '</td>';
 			} else {
 				echo '<td><span class="dashicons dashicons-minus" style="color: #ccc;"></span> Not imported</td>';
-				echo '<td><button class="button button-primary bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-action="import">Download</button></td>';
+				echo '<td><button class="button button-primary bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import">Download</button></td>';
 			}
 				echo '</tr>';
 			}
@@ -256,11 +256,22 @@ class Bible_Here_Admin {
 		// Log all POST data for debugging
 		error_log('Bible_Here_Admin: POST數據: ' . print_r($_POST, true));
 		
-		// Extract version from action name
+		// Extract language and version from action name
 		$action = $_POST['action'];
-		$version = str_replace('bible_here_import_', '', $action);
+		$action_suffix = str_replace('bible_here_import_', '', $action);
 		
-		error_log('Bible_Here_Admin: 解析動作: ' . $action . ' -> 版本: ' . $version);
+		// Parse language and version from action suffix (format: language_version)
+		$parts = explode('_', $action_suffix);
+		if (count($parts) >= 2) {
+			$language = $parts[0];
+			$version = $parts[1];
+		} else {
+			// Fallback for old format (just version)
+			$language = 'en'; // default language
+			$version = $action_suffix;
+		}
+		
+		error_log('Bible_Here_Admin: 解析動作: ' . $action . ' -> 語言: ' . $language . ', 版本: ' . $version);
 		
 		// Verify nonce
 		error_log('Bible_Here_Admin: 開始Nonce驗證...');
@@ -305,12 +316,13 @@ class Bible_Here_Admin {
 			return;
 		}
 		
-		// Import based on version
-		error_log('Bible_Here_Admin: 開始執行版本匯入，版本: ' . $version);
+		// Import based on language and version
+		error_log('Bible_Here_Admin: 開始執行版本匯入，語言: ' . $language . ', 版本: ' . $version);
 		$import_start_time = microtime(true);
 		
-		if ($version === 'kjv') {
-			error_log('Bible_Here_Admin: 執行KJV聖經匯入...');
+		// Determine import method based on language and version
+		if ($language === 'en' && $version === 'kjv') {
+			error_log('Bible_Here_Admin: 執行英文KJV聖經匯入...');
 			try {
 				$result = $xml_importer->import_kjv_bible();
 				error_log('Bible_Here_Admin: KJV匯入方法執行完成');
@@ -323,10 +335,10 @@ class Bible_Here_Admin {
 				];
 			}
 		} else {
-			error_log('Bible_Here_Admin: ❌ 不支援的版本: ' . $version);
+			error_log('Bible_Here_Admin: ❌ 不支援的語言/版本組合: ' . $language . '/' . $version);
 			$result = [
 				'success' => false,
-				'message' => 'Import for version ' . strtoupper($version) . ' is not yet implemented.'
+				'message' => 'Import for language "' . strtoupper($language) . '" and version "' . strtoupper($version) . '" is not yet implemented.'
 			];
 		}
 		

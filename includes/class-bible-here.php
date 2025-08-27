@@ -171,6 +171,13 @@ class Bible_Here {
 		$this->loader->add_action( 'wp_ajax_bible_here_import_nlt', $plugin_admin, 'handle_ajax_import' );
 		$this->loader->add_action( 'wp_ajax_bible_here_import_nasb', $plugin_admin, 'handle_ajax_import' );
 		
+		// Register AJAX hooks for XML import with language prefix
+		$this->loader->add_action( 'wp_ajax_bible_here_import_en_kjv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_en_niv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_en_esv', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_en_nlt', $plugin_admin, 'handle_ajax_import' );
+		$this->loader->add_action( 'wp_ajax_bible_here_import_en_nasb', $plugin_admin, 'handle_ajax_import' );
+		
 		// Register AJAX hook for deleting Bible versions
 		$this->loader->add_action( 'wp_ajax_bible_here_delete_version', $plugin_admin, 'handle_ajax_delete_version' );
 

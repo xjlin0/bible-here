@@ -38,17 +38,17 @@
 
 	$(document).ready(function() {
 		// Handle import button click (legacy XML import page)
-		$('#start-import-btn').on('click', function() {
-			if (importInProgress) {
-				return;
-			}
+		// $('#start-import-btn').on('click', function() {
+		// 	if (importInProgress) {
+		// 		return;
+		// 	}
 			
-			if (!confirm('Are you sure you want to start the KJV Bible download and import? This may take several minutes and will replace existing data.')) {
-				return;
-			}
+		// 	if (!confirm('Are you sure you want to start the KJV Bible download and import? This may take several minutes and will replace existing data.')) {
+		// 		return;
+		// 	}
 			
-			startImport('kjv');
-		});
+		// 	startImport('kjv');
+		// });
 		
 		// Handle Bible version download/import buttons
 		$(document).on('click', '.bible-download-btn', function() {
@@ -58,14 +58,15 @@
 			}
 			
 			var version = $(this).data('version');
+			var language = $(this).data('language');
 			var action = $(this).data('action');
 			var actionText = action === 'reimport' ? 're-import' : 'import';
 			
-			if (!confirm('Are you sure you want to ' + actionText + ' the ' + version.toUpperCase() + ' Bible? This may take several minutes and will replace existing data.')) {
+			if (!confirm('Are you sure you want to ' + actionText + ' the ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible? This may take several minutes and will replace existing data.')) {
 				return;
 			}
 			
-			startImport(version);
+			startImport(language, version);
 		});
 		
 		// Handle Delete button clicks
@@ -90,9 +91,10 @@
 	/**
 	 * Start the XML import process
 	 */
-	function startImport(version) {
+	function startImport(language, version) {
+		language = language || 'en'; // Default to English if no language specified
 		version = version || 'kjv'; // Default to KJV if no version specified
-		console.log('Bible Here: Starting XML download and import process for ' + version);
+		console.log('Bible Here: Starting XML download and import process for ' + language + ' ' + version);
 		
 		// Reset UI to clear any previous error messages or logs
 		resetImportUI();
@@ -114,7 +116,7 @@
 			statusElement.show();
 		}
 		
-		addLogMessage('Starting ' + version.toUpperCase() + ' Bible download and import process via ' + bible_here_ajax.ajax_url);
+		addLogMessage('Starting ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible download and import process via ' + bible_here_ajax.ajax_url);
 		addLogMessage('Timestamp: ' + importStartTime.toLocaleString());
 		
 		// Make AJAX request
@@ -122,7 +124,7 @@
 			url: bible_here_ajax.ajax_url,
 			type: 'POST',
 			data: {
-				action: 'bible_here_import_' + version,
+				action: 'bible_here_import_' + language + '_' + version,
 				nonce: bible_here_ajax.nonce
 			},
 			timeout: 600000, // 10 minutes timeout
