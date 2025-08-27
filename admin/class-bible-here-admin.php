@@ -155,7 +155,7 @@ class Bible_Here_Admin {
 		// Get statistics
 		$books_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_books");
 		$genres_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_genres");
-		$versions_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_bible_versions");
+		$versions_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_versions");
 
 		include_once 'partials/bible-here-admin-display.php';
 	}
@@ -169,7 +169,7 @@ class Bible_Here_Admin {
 		global $wpdb;
 
 		// Get all Bible versions
-		$versions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bible_here_bible_versions ORDER BY rank");
+		$versions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY rank");
 
 		// Check import status for each version
 		$import_status = [];
@@ -187,12 +187,13 @@ class Bible_Here_Admin {
 		}
 
 		echo '<div class="wrap">';
-		echo '<h1>Bible Versions</h1>';
+		echo '<h1>Download versions</h1>';
 		echo '<div class="bible-versions-list">';
 
 		if ($versions) {
+			echo '<h2>Bible</h2>';
 			echo '<table class="wp-list-table widefat fixed striped">';
-			echo '<thead><tr><th>Language</th><th>Name</th><th>Abbreviation</th><th>Publisher</th><th>Rank</th><th>Status</th><th>Actions</th></tr></thead>';
+			echo '<thead><tr><th>Language</th><th>Name</th><th>Abbreviation</th><th>Display order</th><th>Updated At</th><th>Status</th><th>Actions</th></tr></thead>';
 			echo '<tbody>';
 			foreach ($versions as $version) {
 				$status = $import_status[$version->abbreviation];
@@ -200,8 +201,8 @@ class Bible_Here_Admin {
 				echo '<td>' . esc_html($version->language) . '</td>';
 				echo '<td>' . esc_html($version->name) . '</td>';
 				echo '<td>' . esc_html($version->abbreviation) . '</td>';
-				echo '<td>' . esc_html($version->publisher) . '</td>';
 				echo '<td>' . esc_html($version->rank) . '</td>';
+				echo '<td>' . esc_html($version->updated_at) . '</td>';
 				if ($status['imported'] && $version->rank !== null) {
 				echo '<td><span class="dashicons dashicons-yes-alt" style="color: green;"></span> Imported (' . number_format($status['verse_count']) . ' verses)</td>';
 				echo '<td>';
@@ -389,7 +390,7 @@ class Bible_Here_Admin {
 		
 		try {
 			// Get version info from database
-			$version_table = $wpdb->prefix . 'bible_here_bible_versions';
+			$version_table = $wpdb->prefix . 'bible_here_versions';
 			$version_info = $wpdb->get_row($wpdb->prepare(
 				"SELECT * FROM {$version_table} WHERE abbreviation = %s",
 				$version
@@ -466,7 +467,7 @@ class Bible_Here_Admin {
 		
 		// 查詢所有聖經版本，按 rank 排序
 		$versions = $wpdb->get_results(
-			"SELECT * FROM {$wpdb->prefix}bible_here_bible_versions ORDER BY rank ASC"
+			"SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY rank ASC"
 		);
 		
 		// 獲取當前設定的預設版本，如果沒有設定則使用 rank 最低的版本

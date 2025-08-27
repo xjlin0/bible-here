@@ -23,110 +23,91 @@
 class Bible_Here_Deactivator {
 
 	/**
-	 * Deactivate the plugin and clean up all database tables
+	 * Deactivate the plugin without deleting data.
 	 *
-	 * This method removes all plugin-related database tables including:
-	 * - Core plugin tables (books, genres, versions, etc.)
-	 * - Dynamically created verse tables (from bible_here_bible_versions.table_name)
+	 * @since    1.0.0
+	 */
+	public static function deactivate_preserve_data() {
+		// Plugin is deactivated but data is preserved
+		// No cleanup operations are performed
+		// This allows users to reactivate the plugin later with their data intact
+	}
+	
+	/**
+	 * Recursively delete a directory and all its contents.
+	 *
+	 * @param string $dir Directory path to delete.
+	 * @return bool True on success, false on failure.
+	 */
+	private static function delete_directory( $dir ) {
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+		
+		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
+		foreach ( $files as $file ) {
+			$path = $dir . DIRECTORY_SEPARATOR . $file;
+			if ( is_dir( $path ) ) {
+				self::delete_directory( $path );
+			} else {
+				unlink( $path );
+			}
+		}
+		
+		return rmdir( $dir );
+	}
+
+	/**
+	 * Short Description. (use period)
+	 *
+	 * Long Description.
 	 *
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
+		// Check deactivation mode from transient
+		$deactivation_mode = get_transient( 'bible_here_deactivation_mode' );
+		
+		if ( $deactivation_mode === 'delete' ) {
+			// Delete all data
+			self::deactivate_with_cleanup();
+		} else {
+			// Preserve data
+			self::deactivate_preserve_data();
+		}
+		
+		// Clean up the transient
+		delete_transient( 'bible_here_deactivation_mode' );
+	}
+	
+	/**
+	 * Deactivate plugin and delete all data.
+	 *
+	 * @since    1.0.0
+	 */
+	public static function deactivate_with_cleanup() {
 		global $wpdb;
-		
-		error_log('Bible_Here_Deactivator: Starting plugin deactivation cleanup process');
-		
-		// Get all dynamically created verse tables from bible_here_bible_versions
-		$versions_table = $wpdb->prefix . 'bible_here_bible_versions';
-		
-		// Check if the versions table exists before querying
-		if ($wpdb->get_var("SHOW TABLES LIKE '{$versions_table}'") == $versions_table) {
-			$verse_tables = $wpdb->get_col(
-				"SELECT table_name FROM {$versions_table} WHERE table_name IS NOT NULL AND table_name != ''"
-			);
-			
-			if ($verse_tables) {
-				error_log('Bible_Here_Deactivator: Found ' . count($verse_tables) . ' dynamically created verse tables');
-				
-				// Drop each verse table
-				foreach ($verse_tables as $table_name) {
-					$full_table_name = $wpdb->prefix . $table_name;
-					
-					// Verify table exists before dropping
-					if ($wpdb->get_var("SHOW TABLES LIKE '{$full_table_name}'") == $full_table_name) {
-						$result = $wpdb->query("DROP TABLE IF EXISTS {$full_table_name}");
-						if ($result !== false) {
-							error_log('Bible_Here_Deactivator: Successfully deleted verse table: ' . $full_table_name);
-						} else {
-							error_log('Bible_Here_Deactivator: Failed to delete verse table: ' . $full_table_name . ' - ' . $wpdb->last_error);
-						}
-					} else {
-						error_log('Bible_Here_Deactivator: Bible table not found, skipped: ' . $full_table_name);
-					}
-				}
-			} else {
-				error_log('Bible_Here_Deactivator: No dynamically created verse tables found');
-			}
-		} else {
-			error_log('Bible_Here_Deactivator: bible_here_bible_versions table does not exist, skipped dynamic table cleanup');
-		}
-		
-		// Define all core plugin tables to be removed
-		$core_tables = array(
-			'bible_here_books',
-			'bible_here_genres',
-			'bible_here_bible_versions',
-			'bible_here_cross_references',
-			'bible_here_abbreviations',
-			'bible_here_bible_commentaries'
+
+		// Get all tables with our prefix
+		$tables = $wpdb->get_results(
+			$wpdb->prepare(
+				"SHOW TABLES LIKE %s",
+				$wpdb->esc_like( $wpdb->prefix . 'bible_here_' ) . '%'
+			)
 		);
-		
-		error_log('Bible_Here_Deactivator: Starting deletion of core plugin tables');
-		
-		// Drop each core table
-		foreach ($core_tables as $table_name) {
-			$full_table_name = $wpdb->prefix . $table_name;
-			
-			// Verify table exists before dropping
-			if ($wpdb->get_var("SHOW TABLES LIKE '{$full_table_name}'") == $full_table_name) {
-				$result = $wpdb->query("DROP TABLE IF EXISTS {$full_table_name}");
-				if ($result !== false) {
-					error_log('Bible_Here_Deactivator: Successfully deleted core table: ' . $full_table_name);
-				} else {
-					error_log('Bible_Here_Deactivator: Failed to delete core table: ' . $full_table_name . ' - ' . $wpdb->last_error);
-				}
-			} else {
-				error_log('Bible_Here_Deactivator: Core table not found, skipped: ' . $full_table_name);
-			}
+
+		// Drop all plugin tables
+		foreach ( $tables as $table ) {
+			$table_name = array_values( (array) $table )[0];
+			$wpdb->query( "DROP TABLE IF EXISTS `{$table_name}`" );
 		}
-		
-		// Clean up temporary files directory
+
+		// Clean up any uploaded files
 		$upload_dir = wp_upload_dir();
-		$temp_dir = $upload_dir['basedir'] . '/bible-here-temp/';
-		
-		if (is_dir($temp_dir)) {
-			error_log('Bible_Here_Deactivator: Starting cleanup of temporary files directory: ' . $temp_dir);
-			
-			// Remove all files in temp directory
-			$files = glob($temp_dir . '*');
-			foreach ($files as $file) {
-				if (is_file($file)) {
-					unlink($file);
-					error_log('Bible_Here_Deactivator: Successfully deleted temporary file: ' . $file);
-				}
-			}
-			
-			// Remove temp directory
-			if (rmdir($temp_dir)) {
-				error_log('Bible_Here_Deactivator: Successfully deleted temporary directory: ' . $temp_dir);
-			} else {
-				error_log('Bible_Here_Deactivator: Failed to delete temporary directory: ' . $temp_dir);
-			}
-		} else {
-			error_log('Bible_Here_Deactivator: Temporary directory does not exist, skipped cleanup: ' . $temp_dir);
+		$plugin_upload_dir = $upload_dir['basedir'] . '/bible-here-temp';
+		if ( is_dir( $plugin_upload_dir ) ) {
+			self::delete_directory( $plugin_upload_dir );
 		}
-		
-		error_log('Bible_Here_Deactivator: Plugin deactivation cleanup process completed');
 	}
 
 }

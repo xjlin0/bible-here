@@ -44,6 +44,22 @@ define( 'BIBLE_HERE_VERSION', '1.0.0' );
 function activate_bible_here() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-bible-here-activator.php';
 	Bible_Here_Activator::activate();
+	
+	// Set activation notice transient
+	set_transient( 'bible_here_activation_notice', true, 5 );
+}
+
+/**
+ * Display activation notice with link to versions page.
+ */
+function bible_here_activation_notice() {
+	if ( get_transient( 'bible_here_activation_notice' ) ) {
+		delete_transient( 'bible_here_activation_notice' );
+		$versions_url = admin_url( 'admin.php?page=bible-here' );
+		echo '<div class="notice notice-success is-dismissible">';
+		echo '<p>Plugin activated, please visit <a href="' . esc_url( $versions_url ) . '">Versions page</a> to download and install data.</p>';
+		echo '</div>';
+	}
 }
 
 /**
@@ -57,6 +73,82 @@ function deactivate_bible_here() {
 
 register_activation_hook( __FILE__, 'activate_bible_here' );
 register_deactivation_hook( __FILE__, 'deactivate_bible_here' );
+
+// Add activation notice hook
+add_action( 'admin_notices', 'bible_here_activation_notice' );
+
+// Add deactivation warning script
+add_action( 'admin_footer-plugins.php', 'bible_here_deactivation_warning' );
+
+// Add AJAX handler for setting deactivation mode
+add_action( 'wp_ajax_bible_here_set_deactivation_mode', 'bible_here_handle_deactivation_mode' );
+
+/**
+ * Handle AJAX request to set deactivation mode.
+ */
+function bible_here_handle_deactivation_mode() {
+	// Verify nonce
+	if ( ! wp_verify_nonce( $_POST['nonce'], 'bible_here_deactivate_nonce' ) ) {
+		wp_die( 'Security check failed' );
+	}
+	
+	// Check user permissions
+	if ( ! current_user_can( 'activate_plugins' ) ) {
+		wp_die( 'Insufficient permissions' );
+	}
+	
+	// Store the deactivation mode in a transient
+	$delete_data = isset( $_POST['delete_data'] ) && $_POST['delete_data'] === 'true';
+	set_transient( 'bible_here_deactivation_mode', $delete_data ? 'delete' : 'preserve', 60 );
+	
+	wp_send_json_success();
+}
+
+/**
+ * Add JavaScript prompt dialog for plugin deactivation.
+ */
+function bible_here_deactivation_warning() {
+	$plugin_file = plugin_basename( __FILE__ );
+	$ajax_url = admin_url( 'admin-ajax.php' );
+	$nonce = wp_create_nonce( 'bible_here_deactivate_nonce' );
+	?>
+	<script type="text/javascript">
+	jQuery(document).ready(function($) {
+		$('tr[data-plugin="<?php echo $plugin_file; ?>"] .deactivate a').click(function(e) {
+			e.preventDefault();
+			var originalUrl = this.href;
+			
+			var userInput = prompt('Sad to see you want to deactivate the plugin. Please let us know if you also want to delete all its data：\n- Enter "deactivate and delete" to deactivate the plugin and delete all its data\n- Enter all other text & click OK will still deactivate the plugin but keep its data.\n- Click Cancel to abort the deactivation', 'deactivate and delete');
+			
+			if (userInput === null) {
+				// User clicked Cancel, do nothing
+				return;
+			}
+			
+			var deleteData = (userInput.toLowerCase() === 'deactivate and delete');
+			
+			// Send AJAX request to set deactivation mode
+			$.ajax({
+				url: '<?php echo $ajax_url; ?>',
+				type: 'POST',
+				data: {
+					action: 'bible_here_set_deactivation_mode',
+					delete_data: deleteData,
+					nonce: '<?php echo $nonce; ?>'
+				},
+				success: function(response) {
+					// Proceed with deactivation
+					window.location.href = originalUrl;
+				},
+				error: function() {
+					alert('Getting error when setting deactivation mode, please try again.');
+				}
+			});
+		});
+	});
+	</script>
+	<?php
+}
 
 /**
  * The core plugin class that is used to define internationalization,

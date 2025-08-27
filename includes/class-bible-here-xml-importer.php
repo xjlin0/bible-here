@@ -175,7 +175,7 @@ class Bible_Here_XML_Importer {
 		
 		error_log('Bible_Here_XML_Importer: 開始從資料庫取得KJV下載URL');
 		
-		$table_name = $wpdb->prefix . 'bible_here_bible_versions';
+		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT download_url FROM {$table_name} WHERE abbreviation = %s",
@@ -641,8 +641,8 @@ class Bible_Here_XML_Importer {
 		
 		error_log('Bible_Here_XML_Importer: 開始創建版本特定內容表格: ' . $version_abbreviation);
 		
-		// Get table name from bible_here_bible_versions
-		$versions_table = $wpdb->prefix . 'bible_here_bible_versions';
+		// Get table name from bible_here_versions
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
 		$table_name_suffix = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT table_name FROM {$versions_table} WHERE abbreviation = %s",
@@ -665,17 +665,17 @@ class Bible_Here_XML_Importer {
 		}
 		
 		$charset_collate = $wpdb->get_charset_collate();
+		$index_name = 'uniq_'.$table_name;
 		
-		$sql = "CREATE TABLE {$table_name} (
-			id int(11) NOT NULL AUTO_INCREMENT,
-			book_number int(11) NOT NULL,
-			chapter_number int(11) NOT NULL,
-			verse_number int(11) NOT NULL,
+		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+			verse_id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT COMMENT 'verse ID: 2-digit book_number + 3-digit chapter_number + 3-digit verse_number',
+			book_number tinyint(1) unsigned NOT NULL,
+	        chapter_number tinyint(1) unsigned NOT NULL,
+	        verse_number tinyint(1) unsigned NOT NULL,
 			verse_text text NOT NULL,
 			verse_strong text,
-		PRIMARY KEY (id),
-			KEY idx_book_chapter_verse (book_number, chapter_number, verse_number),
-			KEY idx_book_number (book_number)
+		  PRIMARY KEY (verse_id),
+		  UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
 		) {$charset_collate};";
 		
 		error_log('Bible_Here_XML_Importer: 執行SQL創建表格: ' . $sql);
@@ -711,8 +711,8 @@ class Bible_Here_XML_Importer {
 		
 		error_log('Bible_Here_XML_Importer: 開始匯入聖經數據，共 ' . count($bible_data) . ' 節經文，版本: ' . $version_abbreviation);
 		
-		// Get table name from bible_here_bible_versions
-		$versions_table = $wpdb->prefix . 'bible_here_bible_versions';
+		// Get table name from bible_here_versions
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
 		$table_name_suffix = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT table_name FROM {$versions_table} WHERE abbreviation = %s",
@@ -753,14 +753,17 @@ class Bible_Here_XML_Importer {
 			$placeholders = array();
 			
 			foreach ($batch as $verse) {
+				// Generate custom ID: 2-digit book + 3-digit chapter + 3-digit verse
+				$custom_id = sprintf('%02d%03d%03d', $verse['book_number'], $verse['chapter_number'], $verse['verse_number']);
+				$values[] = $custom_id;
 				$values[] = $verse['book_number'];
 				$values[] = $verse['chapter_number'];
 				$values[] = $verse['verse_number'];
 				$values[] = $verse['verse_text'];
-				$placeholders[] = '(%d, %d, %d, %s)';
+				$placeholders[] = '(%s, %d, %d, %d, %s)';
 			}
 			
-			$sql = "INSERT INTO {$table_name} (book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+			$sql = "INSERT INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
 			$prepared_sql = $wpdb->prepare($sql, $values);
 			
 			$result = $wpdb->query($prepared_sql);
@@ -823,7 +826,7 @@ class Bible_Here_XML_Importer {
 		
 		error_log('Bible_Here_XML_Importer: 開始更新版本rank - 版本: ' . $version_abbreviation . ', rank: ' . $rank);
 		
-		$table_name = $wpdb->prefix . 'bible_here_bible_versions';
+		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$result = $wpdb->update(
 			$table_name,
 			array('rank' => $rank),

@@ -78,7 +78,7 @@ class Bible_Here_Activator {
 		dbDelta( $sql );
 
 		// Bible versions table
-		$table_name = $wpdb->prefix . 'bible_here_bible_versions';
+		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
@@ -91,6 +91,7 @@ class Bible_Here_Activator {
 			copyright TEXT,
 			download_url VARCHAR(255),
 			rank TINYINT NULL,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			UNIQUE KEY unique_version (language, abbreviation)
 		) $charset_collate;";
 		dbDelta( $sql );
@@ -125,7 +126,7 @@ class Bible_Here_Activator {
 
 
 		// Bible commentaries table
-		$table_name = $wpdb->prefix . 'bible_here_bible_commentaries';
+		$table_name = $wpdb->prefix . 'bible_here_commentaries';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			installed BOOLEAN DEFAULT FALSE,
@@ -281,7 +282,7 @@ class Bible_Here_Activator {
 		}
 
 		// Insert default KJV version
-		$versions_table = $wpdb->prefix . 'bible_here_bible_versions';
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
 		$existing_kjv = $wpdb->get_var($wpdb->prepare(
 			"SELECT COUNT(*) FROM $versions_table WHERE abbreviation = %s AND language = %s",
 			'kjv', 'en'
