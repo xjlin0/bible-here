@@ -166,7 +166,7 @@ function generate_bible_regex() {
         $patterns[] = preg_quote($abbr->abbreviation, '/');
     }
     
-    // 生成完整的正規表達式
+    // Generate complete regex pattern
     $regex = '/\b(' . implode('|', $patterns) . ')\s*(\d+):(\d+)(?:-(\d+))?\b/i';
     
     return $regex;

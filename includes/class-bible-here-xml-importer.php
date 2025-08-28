@@ -259,7 +259,7 @@ class Bible_Here_XML_Importer {
 		error_log('Bible_Here_XML_Importer: HTTP response status code: ' . $response_code);
 		error_log('Bible_Here_XML_Importer: HTTP response message: ' . $response_message);
 		
-		// 詳細記錄響應標頭
+		// Log response headers in detail
 		if (isset($response_headers['content-length'])) {
 			$expected_size = (int)$response_headers['content-length'];
 			$expected_size_kb = round($expected_size / 1024, 2);
@@ -279,7 +279,7 @@ class Bible_Here_XML_Importer {
 			}
 		}
 		
-		// 檢查 HTTP 狀態碼
+		// Check HTTP status code
 		if ($response_code !== 200) {
 			error_log('Bible_Here_XML_Importer: Download failed - HTTP status code: ' . $response_code . ' (' . $response_message . ')');
 			if ($response_code === 404) {
@@ -293,7 +293,7 @@ class Bible_Here_XML_Importer {
 		}
 		
 		if (!file_exists($zip_file_path)) {
-			error_log('Bible_Here_XML_Importer: 下載失敗 - 檔案不存在: ' . $zip_file_path);
+			error_log('Bible_Here_XML_Importer: Download failed - file does not exist: ' . $zip_file_path);
 			return false;
 		}
 		
@@ -383,23 +383,23 @@ class Bible_Here_XML_Importer {
 	 * @return   string|false    Path to extracted XML file or false on failure
 	 */
 	private function extract_xml_from_zip($zip_file_path) {
-		error_log('Bible_Here_XML_Importer: 開始解壓縮ZIP檔案: ' . $zip_file_path);
+		error_log('Bible_Here_XML_Importer: Starting ZIP file extraction: ' . $zip_file_path);
 		
 		// Check if ZIP file exists before processing
 		if (!file_exists($zip_file_path)) {
-			error_log('Bible_Here_XML_Importer: 錯誤 - ZIP檔案不存在: ' . $zip_file_path);
+			error_log('Bible_Here_XML_Importer: Error - ZIP file does not exist: ' . $zip_file_path);
 			return false;
 		}
 		
 		$zip_file_size = filesize($zip_file_path);
-		error_log('Bible_Here_XML_Importer: ZIP檔案存在性檢查通過，檔案大小: ' . round($zip_file_size / 1024, 2) . ' KB');
+		error_log('Bible_Here_XML_Importer: ZIP file existence check passed, file size: ' . round($zip_file_size / 1024, 2) . ' KB');
 		
 		if (!class_exists('ZipArchive')) {
-			error_log('Bible_Here_XML_Importer: 錯誤 - ZipArchive類別不存在，請檢查PHP是否安裝zip擴展');
+			error_log('Bible_Here_XML_Importer: Error - ZipArchive class does not exist, please check if PHP zip extension is installed');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: ZipArchive類別檢查通過');
+		error_log('Bible_Here_XML_Importer: ZipArchive class check passed');
 		
 		$zip = new ZipArchive();
 		$result = $zip->open($zip_file_path);
@@ -432,26 +432,26 @@ class Bible_Here_XML_Importer {
 				ZipArchive::ER_DELETED => 'Entry has been deleted'
 			];
 			$error_message = isset($error_messages[$result]) ? $error_messages[$result] : 'Unknown error';
-			error_log('Bible_Here_XML_Importer: ZIP檔案開啟失敗，錯誤代碼: ' . $result . ' (' . $error_message . ')');
+			error_log('Bible_Here_XML_Importer: ZIP file opening failed, error code: ' . $result . ' (' . $error_message . ')');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: ZIP檔案開啟成功，包含 ' . $zip->numFiles . ' 個檔案');
+		error_log('Bible_Here_XML_Importer: ZIP file opened successfully, contains ' . $zip->numFiles . ' files');
 		
 		// List all files in ZIP for debugging
-		error_log('Bible_Here_XML_Importer: ZIP檔案內容列表:');
+		error_log('Bible_Here_XML_Importer: ZIP file content list:');
 		for ($i = 0; $i < $zip->numFiles; $i++) {
 			$file_info = $zip->statIndex($i);
 			$filename = $file_info['name'];
 			$file_size = $file_info['size'];
 			$compressed_size = $file_info['comp_size'];
 			$file_extension = pathinfo($filename, PATHINFO_EXTENSION);
-			error_log('Bible_Here_XML_Importer: [' . ($i + 1) . '] ' . $filename . ' (大小: ' . $file_size . ' bytes, 壓縮後: ' . $compressed_size . ' bytes, 副檔名: ' . $file_extension . ')');
+			error_log('Bible_Here_XML_Importer: [' . ($i + 1) . '] ' . $filename . ' (size: ' . $file_size . ' bytes, compressed: ' . $compressed_size . ' bytes, extension: ' . $file_extension . ')');
 		}
 		
 		// Find XML file in ZIP
 		$xml_file_name = null;
-		error_log('Bible_Here_XML_Importer: 開始搜尋XML檔案...');
+		error_log('Bible_Here_XML_Importer: Starting XML file search...');
 		for ($i = 0; $i < $zip->numFiles; $i++) {
 			$file_info = $zip->statIndex($i);
 			$filename = $file_info['name'];
@@ -459,14 +459,14 @@ class Bible_Here_XML_Importer {
 			
 			if ($file_extension === 'xml') {
 				$xml_file_name = $filename;
-				error_log('Bible_Here_XML_Importer: 找到XML檔案: ' . $xml_file_name . ' (大小: ' . $file_info['size'] . ' bytes)');
+				error_log('Bible_Here_XML_Importer: Found XML file: ' . $xml_file_name . ' (size: ' . $file_info['size'] . ' bytes)');
 				break;
 			}
 		}
 		
 		if (!$xml_file_name) {
-			error_log('Bible_Here_XML_Importer: 錯誤 - ZIP檔案中未找到XML檔案');
-			error_log('Bible_Here_XML_Importer: 請檢查ZIP檔案是否包含有效的XML檔案');
+			error_log('Bible_Here_XML_Importer: Error - No XML file found in ZIP archive');
+			error_log('Bible_Here_XML_Importer: Please check if ZIP file contains valid XML file');
 			$zip->close();
 			return false;
 		}
@@ -478,70 +478,70 @@ class Bible_Here_XML_Importer {
 		$xml_final_name = basename($xml_file_name);
 		$xml_file_path = $temp_dir . $xml_final_name;
 		
-		error_log('Bible_Here_XML_Importer: 準備解壓縮XML檔案');
-		error_log('Bible_Here_XML_Importer: 來源檔案: ' . $xml_file_name);
-		error_log('Bible_Here_XML_Importer: 最終檔案名: ' . $xml_final_name);
-		error_log('Bible_Here_XML_Importer: 目標路徑: ' . $xml_file_path);
-		error_log('Bible_Here_XML_Importer: 臨時目錄: ' . $temp_dir);
+		error_log('Bible_Here_XML_Importer: Preparing XML file extraction');
+		error_log('Bible_Here_XML_Importer: Source file: ' . $xml_file_name);
+		error_log('Bible_Here_XML_Importer: Final filename: ' . $xml_final_name);
+		error_log('Bible_Here_XML_Importer: Target path: ' . $xml_file_path);
+		error_log('Bible_Here_XML_Importer: Temp directory: ' . $temp_dir);
 		
 		// Ensure temp directory exists
 		if (!file_exists($temp_dir)) {
-			error_log('Bible_Here_XML_Importer: 臨時目錄不存在，正在創建: ' . $temp_dir);
+			error_log('Bible_Here_XML_Importer: Temp directory does not exist, creating: ' . $temp_dir);
 			wp_mkdir_p($temp_dir);
 		}
 		
-		error_log('Bible_Here_XML_Importer: 開始解壓縮...');
+		error_log('Bible_Here_XML_Importer: Starting extraction...');
 		$extraction_result = $zip->extractTo($temp_dir, $xml_file_name);
 		
 		if (!$extraction_result) {
 			$last_error = $zip->getStatusString();
 			$zip_error_code = $zip->status;
-			error_log('Bible_Here_XML_Importer: XML檔案解壓縮失敗');
-			error_log('Bible_Here_XML_Importer: ZIP錯誤狀態: ' . $last_error);
-			error_log('Bible_Here_XML_Importer: ZIP錯誤代碼: ' . $zip_error_code);
-			error_log('Bible_Here_XML_Importer: 可能原因：檔案損壞、權限不足或磁碟空間不足');
+			error_log('Bible_Here_XML_Importer: XML file extraction failed');
+			error_log('Bible_Here_XML_Importer: ZIP error status: ' . $last_error);
+			error_log('Bible_Here_XML_Importer: ZIP error code: ' . $zip_error_code);
+			error_log('Bible_Here_XML_Importer: Possible causes: corrupted file, insufficient permissions, or insufficient disk space');
 			$zip->close();
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: 解壓縮操作完成，正在關閉ZIP檔案');
+		error_log('Bible_Here_XML_Importer: Extraction operation completed, closing ZIP file');
 		$zip->close();
 		
 		// Check if file was extracted with directory structure
 		$extracted_file_with_path = $temp_dir . $xml_file_name;
-		error_log('Bible_Here_XML_Importer: 檢查解壓縮後的檔案（含路徑）: ' . $extracted_file_with_path);
+		error_log('Bible_Here_XML_Importer: Checking extracted file (with path): ' . $extracted_file_with_path);
 		
 		if (file_exists($extracted_file_with_path)) {
 			// File extracted with directory structure, move it to final location
-			error_log('Bible_Here_XML_Importer: 檔案解壓縮到子目錄，正在移動到最終位置');
+			error_log('Bible_Here_XML_Importer: File extracted to subdirectory, moving to final location');
 			if (rename($extracted_file_with_path, $xml_file_path)) {
-				error_log('Bible_Here_XML_Importer: 檔案移動成功: ' . $xml_file_path);
+				error_log('Bible_Here_XML_Importer: File moved successfully: ' . $xml_file_path);
 				// Clean up empty directory if it exists
 				$extracted_dir = dirname($extracted_file_with_path);
 				if (is_dir($extracted_dir) && $extracted_dir !== $temp_dir) {
 					@rmdir($extracted_dir);
-					error_log('Bible_Here_XML_Importer: 已清理空目錄: ' . $extracted_dir);
+					error_log('Bible_Here_XML_Importer: Cleaned up empty directory: ' . $extracted_dir);
 				}
 			} else {
-				error_log('Bible_Here_XML_Importer: 檔案移動失敗');
+				error_log('Bible_Here_XML_Importer: File move failed');
 				return false;
 			}
 		} else {
 			// Check if file was extracted directly to temp directory
-			error_log('Bible_Here_XML_Importer: 檢查解壓縮後的檔案（直接路徑）: ' . $xml_file_path);
+			error_log('Bible_Here_XML_Importer: Checking extracted file (direct path): ' . $xml_file_path);
 			if (!file_exists($xml_file_path)) {
-				error_log('Bible_Here_XML_Importer: 錯誤 - 解壓縮後XML檔案不存在');
-				error_log('Bible_Here_XML_Importer: 嘗試的路徑1: ' . $extracted_file_with_path);
-				error_log('Bible_Here_XML_Importer: 嘗試的路徑2: ' . $xml_file_path);
+				error_log('Bible_Here_XML_Importer: Error - Extracted XML file does not exist');
+				error_log('Bible_Here_XML_Importer: Attempted path 1: ' . $extracted_file_with_path);
+				error_log('Bible_Here_XML_Importer: Attempted path 2: ' . $xml_file_path);
 				// List files in temp directory for debugging
 				if (is_dir($temp_dir)) {
 					$files = scandir($temp_dir);
-					error_log('Bible_Here_XML_Importer: 臨時目錄內容: ' . implode(', ', $files));
+					error_log('Bible_Here_XML_Importer: Temp directory contents: ' . implode(', ', $files));
 					// Also check subdirectories
 					foreach ($files as $file) {
 						if ($file !== '.' && $file !== '..' && is_dir($temp_dir . $file)) {
 							$subdir_files = scandir($temp_dir . $file);
-							error_log('Bible_Here_XML_Importer: 子目錄 ' . $file . ' 內容: ' . implode(', ', $subdir_files));
+							error_log('Bible_Here_XML_Importer: Subdirectory ' . $file . ' contents: ' . implode(', ', $subdir_files));
 						}
 					}
 				}
@@ -551,8 +551,8 @@ class Bible_Here_XML_Importer {
 		
 		$xml_file_size = filesize($xml_file_path);
 		$xml_file_size_kb = round($xml_file_size / 1024, 2);
-		error_log('Bible_Here_XML_Importer: XML檔案解壓縮成功');
-		error_log('Bible_Here_XML_Importer: XML檔案大小: ' . $xml_file_size . ' bytes (' . $xml_file_size_kb . ' KB)');
+		error_log('Bible_Here_XML_Importer: XML file extraction successful');
+		error_log('Bible_Here_XML_Importer: XML file size: ' . $xml_file_size . ' bytes (' . $xml_file_size_kb . ' KB)');
 		
 		return $xml_file_path;
 	}
@@ -565,7 +565,7 @@ class Bible_Here_XML_Importer {
 	 * @return   array|false    Parsed bible data or false on failure
 	 */
 	private function parse_zefania_xml($xml_file_path) {
-		error_log('Bible_Here_XML_Importer: 開始解析Zefania XML檔案: ' . $xml_file_path);
+		error_log('Bible_Here_XML_Importer: Starting Zefania XML file parsing: ' . $xml_file_path);
 		
 		libxml_use_internal_errors(true);
 		$xml = simplexml_load_file($xml_file_path);
@@ -573,12 +573,12 @@ class Bible_Here_XML_Importer {
 		if ($xml === false) {
 			$errors = libxml_get_errors();
 			foreach ($errors as $error) {
-				error_log('Bible_Here_XML_Importer: XML解析錯誤: ' . $error->message);
+				error_log('Bible_Here_XML_Importer: XML parsing error: ' . $error->message);
 			}
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: XML檔案載入成功');
+		error_log('Bible_Here_XML_Importer: XML file loaded successfully');
 		
 		$bible_data = array();
 		$verse_count = 0;
@@ -591,7 +591,7 @@ class Bible_Here_XML_Importer {
 				$book_name = (string)$book['bname'];
 				$book_count++;
 				
-				error_log('Bible_Here_XML_Importer: 解析書卷 ' . $book_count . ': ' . $book_name . ' (編號: ' . $book_number . ')');
+				error_log('Bible_Here_XML_Importer: Processing book ' . $book_count . ': ' . $book_name . ' (Number: ' . $book_number . ')');
 				
 				// Parse chapters
 				if (isset($book->CHAPTER)) {
@@ -615,7 +615,7 @@ class Bible_Here_XML_Importer {
 								
 								// Log progress every 1000 verses
 								if ($verse_count % 1000 === 0) {
-									error_log('Bible_Here_XML_Importer: 已解析 ' . $verse_count . ' 節經文');
+									error_log('Bible_Here_XML_Importer: Parsed ' . $verse_count . ' verses');
 								}
 							}
 						}
@@ -624,7 +624,7 @@ class Bible_Here_XML_Importer {
 			}
 		}
 		
-		error_log('Bible_Here_XML_Importer: XML解析完成，共解析 ' . $book_count . ' 卷書，' . $verse_count . ' 節經文');
+		error_log('Bible_Here_XML_Importer: XML parsing completed, parsed ' . $book_count . ' books, ' . $verse_count . ' verses');
 		
 		return $bible_data;
 	}
@@ -639,7 +639,7 @@ class Bible_Here_XML_Importer {
 	private function create_version_content_table($version_abbreviation) {
 		global $wpdb;
 		
-		error_log('Bible_Here_XML_Importer: 開始創建版本特定內容表格: ' . $version_abbreviation);
+		error_log('Bible_Here_XML_Importer: Starting to create version-specific content table: ' . $version_abbreviation);
 		
 		// Get table name from bible_here_versions
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
@@ -651,16 +651,16 @@ class Bible_Here_XML_Importer {
 		);
 		
 		if (!$table_name_suffix) {
-			error_log('Bible_Here_XML_Importer: 錯誤 - 未找到版本 ' . $version_abbreviation . ' 的表格名稱');
+			error_log('Bible_Here_XML_Importer: Error - Table name not found for version ' . $version_abbreviation);
 			return false;
 		}
 		
 		$table_name = $wpdb->prefix . $table_name_suffix;
-		error_log('Bible_Here_XML_Importer: 目標表格名稱: ' . $table_name);
+		error_log('Bible_Here_XML_Importer: Target table name: ' . $table_name);
 		
 		// Check if table already exists
 		if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name) {
-			error_log('Bible_Here_XML_Importer: 版本內容表格已存在，跳過創建: ' . $table_name);
+			error_log('Bible_Here_XML_Importer: Version content table already exists, skipping creation: ' . $table_name);
 			return true;
 		}
 		
@@ -678,23 +678,23 @@ class Bible_Here_XML_Importer {
 		  UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
 		) {$charset_collate};";
 		
-		error_log('Bible_Here_XML_Importer: 執行SQL創建表格: ' . $sql);
+		error_log('Bible_Here_XML_Importer: Executing SQL to create table: ' . $sql);
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 		
 		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: 表格創建失敗，資料庫錯誤: ' . $wpdb->last_error);
+			error_log('Bible_Here_XML_Importer: Table creation failed, database error: ' . $wpdb->last_error);
 			return false;
 		}
 		
 		// Verify table creation
 		if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") != $table_name) {
-			error_log('Bible_Here_XML_Importer: 表格創建驗證失敗');
+			error_log('Bible_Here_XML_Importer: Table creation verification failed');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: 版本內容表格創建成功: ' . $table_name);
+		error_log('Bible_Here_XML_Importer: Version content table created successfully: ' . $table_name);
 		return true;
 	}
 
@@ -709,7 +709,7 @@ class Bible_Here_XML_Importer {
 	private function import_bible_data($bible_data, $version_abbreviation) {
 		global $wpdb;
 		
-		error_log('Bible_Here_XML_Importer: 開始匯入聖經數據，共 ' . count($bible_data) . ' 節經文，版本: ' . $version_abbreviation);
+		error_log('Bible_Here_XML_Importer: Starting to import Bible data, total ' . count($bible_data) . ' verses, version: ' . $version_abbreviation);
 		
 		// Get table name from bible_here_versions
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
@@ -721,23 +721,23 @@ class Bible_Here_XML_Importer {
 		);
 		
 		if (!$table_name_suffix) {
-			error_log('Bible_Here_XML_Importer: 錯誤 - 未找到版本 ' . $version_abbreviation . ' 的表格名稱');
-			return array('success' => false, 'message' => '未找到版本表格名稱');
+			error_log('Bible_Here_XML_Importer: Error - Table name not found for version ' . $version_abbreviation);
+			return array('success' => false, 'message' => 'Version table name not found');
 		}
 		
 		$table_name = $wpdb->prefix . $table_name_suffix;
-		error_log('Bible_Here_XML_Importer: 目標表格名稱: ' . $table_name);
+		error_log('Bible_Here_XML_Importer: Target table name: ' . $table_name);
 		$imported_count = 0;
 		$batch_size = 100; // Process in batches of 100 verses
 		$total_verses = count($bible_data);
 		
 		// Clear existing data
-		error_log('Bible_Here_XML_Importer: 清空現有數據');
+		error_log('Bible_Here_XML_Importer: Clearing existing data');
 		$wpdb->query("TRUNCATE TABLE {$table_name}");
 		
 		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: 清空表格失敗: ' . $wpdb->last_error);
-			return array('success' => false, 'message' => '清空表格失敗');
+			error_log('Bible_Here_XML_Importer: Failed to clear table: ' . $wpdb->last_error);
+			return array('success' => false, 'message' => 'Failed to clear table');
 		}
 		
 		// Process data in batches
@@ -746,7 +746,7 @@ class Bible_Here_XML_Importer {
 			$batch_number = floor($i / $batch_size) + 1;
 			$total_batches = ceil($total_verses / $batch_size);
 			
-			error_log('Bible_Here_XML_Importer: 處理批次 ' . $batch_number . '/' . $total_batches . '，包含 ' . count($batch) . ' 節經文');
+			error_log('Bible_Here_XML_Importer: Processing batch ' . $batch_number . '/' . $total_batches . ', containing ' . count($batch) . ' verses');
 			
 			// Build batch insert query
 			$values = array();
@@ -769,23 +769,23 @@ class Bible_Here_XML_Importer {
 			$result = $wpdb->query($prepared_sql);
 			
 			if ($result === false) {
-				error_log('Bible_Here_XML_Importer: 批次 ' . $batch_number . ' 匯入失敗: ' . $wpdb->last_error);
-				return array('success' => false, 'message' => '數據匯入失敗: ' . $wpdb->last_error);
+				error_log('Bible_Here_XML_Importer: Batch ' . $batch_number . ' import failed: ' . $wpdb->last_error);
+				return array('success' => false, 'message' => 'Data import failed: ' . $wpdb->last_error);
 			}
 			
 			$imported_count += $result;
-			error_log('Bible_Here_XML_Importer: 批次 ' . $batch_number . ' 匯入成功，本批次匯入 ' . $result . ' 節，累計匯入 ' . $imported_count . ' 節');
+			error_log('Bible_Here_XML_Importer: Batch ' . $batch_number . ' import successful, imported ' . $result . ' verses in this batch, total imported ' . $imported_count . ' verses');
 			
 			// Log progress percentage
 			$progress_percentage = round(($imported_count / $total_verses) * 100, 1);
-			error_log('Bible_Here_XML_Importer: 匯入進度: ' . $progress_percentage . '% (' . $imported_count . '/' . $total_verses . ')');
+			error_log('Bible_Here_XML_Importer: Import progress: ' . $progress_percentage . '% (' . $imported_count . '/' . $total_verses . ')');
 		}
 		
-		error_log('Bible_Here_XML_Importer: 聖經數據匯入完成，總共匯入 ' . $imported_count . ' 節經文');
+		error_log('Bible_Here_XML_Importer: Bible data import completed, total imported ' . $imported_count . ' verses');
 		
 		return array(
 			'success' => true,
-			'message' => '數據匯入成功',
+			'message' => 'Data import successful',
 			'imported_count' => $imported_count
 		);
 	}
@@ -798,19 +798,19 @@ class Bible_Here_XML_Importer {
 	 * @param    string    $xml_file_path    Path to XML file
 	 */
 	private function cleanup_temp_files($zip_file_path, $xml_file_path) {
-		error_log('Bible_Here_XML_Importer: 開始清理臨時檔案');
+		error_log('Bible_Here_XML_Importer: Starting to clean up temporary files');
 		
 		if (file_exists($zip_file_path)) {
 			unlink($zip_file_path);
-			error_log('Bible_Here_XML_Importer: 已刪除ZIP檔案: ' . $zip_file_path);
+			error_log('Bible_Here_XML_Importer: Deleted ZIP file: ' . $zip_file_path);
 		}
 		
 		if (file_exists($xml_file_path)) {
 			unlink($xml_file_path);
-			error_log('Bible_Here_XML_Importer: 已刪除XML檔案: ' . $xml_file_path);
+			error_log('Bible_Here_XML_Importer: Deleted XML file: ' . $xml_file_path);
 		}
 		
-		error_log('Bible_Here_XML_Importer: 臨時檔案清理完成');
+		error_log('Bible_Here_XML_Importer: Temporary files cleanup completed');
 	}
 
 	/**
@@ -824,7 +824,7 @@ class Bible_Here_XML_Importer {
 	private function update_version_rank($version_abbreviation, $rank) {
 		global $wpdb;
 		
-		error_log('Bible_Here_XML_Importer: 開始更新版本rank - 版本: ' . $version_abbreviation . ', rank: ' . $rank);
+		error_log('Bible_Here_XML_Importer: Starting to update version rank - Version: ' . $version_abbreviation . ', rank: ' . $rank);
 		
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$result = $wpdb->update(
@@ -836,16 +836,16 @@ class Bible_Here_XML_Importer {
 		);
 		
 		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: 更新版本rank失敗，資料庫錯誤: ' . $wpdb->last_error);
+			error_log('Bible_Here_XML_Importer: Failed to update version rank, database error: ' . $wpdb->last_error);
 			return false;
 		}
 		
 		if ($result === false) {
-			error_log('Bible_Here_XML_Importer: 更新版本rank失敗');
+			error_log('Bible_Here_XML_Importer: Failed to update version rank');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: 版本rank更新成功，影響行數: ' . $result);
+		error_log('Bible_Here_XML_Importer: Version rank updated successfully, affected rows: ' . $result);
 		return true;
 	}
 
@@ -860,7 +860,7 @@ class Bible_Here_XML_Importer {
 		// For now, return basic info
 		return array(
 			'status' => 'ready',
-			'message' => '準備開始匯入'
+			'message' => 'Ready to start import'
 		);
 	}
 }

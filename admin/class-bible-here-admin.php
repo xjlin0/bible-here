@@ -127,6 +127,15 @@ class Bible_Here_Admin {
 
 		add_submenu_page(
 			'bible-here',
+			'Settings',
+			'Settings',
+			'manage_options',
+			'bible-here',
+			array($this, 'display_admin_page')
+		);
+
+		add_submenu_page(
+			'bible-here',
 			'Versions',
 			'Versions',
 			'manage_options',
@@ -134,14 +143,7 @@ class Bible_Here_Admin {
 			array($this, 'display_versions_page')
 		);
 
-		add_submenu_page(
-			'bible-here',
-			'Settings',
-			'Settings',
-			'manage_options',
-			'bible-here-settings',
-			array($this, 'display_settings_page')
-		);
+	
 	}
 
 	/**
@@ -157,10 +159,28 @@ class Bible_Here_Admin {
 		
 		global $wpdb;
 
+		// Handle settings form submission
+		if (isset($_POST['submit']) && isset($_POST['bible_here_default_version'])) {
+			check_admin_referer('bible_here_settings_nonce');
+			update_option('bible_here_default_version', sanitize_text_field($_POST['bible_here_default_version']));
+			echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
+		}
+
 		// Get statistics
 		$books_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_books");
 		$genres_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_genres");
 		$versions_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_versions");
+
+		// Get all Bible versions for settings
+		$versions = $wpdb->get_results(
+			"SELECT * FROM {$wpdb->prefix}bible_here_versions WHERE rank IS NOT NULL ORDER BY rank ASC"
+		);
+		
+		// Get current default version setting
+		$current_default = get_option('bible_here_default_version');
+		if (empty($current_default) && !empty($versions)) {
+			$current_default = $versions[0]->abbreviation;
+		}
 
 		include_once 'partials/bible-here-admin-display.php';
 	}
@@ -475,63 +495,7 @@ class Bible_Here_Admin {
 		wp_send_json($result);
 	}
 	
-	/**
-	 * Display the settings page.
-	 *
-	 * @since    1.0.0
-	 */
-	public function display_settings_page() {
-		// Check user permissions
-		if (!current_user_can('manage_options')) {
-			wp_die(__('You do not have sufficient permissions to access this page.'));
-		}
-		
-		global $wpdb;
-		
-		// 查詢所有聖經版本，按 rank 排序
-		$versions = $wpdb->get_results(
-			"SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY rank ASC"
-		);
-		
-		// 獲取當前設定的預設版本，如果沒有設定則使用 rank 最低的版本
-		$current_default = get_option('bible_here_default_version');
-		if (empty($current_default) && !empty($versions)) {
-			$current_default = $versions[0]->abbreviation;
-		}
-		
-		?>
-		<div class="wrap">
-			<h1>Bible Here Settings</h1>
-			<form method="post" action="options.php">
-				<?php
-				settings_fields('bible_here_settings');
-				do_settings_sections('bible_here_settings');
-				?>
-				<table class="form-table">
-					<tr>
-						<th scope="row">Default Bible Version</th>
-						<td>
-							<select name="bible_here_default_version">
-								<?php if (!empty($versions)): ?>
-									<?php foreach ($versions as $version): ?>
-										<option value="<?php echo esc_attr($version->abbreviation); ?>" 
-											<?php selected($current_default, $version->abbreviation); ?>>
-											<?php echo esc_html($version->name . ' (' . $version->abbreviation . ')'); ?>
-										</option>
-									<?php endforeach; ?>
-								<?php else: ?>
-									<option value="">No versions available</option>
-								<?php endif; ?>
-							</select>
-							<p class="description">The version with the lowest rank value is automatically set as default.</p>
-						</td>
-					</tr>
-				</table>
-				<?php submit_button(); ?>
-			</form>
-		</div>
-		<?php
-	}
+
 
 	/**
 	 * Handle AJAX reload CSV data request

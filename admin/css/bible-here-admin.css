@@ -1,4 +1,71 @@
-/**
- * All of the CSS for your admin-specific functionality should be
- * included in this file.
- */
+.bible-here-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Stronger selectors for WordPress admin compatibility */
+.wrap .bible-here-dashboard .bible-here-stats,
+.wrap .bible-here-dashboard .bible-here-settings,
+.wrap .bible-here-dashboard .bible-here-quick-actions,
+.wrap .bible-here-dashboard .bible-here-info {
+    background: #e8e8e8 !important;
+    border: 1px solid #333333 !important;
+    padding: 25px !important;
+    border-radius: 0 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    min-height: 220px !important;
+    margin-bottom: 25px !important;
+    position: relative !important;
+    display: block !important;
+}
+
+.bible-here-stats h2,
+.bible-here-settings h2,
+.bible-here-quick-actions h2,
+.bible-here-info h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0073aa;
+    margin: 5px 0;
+}
+
+.action-buttons {
+    margin-top: 15px;
+}
+
+.action-buttons .button {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .bible-here-dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,97 +1,66 @@
-(function( $ ) {
+(function() {
 	'use strict';
 
 	/**
 	 * All of the code for your admin-facing JavaScript source
 	 * should reside in this file.
 	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
+	 * This code uses native JavaScript instead of jQuery for better performance
+	 * and to avoid external dependencies.
 	 */
 
 	// XML Import functionality
-	var importInProgress = false;
-	var importCancelled = false;
-	var importStartTime = null;
-	var importXhr = null;
-	var currentImportVersion = null;
+	let importInProgress = false;
+	let importCancelled = false;
+	let importStartTime = null;
+	let importXhr = null;
+	let currentImportVersion = null;
 
-	$(document).ready(function() {
-		// Handle import button click (legacy XML import page)
-		// $('#start-import-btn').on('click', function() {
-		// 	if (importInProgress) {
-		// 		return;
-		// 	}
-			
-		// 	if (!confirm('Are you sure you want to start the KJV Bible download and import? This may take several minutes and will replace existing data.')) {
-		// 		return;
-		// 	}
-			
-		// 	startImport('kjv');
-		// });
-		
+	document.addEventListener('DOMContentLoaded', function() {
 		// Handle Bible version download/import buttons
-		$(document).on('click', '.bible-download-btn', function() {
-			if (importInProgress) {
-				alert('A download and import is already in progress. Please wait for it to complete.');
-				return;
+		document.addEventListener('click', function(e) {
+			if (e.target.classList.contains('bible-download-btn')) {
+				if (importInProgress) {
+					alert('A download and import is already in progress. Please wait for it to complete.');
+					return;
+				}
+				
+				const version = e.target.getAttribute('data-version');
+				const language = e.target.getAttribute('data-language');
+				
+				if (!confirm('Are you sure you want to import the ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible? This may take several minutes.')) {
+					return;
+				}
+				
+				startImport(language, version);
 			}
-			
-			var version = $(this).data('version');
-			var language = $(this).data('language');
-			
-			if (!confirm('Are you sure you want to import the ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible? This may take several minutes.')) {
-				return;
-			}
-			
-			startImport(language, version);
-		});
 		
-		// Handle Delete button clicks
-		$(document).on('click', 'button[data-action="delete"]', function() {
-			var version = $(this).data('version');
-			
-			if (!confirm('Are you sure you want to delete the ' + version.toUpperCase() + ' Bible data? This action cannot be undone.')) {
-				return;
+			// Handle Delete button clicks
+			if (e.target.tagName === 'BUTTON' && e.target.getAttribute('data-action') === 'delete') {
+				const version = e.target.getAttribute('data-version');
+				
+				if (!confirm('Are you sure you want to delete the ' + version.toUpperCase() + ' Bible data? This action cannot be undone.')) {
+					return;
+				}
+				
+				deleteVersion(version);
 			}
 			
-			deleteVersion(version);
-		});
-		
-		// Handle cancel button click
-		$('#cancel-import-btn').on('click', function() {
-			if (importInProgress) {
-				cancelImport();
-			}
-		});
-		
-		// Handle reload CSV data button click
-		$('#reload-csv-btn').on('click', function() {
-			if (!confirm('Are you sure you want to reload all CSV data? This will update books, genres, and versions from the CSV files.')) {
-				return;
+			// Handle cancel button click
+			if (e.target.id === 'cancel-import-btn') {
+				if (importInProgress) {
+					cancelImport();
+				}
 			}
 			
-			reloadCSVData();
+			// Handle reload CSV data button click
+			if (e.target.id === 'reload-csv-btn') {
+				if (!confirm('Are you sure you want to reload all CSV data? This will update books, genres, and versions from the CSV files.')) {
+					return;
+				}
+				
+				reloadCSVData();
+			}
 		});
 	});
 
@@ -111,52 +80,71 @@
 		currentImportVersion = version;
 		
 		// Update UI
-		$('#start-import-btn').prop('disabled', true).text(bible_here_ajax.importing_text);
-		$('.bible-download-btn').prop('disabled', true);
-		$('#cancel-import-btn').show();
-		$('#import-progress').show();
-		$('#progress-bar').css('width', '0%');
-		$('#progress-text').text('Initializing download and import...');
+		const startImportBtn = document.getElementById('start-import-btn');
+		if (startImportBtn) {
+			startImportBtn.disabled = true;
+			startImportBtn.textContent = bible_here_ajax.importing_text;
+		}
 		
-		var statusElement = $('#import-status');
-		if (statusElement.length) {
-			statusElement.show();
+		const downloadBtns = document.querySelectorAll('.bible-download-btn');
+		downloadBtns.forEach(btn => btn.disabled = true);
+		
+		const cancelBtn = document.getElementById('cancel-import-btn');
+		if (cancelBtn) cancelBtn.style.display = 'block';
+		
+		const importProgress = document.getElementById('import-progress');
+		if (importProgress) importProgress.style.display = 'block';
+		
+		const progressBar = document.getElementById('progress-bar');
+		if (progressBar) progressBar.style.width = '0%';
+		
+		const progressText = document.getElementById('progress-text');
+		if (progressText) progressText.textContent = 'Initializing download and import...';
+		
+		const statusElement = document.getElementById('import-status');
+		if (statusElement) {
+			statusElement.style.display = 'block';
 		}
 		
 		addLogMessage('Starting ' + language.toUpperCase() + ' ' + version.toUpperCase() + ' Bible download and import process via ' + bible_here_ajax.ajax_url);
 		addLogMessage('Timestamp: ' + importStartTime.toLocaleString());
 		
-		// Make AJAX request
-		$.ajax({
-			url: bible_here_ajax.ajax_url,
-			type: 'POST',
-			data: {
-				action: 'bible_here_import',
-				language: language,
-				version: version,
-				nonce: bible_here_ajax.nonce
-			},
-			timeout: 600000, // 10 minutes timeout
-			beforeSend: function() {
-				addLogMessage('Sending download request to server at ' + bible_here_ajax.ajax_url);
-				updateProgress(10, 'Connecting to server...');
-			},
-			success: function(response) {
-				if (importCancelled) {
-					return;
-				}
-				
-				console.log('Bible Here: Download response received', response);
-				handleImportResponse(response);
-			},
-			error: function(xhr, status, error) {
-				if (importCancelled || status === 'abort') {
-					return;
-				}
-				
-				console.error('Bible Here: Download request failed', status, error);
-				handleImportError(xhr, status, error);
+		// Make AJAX request using fetch API
+		addLogMessage('Sending download request to server at ' + bible_here_ajax.ajax_url);
+		updateProgress(10, 'Connecting to server...');
+		
+		const formData = new FormData();
+		formData.append('action', 'bible_here_import');
+		formData.append('language', language);
+		formData.append('version', version);
+		formData.append('nonce', bible_here_ajax.nonce);
+		
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+		
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData,
+			signal: controller.signal
+		})
+		.then(response => response.json())
+		.then(response => {
+			clearTimeout(timeoutId);
+			if (importCancelled) {
+				return;
 			}
+			
+			console.log('Bible Here: Download response received', response);
+			handleImportResponse(response);
+		})
+		.catch(error => {
+			clearTimeout(timeoutId);
+			if (importCancelled || error.name === 'AbortError') {
+				return;
+			}
+			
+			console.error('Bible Here: Download request failed', error);
+			handleImportError(null, 'fetch_error', error.message);
 		});
 	}
 
@@ -175,7 +163,8 @@
 			addLogMessage('Finished at: ' + endTime.toLocaleString());
 			
 			// Ensure progress text shows success with green color
-			$('#progress-text').css('color', '#00a32a'); // Green color for success
+			const progressText = document.getElementById('progress-text');
+			if (progressText) progressText.style.color = '#00a32a'; // Green color for success
 			
 			// Update the status for this version
 			if (currentImportVersion) {
@@ -200,8 +189,11 @@
 			addLogMessage('Duration: ' + duration + ' seconds');
 			
 			// Also update the progress text directly to ensure visibility
-			$('#progress-text').text('Error: ' + (response.message || 'Unknown error'));
-			$('#progress-text').css('color', '#d63638'); // Red color for error
+			const progressText = document.getElementById('progress-text');
+			if (progressText) {
+				progressText.textContent = 'Error: ' + (response.message || 'Unknown error');
+				progressText.style.color = '#d63638'; // Red color for error
+			}
 			
 			// Show error message
 			showNotice('Download and Import failed: ' + (response.message || 'Unknown error'), 'error');
@@ -210,9 +202,12 @@
 			// Only reset buttons to allow retry
 			importInProgress = false;
 			currentImportVersion = null;
-			$('#start-import-btn').prop('disabled', false);
-			$('.bible-download-btn').prop('disabled', false);
-			$('#cancel-import-btn').hide();
+			const startImportBtn = document.getElementById('start-import-btn');
+			if (startImportBtn) startImportBtn.disabled = false;
+			const downloadBtns = document.querySelectorAll('.bible-download-btn');
+			downloadBtns.forEach(btn => btn.disabled = false);
+			const cancelBtn = document.getElementById('cancel-import-btn');
+			if (cancelBtn) cancelBtn.style.display = 'none';
 		}
 	}
 
@@ -252,39 +247,49 @@
 		console.log('Bible Here: Starting delete process for ' + version);
 		
 		// Disable delete button during operation
-		$('button[data-action="delete"][data-version="' + version + '"]').prop('disabled', true).text('Deleting...');
+		const deleteBtn = document.querySelector('button[data-action="delete"][data-version="' + version + '"]');
+		if (deleteBtn) {
+			deleteBtn.disabled = true;
+			deleteBtn.textContent = 'Deleting...';
+		}
 		
 		// Make AJAX request to delete version
-		$.ajax({
-			url: bible_here_ajax.ajax_url,
-			type: 'POST',
-			data: {
-				action: 'bible_here_delete_version',
-				version: version,
-				nonce: bible_here_ajax.nonce
-			},
-			timeout: 30000, // 30 seconds timeout
-			success: function(response) {
-				console.log('Bible Here: Delete response received', response);
+		const formData = new FormData();
+		formData.append('action', 'bible_here_delete_version');
+		formData.append('version', version);
+		formData.append('nonce', bible_here_ajax.nonce);
+		
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(response => {
+			console.log('Bible Here: Delete response received', response);
+			
+			if (response.success) {
+				showNotice(version.toUpperCase() + ' Bible data deleted successfully!', 'success');
 				
-				if (response.success) {
-					showNotice(version.toUpperCase() + ' Bible data deleted successfully!', 'success');
-					
-					// Refresh page after 2 seconds to update UI
-					setTimeout(function() {
-						location.reload();
-					}, 2000);
-				} else {
-					showNotice('Failed to delete ' + version.toUpperCase() + ' Bible data: ' + (response.message || 'Unknown error'), 'error');
-					// Re-enable button on error
-					$('button[data-action="delete"][data-version="' + version + '"]').prop('disabled', false).text('Delete');
-				}
-			},
-			error: function(xhr, status, error) {
-				console.error('Bible Here: Delete request failed', status, error);
-				showNotice('Delete request failed: ' + status + ' - ' + error, 'error');
+				// Refresh page after 2 seconds to update UI
+				setTimeout(function() {
+					location.reload();
+				}, 2000);
+			} else {
+				showNotice('Failed to delete ' + version.toUpperCase() + ' Bible data: ' + (response.message || 'Unknown error'), 'error');
 				// Re-enable button on error
-				$('button[data-action="delete"][data-version="' + version + '"]').prop('disabled', false).text('Delete');
+				if (deleteBtn) {
+					deleteBtn.disabled = false;
+					deleteBtn.textContent = 'Delete';
+				}
+			}
+		})
+		.catch(error => {
+			console.error('Bible Here: Delete request failed', error);
+			showNotice('Delete request failed: ' + error.message, 'error');
+			// Re-enable button on error
+			if (deleteBtn) {
+				deleteBtn.disabled = false;
+				deleteBtn.textContent = 'Delete';
 			}
 		});
 	}
@@ -307,15 +312,21 @@
 		}
 		
 		// Reset UI
-		$('#start-import-btn').prop('disabled', false);
-		$('.bible-download-btn').prop('disabled', false);
-		$('#cancel-import-btn').prop('disabled', true);
+		const startImportBtn = document.getElementById('start-import-btn');
+		if (startImportBtn) startImportBtn.disabled = false;
+		
+		const downloadBtns = document.querySelectorAll('.bible-download-btn');
+		downloadBtns.forEach(btn => btn.disabled = false);
+		
+		const cancelBtn = document.getElementById('cancel-import-btn');
+		if (cancelBtn) cancelBtn.disabled = true;
 		
 		addLogMessage('Import cancelled by user.');
 		
 		// Hide progress after a short delay
 		setTimeout(function() {
-			$('#import-progress-container').hide();
+			const progressContainer = document.getElementById('import-progress-container');
+			if (progressContainer) progressContainer.style.display = 'none';
 		}, 2000);
 	}
 
@@ -329,22 +340,37 @@
 		currentImportVersion = null;
 		
 		// Reset buttons
-		$('#start-import-btn').prop('disabled', false).text(bible_here_ajax.start_import_text);
-		$('.bible-download-btn').prop('disabled', false);
-		$('#cancel-import-btn').hide();
+		const startImportBtn = document.getElementById('start-import-btn');
+		if (startImportBtn) {
+			startImportBtn.disabled = false;
+			startImportBtn.textContent = bible_here_ajax.start_import_text;
+		}
+		
+		const downloadBtns = document.querySelectorAll('.bible-download-btn');
+		downloadBtns.forEach(btn => btn.disabled = false);
+		
+		const cancelBtn = document.getElementById('cancel-import-btn');
+		if (cancelBtn) cancelBtn.style.display = 'none';
 		
 		// Clear import log content
-		$('#import-log').html('');
+		const importLog = document.getElementById('import-log');
+		if (importLog) importLog.innerHTML = '';
 		
 		// Remove any existing notice messages
-		$('#import-status').find('.bible-here-notice').remove();
+		const importStatus = document.getElementById('import-status');
+		if (importStatus) {
+			const notices = importStatus.querySelectorAll('.bible-here-notice');
+			notices.forEach(notice => notice.remove());
+		}
 		
 		// Reset progress text color
-		$('#progress-text').css('color', '');
+		const progressText = document.getElementById('progress-text');
+		if (progressText) progressText.style.color = '';
 		
 		// Hide progress elements after a delay
 		setTimeout(function() {
-			$('#import-progress-container').hide();
+			const progressContainer = document.getElementById('import-progress-container');
+			if (progressContainer) progressContainer.style.display = 'none';
 		}, 3000);
 	}
 
@@ -352,8 +378,11 @@
 	 * Update progress bar and text
 	 */
 	function updateProgress(percentage, text) {
-		$('#progress-bar').css('width', percentage + '%');
-		$('#progress-text').text(text + ' (' + percentage + '%)');
+		const progressBar = document.getElementById('progress-bar');
+		if (progressBar) progressBar.style.width = percentage + '%';
+		
+		const progressText = document.getElementById('progress-text');
+		if (progressText) progressText.textContent = text + ' (' + percentage + '%)';
 	}
 
 	/**
@@ -363,30 +392,28 @@
 		var timestamp = new Date().toLocaleTimeString();
 		var logEntry = '[' + timestamp + '] ' + message;
 		
-		var logElement = $('#import-log');
-		if (logElement.length > 0) {
+		var logElement = document.getElementById('import-log');
+		if (logElement) {
 			// Use HTML content and <br> tags to ensure line breaks
-			var currentContent = logElement.html();
-			logElement.html(currentContent + (currentContent ? '<br>' : '') + logEntry);
+			var currentContent = logElement.innerHTML;
+			logElement.innerHTML = currentContent + (currentContent ? '<br>' : '') + logEntry;
 			// Safety check if element exists before accessing scrollHeight
-			var logDomElement = logElement[0];
-			if (logDomElement && typeof logDomElement.scrollHeight !== 'undefined') {
-				logElement.scrollTop(logDomElement.scrollHeight);
+			if (typeof logElement.scrollHeight !== 'undefined') {
+				logElement.scrollTop = logElement.scrollHeight;
 			}
 		} else {
 			// If #import-log element not found, try to ensure parent container is visible
-			var statusElement = $('#import-status');
-			if (statusElement.length > 0) {
-				statusElement.show();
+			var statusElement = document.getElementById('import-status');
+			if (statusElement) {
+				statusElement.style.display = 'block';
 				// Try to find #import-log element again
-				logElement = $('#import-log');
-				if (logElement.length > 0) {
+				logElement = document.getElementById('import-log');
+				if (logElement) {
 					// Use HTML content and <br> tags to ensure line breaks
-					var currentContent = logElement.html();
-					logElement.html(currentContent + (currentContent ? '<br>' : '') + logEntry);
-					var logDomElement = logElement[0];
-					if (logDomElement && typeof logDomElement.scrollHeight !== 'undefined') {
-						logElement.scrollTop(logDomElement.scrollHeight);
+					var currentContent = logElement.innerHTML;
+					logElement.innerHTML = currentContent + (currentContent ? '<br>' : '') + logEntry;
+					if (typeof logElement.scrollHeight !== 'undefined') {
+						logElement.scrollTop = logElement.scrollHeight;
 					}
 				} else {
 					console.error('Bible Here: Download and Import log element (#import-log) still not found after showing parent container');
@@ -406,10 +433,10 @@
 		console.log('Bible Here: Showing notice:', message, type);
 		
 		// Use correct ID selector
-		var statusElement = $('#import-status');
-		if (statusElement.length) {
+		var statusElement = document.getElementById('import-status');
+		if (statusElement) {
 			// Ensure element is visible
-			statusElement.show();
+			statusElement.style.display = 'block';
 			
 			// Create notice message element without overwriting existing content
 			var noticeHtml = '';
@@ -422,15 +449,15 @@
 			}
 			
 			// Remove previous notice messages (if any)
-			statusElement.find('.bible-here-notice').remove();
+			const notices = statusElement.querySelectorAll('.bible-here-notice');
+			notices.forEach(notice => notice.remove());
 			
 			// Append notice message below existing content instead of overwriting
-			statusElement.append(noticeHtml);
+			statusElement.insertAdjacentHTML('beforeend', noticeHtml);
 			
 			// Scroll to bottom to show new notice
-			var statusDomElement = statusElement[0];
-			if (statusDomElement && typeof statusDomElement.scrollHeight !== 'undefined') {
-				statusElement.scrollTop(statusDomElement.scrollHeight);
+			if (typeof statusElement.scrollHeight !== 'undefined') {
+				statusElement.scrollTop = statusElement.scrollHeight;
 			}
 		} else {
 			console.error('Bible Here: Download and Import status element (#import-status) not found');
@@ -444,40 +471,50 @@
 		console.log('Bible Here: Starting CSV data reload process');
 		
 		// Disable the reload button during operation
-		$('#reload-csv-btn').prop('disabled', true).text('Reloading...');
+		const reloadBtn = document.getElementById('reload-csv-btn');
+		if (reloadBtn) {
+			reloadBtn.disabled = true;
+			reloadBtn.textContent = 'Reloading...';
+		}
 		
 		// Make AJAX request to reload CSV data
-		$.ajax({
-			url: bible_here_ajax.ajax_url,
-			type: 'POST',
-			data: {
-				action: 'bible_here_reload_csv',
-				nonce: bible_here_ajax.nonce
-			},
-			timeout: 30000, // 30 seconds timeout
-			success: function(response) {
-				console.log('Bible Here: CSV reload response received', response);
+		const formData = new FormData();
+		formData.append('action', 'bible_here_reload_csv');
+		formData.append('nonce', bible_here_ajax.nonce);
+		
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(response => {
+			console.log('Bible Here: CSV reload response received', response);
+			
+			if (response.success) {
+				showNotice('CSV data reloaded successfully! ' + (response.message || ''), 'success');
 				
-				if (response.success) {
-					showNotice('CSV data reloaded successfully! ' + (response.message || ''), 'success');
-					
-					// Refresh page after 2 seconds to update UI
-					setTimeout(function() {
-						location.reload();
-					}, 2000);
-				} else {
-					showNotice('Failed to reload CSV data: ' + (response.message || 'Unknown error'), 'error');
-					// Re-enable button on error
-					$('#reload-csv-btn').prop('disabled', false).text('🔄 Reload All CSV Data');
-				}
-			},
-			error: function(xhr, status, error) {
-				console.error('Bible Here: CSV reload request failed', status, error);
-				showNotice('CSV reload request failed: ' + status + ' - ' + error, 'error');
+				// Refresh page after 2 seconds to update UI
+				setTimeout(function() {
+					location.reload();
+				}, 2000);
+			} else {
+				showNotice('Failed to reload CSV data: ' + (response.message || 'Unknown error'), 'error');
 				// Re-enable button on error
-				$('#reload-csv-btn').prop('disabled', false).text('🔄 Reload All CSV Data');
+				if (reloadBtn) {
+					reloadBtn.disabled = false;
+					reloadBtn.textContent = '🔄 Reload All CSV Data';
+				}
+			}
+		})
+		.catch(error => {
+			console.error('Bible Here: CSV reload request failed', error);
+			showNotice('CSV reload request failed: ' + error.message, 'error');
+			// Re-enable button on error
+			if (reloadBtn) {
+				reloadBtn.disabled = false;
+				reloadBtn.textContent = '🔄 Reload All CSV Data';
 			}
 		});
 	}
 
-})( jQuery );
+})();

@@ -80,7 +80,7 @@ class Bible_Here_Activator {
 		// Bible versions table
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			id INT AUTO_INCREMENT PRIMARY KEY,
+			id INT AUTO_INCREMENT PRIMARY KEY ,
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL COMMENT 'ascii English only for database table names',
@@ -99,12 +99,10 @@ class Bible_Here_Activator {
 		// Cross references table
 		$table_name = $wpdb->prefix . 'bible_here_cross_references';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			verse_id INT(8) NOT NULL,
-			rank TINYINT NOT NULL,
-			start INT(8) NOT NULL,
-			finish INT(8) NOT NULL,
-			PRIMARY KEY (verse_id, rank),
-			INDEX idx_verse_id (verse_id),
+			verse_id INT(8) unsigned zerofill NOT NULL PRIMARY KEY AUTO_INCREMENT,
+			rank TINYINT(1) unsigned NOT NULL DEFAULT 0,
+			start INT(8) unsigned zerofill NOT NULL,
+			finish INT(8) unsigned zerofill NOT NULL DEFAULT 0,
 			INDEX idx_start (start)
 		) $charset_collate;";
 		dbDelta( $sql );
@@ -118,8 +116,7 @@ class Bible_Here_Activator {
 			book_number TINYINT NOT NULL CHECK (book_number BETWEEN 1 AND 66),
 			primary_abbr BOOLEAN DEFAULT FALSE,
 			UNIQUE KEY unique_abbr (language, abbreviation),
-			INDEX idx_book_number (book_number),
-			INDEX idx_language (language)
+			INDEX idx_book_number (book_number)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -177,23 +174,24 @@ class Bible_Here_Activator {
 				// Check if books data already exists
 				$existing_books = $wpdb->get_var("SELECT COUNT(*) FROM $books_table");
 				if ($existing_books == 0 || $force_reload) {
-					// Clear existing data if force reload
-					if ($force_reload && $existing_books > 0) {
-						$wpdb->query("DELETE FROM $books_table");
-					}
 					foreach ($books_data as $book) {
-						$result = $wpdb->insert(
-							$books_table,
-							[
-								'language' => $book['language'] ?? '',
-								'genre_number' => intval($book['genre_number'] ?? 0),
-								'book_number' => intval($book['book_number'] ?? 0),
-								'title_short' => $book['title_short'] ?? '',
-								'title_full' => $book['title_full'] ?? '',
-								'chapters' => intval($book['chapters'] ?? 0)
-							],
-							['%s', '%d', '%d', '%s', '%s', '%d']
+						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
+						$sql = $wpdb->prepare(
+							"INSERT INTO $books_table (language, genre_number, book_number, title_short, title_full, chapters) 
+							VALUES (%s, %d, %d, %s, %s, %d) 
+							ON DUPLICATE KEY UPDATE 
+							genre_number = VALUES(genre_number), 
+							title_short = VALUES(title_short), 
+							title_full = VALUES(title_full), 
+							chapters = VALUES(chapters)",
+							$book['language'] ?? '',
+							intval($book['genre_number'] ?? 0),
+							intval($book['book_number'] ?? 0),
+							$book['title_short'] ?? '',
+							$book['title_full'] ?? '',
+							intval($book['chapters'] ?? 0)
 						);
+						$result = $wpdb->query($sql);
 						if ($result === false) {
 							$success = false;
 						}
@@ -213,21 +211,20 @@ class Bible_Here_Activator {
 				// Check if genres data already exists
 				$existing_genres = $wpdb->get_var("SELECT COUNT(*) FROM $genres_table");
 				if ($existing_genres == 0 || $force_reload) {
-					// Clear existing data if force reload
-					if ($force_reload && $existing_genres > 0) {
-						$wpdb->query("DELETE FROM $genres_table");
-					}
 					foreach ($genres_data as $genre) {
-						$result = $wpdb->insert(
-							$genres_table,
-							[
-								'language' => $genre['language'] ?? '',
-								'type' => $genre['type'] ?? '',
-								'genre_number' => intval($genre['genre_number'] ?? 0),
-								'name' => $genre['name'] ?? ''
-							],
-							['%s', '%s', '%d', '%s']
+						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
+						$sql = $wpdb->prepare(
+							"INSERT INTO $genres_table (language, type, genre_number, name) 
+							VALUES (%s, %s, %d, %s) 
+							ON DUPLICATE KEY UPDATE 
+							type = VALUES(type), 
+							name = VALUES(name)",
+							$genre['language'] ?? '',
+							$genre['type'] ?? '',
+							intval($genre['genre_number'] ?? 0),
+							$genre['name'] ?? ''
 						);
+						$result = $wpdb->query($sql);
 						if ($result === false) {
 							$success = false;
 						}
@@ -247,44 +244,34 @@ class Bible_Here_Activator {
 				// Check if versions data already exists
 				$existing_versions = $wpdb->get_var("SELECT COUNT(*) FROM $versions_table");
 				if ($existing_versions == 0 || $force_reload) {
-					// For versions, we need to be more careful - preserve rank for imported versions
-					if ($force_reload && $existing_versions > 0) {
-						// Get existing versions with their ranks to preserve imported status
-						$existing_ranks = $wpdb->get_results(
-							"SELECT abbreviation, rank FROM $versions_table WHERE rank IS NOT NULL",
-							ARRAY_A
-						);
-						$rank_map = [];
-						foreach ($existing_ranks as $existing_rank) {
-							$rank_map[$existing_rank['abbreviation']] = $existing_rank['rank'];
-						}
-						$wpdb->query("DELETE FROM $versions_table");
-					}
 					foreach ($versions_data as $version) {
-						// Preserve existing rank if version was already imported
-						$rank = null;
-						if ($force_reload && isset($rank_map) && isset($rank_map[$version['abbreviation']])) {
-							$rank = $rank_map[$version['abbreviation']];
-						} elseif (!empty($version['rank'])) {
-							$rank = intval($version['rank']);
-						}
+						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs and rank
+						$rank = !empty($version['rank']) ? intval($version['rank']) : null;
 						
-						$result = $wpdb->insert(
-							$versions_table,
-							[
-								'table_name' => $version['table_name'] ?? '',
-								'language' => $version['language'] ?? '',
-								'abbreviation' => $version['abbreviation'] ?? '',
-								'name' => $version['name'] ?? '',
-								'info_text' => $version['info_text'] ?? '',
-								'info_url' => $version['info_url'] ?? '',
-								'publisher' => $version['publisher'] ?? '',
-								'copyright' => $version['copyright'] ?? '',
-								'download_url' => $version['download_url'] ?? '',
-								'rank' => $rank
-							],
-							['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']
+						$sql = $wpdb->prepare(
+							"INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank) 
+							VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %d) 
+							ON DUPLICATE KEY UPDATE 
+							table_name = VALUES(table_name), 
+							name = VALUES(name), 
+							info_text = VALUES(info_text), 
+							info_url = VALUES(info_url), 
+							publisher = VALUES(publisher), 
+							copyright = VALUES(copyright), 
+							download_url = VALUES(download_url), 
+							rank = COALESCE(rank, VALUES(rank))",
+							$version['table_name'] ?? '',
+							$version['language'] ?? '',
+							$version['abbreviation'] ?? '',
+							$version['name'] ?? '',
+							$version['info_text'] ?? '',
+							$version['info_url'] ?? '',
+							$version['publisher'] ?? '',
+							$version['copyright'] ?? '',
+							$version['download_url'] ?? '',
+							$rank
 						);
+						$result = $wpdb->query($sql);
 						if ($result === false) {
 							$success = false;
 						}
