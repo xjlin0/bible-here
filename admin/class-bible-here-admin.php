@@ -346,25 +346,17 @@ class Bible_Here_Admin {
 		error_log('Bible_Here_Admin: Starting version import, language: ' . $language . ', version: ' . $version);
 		$import_start_time = microtime(true);
 		
-		// Determine import method based on language and version
-		if ($language === 'en' && $version === 'kjv') {
-			error_log('Bible_Here_Admin: Executing English KJV Bible import...');
-			try {
-				$result = $xml_importer->import_kjv_bible();
-				error_log('Bible_Here_Admin: KJV import method execution completed');
-			} catch (Exception $e) {
-				error_log('Bible_Here_Admin: ❌ Exception occurred during KJV import process: ' . $e->getMessage());
-				error_log('Bible_Here_Admin: Exception stack trace: ' . $e->getTraceAsString());
-				$result = [
-					'success' => false,
-					'message' => 'Import failed with exception: ' . $e->getMessage()
-				];
-			}
-		} else {
-			error_log('Bible_Here_Admin: ❌ Unsupported language/version combination: ' . $language . '/' . $version);
+		// Use dynamic import method
+		error_log('Bible_Here_Admin: Executing dynamic Bible import for ' . strtoupper($language) . '/' . strtoupper($version) . '...');
+		try {
+			$result = $xml_importer->import_bible($language, $version);
+			error_log('Bible_Here_Admin: Dynamic import method execution completed');
+		} catch (Exception $e) {
+			error_log('Bible_Here_Admin: ❌ Exception occurred during ' . strtoupper($language) . '/' . strtoupper($version) . ' import process: ' . $e->getMessage());
+			error_log('Bible_Here_Admin: Exception stack trace: ' . $e->getTraceAsString());
 			$result = [
 				'success' => false,
-				'message' => 'Import for language "' . strtoupper($language) . '" and version "' . strtoupper($version) . '" is not yet implemented.'
+				'message' => 'Import failed with exception: ' . $e->getMessage()
 			];
 		}
 		

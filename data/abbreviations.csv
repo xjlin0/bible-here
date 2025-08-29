@@ -1,0 +1,399 @@
+language,abbreviation,book_number,is_primary
+en,Genesis,01,1
+en,Gen,01,0
+en,Ge,01,0
+en,Gn,01,0
+en,Exodus,02,1
+en,Exo,02,0
+en,Ex,02,0
+en,Exod,02,0
+en,Leviticus,03,1
+en,Lev,03,0
+en,Le,03,0
+en,Lv,03,0
+en,Numbers,04,1
+en,Num,04,0
+en,Nu,04,0
+en,Nm,04,0
+en,Nb,04,0
+en,Deuteronomy,05,1
+en,Deut,05,0
+en,Dt,05,0
+en,Joshua,06,1
+en,Josh,06,0
+en,Jos,06,0
+en,Jsh,06,0
+en,Judges,07,1
+en,Judg,07,0
+en,Jdg,07,0
+en,Jg,07,0
+en,Jdgs,07,0
+en,Ruth,08,1
+en,Rth,08,0
+en,Ru,08,0
+en,1 Samuel,09,1
+en,1 Sam,09,0
+en,1 Sa,09,0
+en,1Samuel,09,0
+en,1S,09,0
+en,I Sa,09,0
+en,1 Sm,09,0
+en,1Sa,09,0
+en,I Sam,09,0
+en,1Sam,09,0
+en,I Samuel,09,0
+en,1st Samuel,09,0
+en,First Samuel,09,0
+en,2 Samuel,10,1
+en,2 Sam,10,0
+en,2 Sa,10,0
+en,2S,10,0
+en,II Sa,10,0
+en,2 Sm,10,0
+en,2Sa,10,0
+en,II Sam,10,0
+en,2Sam,10,0
+en,II Samuel,10,0
+en,2Samuel,10,0
+en,2nd Samuel,10,0
+en,Second Samuel,10,0
+en,1 Kings,11,1
+en,1 Kgs,11,0
+en,1 Ki,11,0
+en,1K,11,0
+en,I Kgs,11,0
+en,1Kgs,11,0
+en,I Ki,11,0
+en,1Ki,11,0
+en,I Kings,11,0
+en,1Kings,11,0
+en,1st Kgs,11,0
+en,1st Kings,11,0
+en,First Kings,11,0
+en,First Kgs,11,0
+en,1Kin,11,0
+en,2 Kings,12,1
+en,2 Kgs,12,0
+en,2 Ki,12,0
+en,2K,12,0
+en,II Kgs,12,0
+en,2Kgs,12,0
+en,II Ki,12,0
+en,2Ki,12,0
+en,II Kings,12,0
+en,2Kings,12,0
+en,2nd Kgs,12,0
+en,2nd Kings,12,0
+en,Second Kings,12,0
+en,Second Kgs,12,0
+en,2Kin,12,0
+en,1 Chronicles,13,1
+en,1 Chron,13,0
+en,1 Ch,13,0
+en,I Ch,13,0
+en,1Ch,13,0
+en,1 Chr,13,0
+en,I Chr,13,0
+en,1Chr,13,0
+en,I Chron,13,0
+en,1Chron,13,0
+en,I Chronicles,13,0
+en,1Chronicles,13,0
+en,1st Chronicles,13,0
+en,First Chronicles,13,0
+en,2 Chronicles,14,1
+en,2 Chron,14,0
+en,2 Ch,14,0
+en,II Ch,14,0
+en,2Ch,14,0
+en,II Chr,14,0
+en,2Chr,14,0
+en,II Chron,14,0
+en,2Chron,14,0
+en,II Chronicles,14,0
+en,2Chronicles,14,0
+en,2nd Chronicles,14,0
+en,Second Chronicles,14,0
+en,Ezra,15,1
+en,Ezr,15,0
+en,Ez,15,0
+en,Nehemiah,16,1
+en,Neh,16,0
+en,Ne,16,0
+en,Esther,17,1
+en,Esth,17,0
+en,Es,17,0
+en,Job,18,1
+en,Jb,18,0
+en,Psalms,19,1
+en,Pslm,19,0
+en,Ps,19,0
+en,Psa,19,0
+en,Psm,19,0
+en,Pss,19,0
+en,Psalm,19,0
+en,Proverbs,20,1
+en,Prov,20,0
+en,Pr,20,0
+en,Prv,20,0
+en,Ecclesiastes,21,1
+en,Eccles,21,0
+en,Ec,21,0
+en,Qoh,21,0
+en,Qoheleth,21,0
+en,Song of Solomon,22,1
+en,Song,22,0
+en,So,22,0
+en,Canticle of Canticle,22,0
+en,Canticles,22,0
+en,Song of Songs,22,0
+en,SOS,22,0
+en,Isaiah,23,1
+en,Isa,23,0
+en,Is,23,0
+en,Jeremiah,24,1
+en,Jer,24,0
+en,Je,24,0
+en,Jr,24,0
+en,Lamentations,25,1
+en,Lam,25,0
+en,La,25,0
+en,Ezekiel,26,1
+en,Ezek,26,0
+en,Eze,26,0
+en,Ezk,26,0
+en,Daniel,27,1
+en,Dan,27,0
+en,Da,27,0
+en,Dn,27,0
+en,Hosea,28,1
+en,Hos,28,0
+en,Ho,28,0
+en,Joel,29,1
+en,Joe,29,0
+en,Jl,29,0
+en,Amos,30,1
+en,Am,30,0
+en,Obadiah,31,1
+en,Obad,31,0
+en,Ob,31,0
+en,Jonah,32,1
+en,Jnh,32,0
+en,Jon,32,0
+en,Micah,33,1
+en,Mic,33,0
+en,Mc,33,0
+en,Nah,34,1
+en,Nahum,34,1
+en,Na,34,0
+en,Habakkuk,35,1
+en,Hab,35,0
+en,Zephaniah,36,1
+en,Zeph,36,0
+en,Zep,36,0
+en,Zp,36,0
+en,Haggai,37,1
+en,Hag,37,0
+en,Hg,37,0
+en,Zechariah,38,1
+en,Zech,38,0
+en,Zec,38,0
+en,Zc,38,0
+en,Malachi,39,1
+en,Mal,39,0
+en,Ml,39,0
+en,Matthew,40,1
+en,Matt,40,0
+en,Mt,40,0
+en,Mark,41,1
+en,Mrk,41,0
+en,Mk,41,0
+en,Mr,41,0
+en,Luke,42,1
+en,Luk,42,0
+en,Lk,42,0
+en,John,43,1
+en,Jn,43,0
+en,Jhn,43,0
+en,Acts,44,1
+en,Ac,44,0
+en,Act,44,0
+en,Romans,45,1
+en,Rom,45,0
+en,Ro,45,0
+en,Rm,45,0
+en,1 Corinthians,46,1
+en,1 Cor,46,0
+en,1 Co,46,0
+en,I Co,46,0
+en,1Co,46,0
+en,I Cor,46,0
+en,1Cor,46,0
+en,I Corinthians,46,0
+en,1Corinthians,46,0
+en,1st Corinthians,46,0
+en,First Corinthians,46,0
+en,2 Corinthians,47,1
+en,2 Cor,47,0
+en,2 Co,47,0
+en,II Co,47,0
+en,2Co,47,0
+en,II Cor,47,0
+en,2Cor,47,0
+en,II Corinthians,47,0
+en,2Corinthians,47,0
+en,2nd Corinthians,47,0
+en,Second Corinthians,47,0
+en,Galatians,48,1
+en,Gal,48,0
+en,Ga,48,0
+en,Ephesians,49,1
+en,Ephes,49,0
+en,Eph,49,0
+en,Philippians,50,1
+en,Phil,50,0
+en,Php,50,0
+en,Colossians,51,1
+en,Col,51,0
+en,Co,51,0
+en,1 Thessalonians,52,1
+en,1 Thess,52,0
+en,1 Th,52,0
+en,I Th,52,0
+en,1Th,52,0
+en,I Thes,52,0
+en,1Thes,52,0
+en,I Thess,52,0
+en,1Thess,52,0
+en,I Thessalonians,52,0
+en,1Thessalonians,52,0
+en,1st Thessalonians,52,0
+en,First Thessalonians,52,0
+en,2 Thessalonians,53,1
+en,2 Thess,53,0
+en,2 Th,53,0
+en,II Th,53,0
+en,2Th,53,0
+en,II Thes,53,0
+en,2Thes,53,0
+en,II Thess,53,0
+en,2Thess,53,0
+en,II Thessalonians,53,0
+en,2Thessalonians,53,0
+en,2nd Thessalonians,53,0
+en,Second Thessalonians,53,0
+en,1 Timothy,54,1
+en,1 Tim,54,0
+en,1 Ti,54,0
+en,I Ti,54,0
+en,1Ti,54,0
+en,I Tim,54,0
+en,1Tim,54,0
+en,I Timothy,54,0
+en,1Timothy,54,0
+en,1st Timothy,54,0
+en,First Timothy,54,0
+en,2 Timothy,55,1
+en,2 Tim,55,0
+en,2 Ti,55,0
+en,II Ti,55,0
+en,2Ti,55,0
+en,II Tim,55,0
+en,2Tim,55,0
+en,II Timothy,55,0
+en,2Timothy,55,0
+en,2nd Timothy,55,0
+en,Second Timothy,55,0
+en,Titus,56,1
+en,Tit,56,0
+en,ti,56,0
+en,Philemon,57,1
+en,Philem,57,0
+en,Phm,57,0
+en,Hebrews,58,1
+en,Heb,58,0
+en,James,59,1
+en,Jas,59,0
+en,Jm,59,0
+en,1 Peter,60,1
+en,1 Pet,60,0
+en,1 Pe,60,0
+en,I Pe,60,0
+en,1Pe,60,0
+en,I Pet,60,0
+en,1Pet,60,0
+en,I Pt,60,0
+en,1 Pt,60,0
+en,1Pt,60,0
+en,I Peter,60,0
+en,1Peter,60,0
+en,1st Peter,60,0
+en,First Peter,60,0
+en,2 Peter,61,1
+en,2 Pet,61,0
+en,2 Pe,61,0
+en,II Pe,61,0
+en,2Pe,61,0
+en,II Pet,61,0
+en,2Pet,61,0
+en,II Pt,61,0
+en,2 Pt,61,0
+en,2Pt,61,0
+en,II Peter,61,0
+en,2Peter,61,0
+en,2nd Peter,61,0
+en,Second Peter,61,0
+en,1 John,62,1
+en,1 Jn,62,0
+en,I Jn,62,0
+en,1Jn,62,0
+en,I Jo,62,0
+en,1Jo,62,0
+en,I Joh,62,0
+en,1Joh,62,0
+en,I Jhn,62,0
+en,1 Jhn,62,0
+en,1Jhn,62,0
+en,I John,62,0
+en,1John,62,0
+en,1st John,62,0
+en,First John,62,0
+en,1 Joh,62,0
+en,2 John,63,1
+en,2 Jn,63,0
+en,II Jn,63,0
+en,2Jn,63,0
+en,II Jo,63,0
+en,2Jo,63,0
+en,II Joh,63,0
+en,2Joh,63,0
+en,II Jhn,63,0
+en,2 Jhn,63,0
+en,2Jhn,63,0
+en,II John,63,0
+en,2John,63,0
+en,2nd John,63,0
+en,Second John,63,0
+en,2 Joh,63,0
+en,3 John,64,1
+en,3 Jn,64,0
+en,III Jn,64,0
+en,3Jn,64,0
+en,III Jo,64,0
+en,3Jo,64,0
+en,III Joh,64,0
+en,3Joh,64,0
+en,III Jhn,64,0
+en,3 Jhn,64,0
+en,3Jhn,64,0
+en,III John,64,0
+en,3John,64,0
+en,3rd John,64,0
+en,Third John,64,0
+en,3 Joh,64,0
+en,Jude,65,1
+en,Jud,65,0
+en,Jd,65,0
+en,Revelation,66,1
+en,Rev,66,0
+en,Re,66,0

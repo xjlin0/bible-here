@@ -60,108 +60,34 @@ class Bible_Here_XML_Importer {
 	 * @since    1.0.0
 	 * @return   array    Result array with success status and message
 	 */
+	/**
+	 * Import KJV Bible (legacy method for backward compatibility)
+	 * This method now uses the new dynamic import system
+	 *
+	 * @since    1.0.0
+	 * @return   array    Result array with success status and message
+	 */
 	public function import_kjv_bible() {
-		error_log('Bible_Here_XML_Importer: Starting Bible download and import process');
+		error_log('Bible_Here_XML_Importer: Starting KJV Bible import (legacy method)');
+		error_log('Bible_Here_XML_Importer: Redirecting to dynamic import system for en/kjv');
 		
 		$start_time = microtime(true);
 		
-		try {
-			// Step 1: Get KJV download URL from database
-			$download_url = $this->get_kjv_download_url();
-			if (!$download_url) {
-				error_log('Bible_Here_XML_Importer: Error - Unable to get scripture download URL');
-				return array('success' => false, 'message' => 'Unable to get scripture download URL');
-			}
-			error_log('Bible_Here_XML_Importer: Scripture download URL obtained successfully: ' . $download_url);
-
-			// Step 2: Download ZIP file
-			$zip_file_path = $this->download_zip_file($download_url);
-			if (!$zip_file_path) {
-				error_log('Bible_Here_XML_Importer: Error - ZIP file download failed');
-				return array('success' => false, 'message' => 'ZIP file download failed');
-			}
-			error_log('Bible_Here_XML_Importer: ZIP file downloaded successfully: ' . $zip_file_path);
-
-			// Additional download confirmation log
-			if (file_exists($zip_file_path)) {
-				$file_size = filesize($zip_file_path);
-				$file_size_kb = round($file_size / 1024, 2);
-				$file_size_mb = round($file_size / (1024 * 1024), 2);
-				error_log('Bible_Here_XML_Importer: File download confirmation - File exists: ' . $zip_file_path);
-				error_log('Bible_Here_XML_Importer: File download confirmation - File size: ' . $file_size . ' bytes (' . $file_size_kb . ' KB, ' . $file_size_mb . ' MB)');
-				
-				// Check if file is readable
-				if (is_readable($zip_file_path)) {
-					error_log('Bible_Here_XML_Importer: File download confirmation - File is readable');
-				} else {
-					error_log('Bible_Here_XML_Importer: File download confirmation - Warning: File is not readable');
-				}
-				
-				// Verify file is not empty
-				if ($file_size > 0) {
-					error_log('Bible_Here_XML_Importer: File download confirmation - File is not empty');
-				} else {
-					error_log('Bible_Here_XML_Importer: File download confirmation - Error: File is empty');
-				}
-			} else {
-				error_log('Bible_Here_XML_Importer: File download confirmation - Error: File does not exist: ' . $zip_file_path);
-			}
-
-			// Step 3: Extract XML file from ZIP
-			$xml_file_path = $this->extract_xml_from_zip($zip_file_path);
-			if (!$xml_file_path) {
-				error_log('Bible_Here_XML_Importer: Error - XML file extraction failed');
-				return array('success' => false, 'message' => 'XML file extraction failed');
-			}
-			error_log('Bible_Here_XML_Importer: XML file extracted successfully: ' . $xml_file_path);
-
-			// Step 4: Parse XML file
-			$bible_data = $this->parse_zefania_xml($xml_file_path);
-			if (!$bible_data) {
-				error_log('Bible_Here_XML_Importer: Error - XML parsing failed');
-				return array('success' => false, 'message' => 'XML parsing failed');
-			}
-			error_log('Bible_Here_XML_Importer: XML parsing successful, parsed ' . count($bible_data) . ' verses');
-
-			// Step 5: Create version-specific content table
-			$table_created = $this->create_version_content_table('kjv');
-			if (!$table_created) {
-				error_log('Bible_Here_XML_Importer: Error - Scripture content table creation failed');
-				return array('success' => false, 'message' => 'Scripture content table creation failed');
-			}
-			error_log('Bible_Here_XML_Importer: Scripture content table created successfully');
-
-			// Step 6: Import bible data to database
-			$import_result = $this->import_bible_data($bible_data, 'kjv');
-			if (!$import_result['success']) {
-				error_log('Bible_Here_XML_Importer: Error - Bible data import failed: ' . $import_result['message']);
-				return $import_result;
-			}
-			error_log('Bible_Here_XML_Importer: Bible data imported successfully, imported ' . $import_result['imported_count'] . ' verses');
-
-			// Step 7: Update version rank to 0 after successful import
-			$this->update_version_rank('kjv', 0);
-			error_log('Bible_Here_XML_Importer: Scripture version rank updated to 0');
-
-			// Step 8: Clean up temporary files
-			$this->cleanup_temp_files($zip_file_path, $xml_file_path);
-			error_log('Bible_Here_XML_Importer: Temporary files cleanup completed');
-
+		// Use the new dynamic import method
+		$result = $this->import_bible('en', 'kjv');
+		
+		if ($result['success']) {
 			$end_time = microtime(true);
 			$execution_time = round($end_time - $start_time, 2);
-			error_log('Bible_Here_XML_Importer: Bible import process completed, total time: ' . $execution_time . ' seconds');
-
-			return array(
-				'success' => true, 
-				'message' => 'KJV Bible import successful',
-				'imported_count' => $import_result['imported_count'],
-				'execution_time' => $execution_time
-			);
-
-		} catch (Exception $e) {
-			error_log('Bible_Here_XML_Importer: Exception occurred during import process: ' . $e->getMessage());
-			return array('success' => false, 'message' => 'Exception occurred during import process: ' . $e->getMessage());
+			
+			// Add execution time to result for backward compatibility
+			$result['execution_time'] = $execution_time;
+			$result['message'] = 'KJV Bible import successful';
+			
+			error_log('Bible_Here_XML_Importer: KJV Bible import completed via dynamic system, total time: ' . $execution_time . ' seconds');
 		}
+		
+		return $result;
 	}
 
 	/**
@@ -862,5 +788,231 @@ class Bible_Here_XML_Importer {
 			'status' => 'ready',
 			'message' => 'Ready to start import'
 		);
+	}
+
+	/**
+	 * Get version configuration for dynamic import
+	 *
+	 * @since    1.0.0
+	 * @return   array    Version configurations
+	 */
+	private function get_version_configs() {
+		return array(
+			'en' => array(
+				'kjv' => array(
+					'download_url_method' => 'get_kjv_download_url',
+					'xml_parser_method' => 'parse_zefania_xml',
+					'description' => 'King James Version (English)'
+				)
+			),
+			'zh_tw' => array(
+				'cuv' => array(
+					'download_url_method' => 'get_cuv_download_url',
+					'xml_parser_method' => 'parse_zefania_xml',
+					'description' => 'Chinese Union Version (Traditional Chinese)'
+				)
+			)
+		);
+	}
+
+	/**
+	 * Generic bible import method - dynamically handles different language/version combinations
+	 *
+	 * @since    1.0.0
+	 * @param    string    $language    Language code (e.g., 'en', 'zh_tw')
+	 * @param    string    $version     Version abbreviation (e.g., 'kjv', 'cuv')
+	 * @return   array     Result array with success status and message
+	 */
+	public function import_bible($language, $version) {
+		error_log('Bible_Here_XML_Importer: Starting dynamic bible import - Language: ' . $language . ', Version: ' . $version);
+		
+		// Get version configuration
+		$configs = $this->get_version_configs();
+		
+		if (!isset($configs[$language]) || !isset($configs[$language][$version])) {
+			$error_msg = 'Unsupported language/version combination: ' . $language . '/' . $version;
+			error_log('Bible_Here_XML_Importer: ' . $error_msg);
+			return array('success' => false, 'message' => $error_msg);
+		}
+		
+		$config = $configs[$language][$version];
+		error_log('Bible_Here_XML_Importer: Found configuration for ' . $language . '/' . $version . ': ' . $config['description']);
+		
+		try {
+			// Step 1: Get download URL using configured method
+			$download_url_method = $config['download_url_method'];
+			if (!method_exists($this, $download_url_method)) {
+				$error_msg = 'Download URL method not found: ' . $download_url_method;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			error_log('Bible_Here_XML_Importer: Getting download URL using method: ' . $download_url_method);
+			$download_url = $this->$download_url_method();
+			
+			if (!$download_url) {
+				$error_msg = 'Failed to get download URL for ' . $language . '/' . $version;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			error_log('Bible_Here_XML_Importer: Download URL obtained: ' . $download_url);
+			
+			// Step 2: Download ZIP file
+			$zip_file_path = $this->download_zip_file($download_url);
+			if (!$zip_file_path) {
+				$error_msg = 'Failed to download ZIP file for ' . $language . '/' . $version;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 3: Extract XML from ZIP
+			$xml_file_path = $this->extract_xml_from_zip($zip_file_path);
+			if (!$xml_file_path) {
+				$this->cleanup_temp_files($zip_file_path, '');
+				$error_msg = 'Failed to extract XML from ZIP for ' . $language . '/' . $version;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 4: Parse XML using configured method
+			$xml_parser_method = $config['xml_parser_method'];
+			if (!method_exists($this, $xml_parser_method)) {
+				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
+				$error_msg = 'XML parser method not found: ' . $xml_parser_method;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			error_log('Bible_Here_XML_Importer: Parsing XML using method: ' . $xml_parser_method);
+			$bible_data = $this->$xml_parser_method($xml_file_path);
+			
+			if (!$bible_data || !is_array($bible_data) || empty($bible_data)) {
+				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
+				$error_msg = 'Failed to parse XML or no data found for ' . $language . '/' . $version;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 5: Create version content table
+			$table_created = $this->create_version_content_table($version);
+			if (!$table_created) {
+				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
+				$error_msg = 'Failed to create version content table for ' . $version;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 6: Import data to database
+			$import_result = $this->import_bible_data($bible_data, $version);
+			if (!$import_result['success']) {
+				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
+				error_log('Bible_Here_XML_Importer: Data import failed: ' . $import_result['message']);
+				return $import_result;
+			}
+			
+			// Step 7: Update version rank
+			$rank_updated = $this->update_version_rank($version, 1);
+			if (!$rank_updated) {
+				error_log('Bible_Here_XML_Importer: Warning - Failed to update version rank, but import was successful');
+			}
+			
+			// Step 8: Clean up temporary files
+			$this->cleanup_temp_files($zip_file_path, $xml_file_path);
+			
+			$success_msg = 'Successfully imported ' . $config['description'] . ' (' . $language . '/' . $version . ') - ' . $import_result['imported_count'] . ' verses';
+			error_log('Bible_Here_XML_Importer: ' . $success_msg);
+			
+			return array(
+				'success' => true,
+				'message' => $success_msg,
+				'imported_count' => $import_result['imported_count']
+			);
+			
+		} catch (Exception $e) {
+			$error_msg = 'Exception during import: ' . $e->getMessage();
+			error_log('Bible_Here_XML_Importer: ' . $error_msg);
+			
+			// Clean up any temporary files that might exist
+			if (isset($zip_file_path)) {
+				$this->cleanup_temp_files($zip_file_path, isset($xml_file_path) ? $xml_file_path : '');
+			}
+			
+			return array('success' => false, 'message' => $error_msg);
+		}
+	}
+
+	/**
+	 * Get CUV download URL from database
+	 *
+	 * @since    1.0.0
+	 * @return   string|false    Download URL or false on failure
+	 */
+	private function get_cuv_download_url() {
+		global $wpdb;
+		
+		error_log('Bible_Here_XML_Importer: Getting CUV download URL from database');
+		
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		$download_url = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT download_url FROM {$table_name} WHERE abbreviation = %s",
+				'cuv'
+			)
+		);
+		
+		if ($wpdb->last_error) {
+			error_log('Bible_Here_XML_Importer: Database error while getting CUV download URL: ' . $wpdb->last_error);
+			return false;
+		}
+		
+		if (!$download_url) {
+			error_log('Bible_Here_XML_Importer: CUV download URL not found in database');
+			return false;
+		}
+		
+		// Convert GitHub blob URL to raw download URL if needed
+		if (strpos($download_url, 'github.com') !== false && strpos($download_url, '/blob/') !== false) {
+			$download_url = str_replace('github.com', 'raw.githubusercontent.com', $download_url);
+			$download_url = str_replace('/blob/', '/', $download_url);
+			error_log('Bible_Here_XML_Importer: Converted GitHub blob URL to raw URL: ' . $download_url);
+		}
+		
+		error_log('Bible_Here_XML_Importer: CUV download URL: ' . $download_url);
+		return $download_url;
+	}
+
+	/**
+	 * Parse KJV XML file (wrapper for backward compatibility)
+	 *
+	 * @since    1.0.0
+	 * @param    string    $xml_file_path    Path to XML file
+	 * @return   array|false    Array of bible verses or false on failure
+	 */
+	private function parse_kjv_xml($xml_file_path) {
+		error_log('Bible_Here_XML_Importer: Starting to parse KJV XML file (legacy method): ' . $xml_file_path);
+		
+		// Use the standard Zefania XML parser
+		return $this->parse_zefania_xml($xml_file_path);
+	}
+
+	/**
+	 * Parse CUV XML file (wrapper for backward compatibility)
+	 *
+	 * @since    1.0.0
+	 * @param    string    $xml_file_path    Path to XML file
+	 * @return   array|false    Array of bible verses or false on failure
+	 */
+	private function parse_cuv_xml($xml_file_path) {
+		error_log('Bible_Here_XML_Importer: Starting to parse CUV XML file: ' . $xml_file_path);
+		
+		if (!file_exists($xml_file_path)) {
+			error_log('Bible_Here_XML_Importer: CUV XML file does not exist: ' . $xml_file_path);
+			return false;
+		}
+		
+		// Use the standard Zefania XML parser
+		// This can be customized later if CUV XML has different structure
+		return $this->parse_zefania_xml($xml_file_path);
 	}
 }

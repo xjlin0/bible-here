@@ -53,14 +53,13 @@ class Bible_Here_Activator {
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
-			genre_number TINYINT NOT NULL,
-			book_number TINYINT NOT NULL CHECK (book_number BETWEEN 1 AND 66),
+			genre_number TINYINT(1) unsigned NOT NULL,
+			book_number TINYINT(2) unsigned zerofill NOT NULL CHECK (book_number BETWEEN 1 AND 66),
 			title_short VARCHAR(20) NOT NULL,
 			title_full VARCHAR(100) NOT NULL,
 			chapters TINYINT NOT NULL CHECK (chapters BETWEEN 1 AND 150),
 			UNIQUE KEY unique_book (language, book_number),
-			INDEX idx_book_number (book_number),
-			INDEX idx_language (language)
+			INDEX idx_book_number (book_number)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -70,10 +69,9 @@ class Bible_Here_Activator {
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
 			type VARCHAR(20) NOT NULL,
-			genre_number TINYINT NOT NULL CHECK (genre_number BETWEEN 1 AND 10),
+			genre_number TINYINT(1) unsigned NOT NULL CHECK (genre_number BETWEEN 1 AND 10),
 			name VARCHAR(50) NOT NULL,
-			UNIQUE KEY unique_genre (language, genre_number),
-			INDEX idx_language (language)
+			UNIQUE KEY unique_genre (language, genre_number)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -90,9 +88,9 @@ class Bible_Here_Activator {
 			publisher VARCHAR(100),
 			copyright TEXT,
 			download_url VARCHAR(255),
-			rank TINYINT NULL,
+			rank TINYINT(1) unsigned NULL,
 			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-			UNIQUE KEY unique_version (language, abbreviation)
+			UNIQUE KEY unique_language_abbreviation (language, abbreviation)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -113,8 +111,8 @@ class Bible_Here_Activator {
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL,
-			book_number TINYINT NOT NULL CHECK (book_number BETWEEN 1 AND 66),
-			primary_abbr BOOLEAN DEFAULT FALSE,
+			book_number TINYINT(2) unsigned zerofill NOT NULL CHECK (book_number BETWEEN 1 AND 66),
+			is_primary BOOLEAN DEFAULT FALSE,
 			UNIQUE KEY unique_abbr (language, abbreviation),
 			INDEX idx_book_number (book_number)
 		) $charset_collate;";
@@ -270,6 +268,41 @@ class Bible_Here_Activator {
 							$version['copyright'] ?? '',
 							$version['download_url'] ?? '',
 							$rank
+						);
+						$result = $wpdb->query($sql);
+						if ($result === false) {
+							$success = false;
+						}
+					}
+				}
+			}
+		} else {
+			$success = false;
+		}
+
+		// Load abbreviations data from CSV
+		$abbreviations_table = $wpdb->prefix . 'bible_here_abbreviations';
+		$abbreviations_csv = $data_dir . 'abbreviations.csv';
+		if (file_exists($abbreviations_csv)) {
+			$abbreviations_data = self::parse_csv($abbreviations_csv);
+			if (!empty($abbreviations_data)) {
+				// Check if abbreviations data already exists
+				$existing_abbreviations = $wpdb->get_var("SELECT COUNT(*) FROM $abbreviations_table");
+				if ($existing_abbreviations == 0 || $force_reload) {
+					foreach ($abbreviations_data as $abbreviation) {
+						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
+						$is_primary = !empty($abbreviation['is_primary']) ? intval($abbreviation['is_primary']) : 0;
+						
+						$sql = $wpdb->prepare(
+							"INSERT INTO $abbreviations_table (language, abbreviation, book_number, is_primary) 
+							VALUES (%s, %s, %d, %d) 
+							ON DUPLICATE KEY UPDATE 
+							book_number = VALUES(book_number), 
+							is_primary = VALUES(is_primary)",
+							$abbreviation['language'] ?? '',
+							$abbreviation['abbreviation'] ?? '',
+							intval($abbreviation['book_number'] ?? 0),
+							$is_primary
 						);
 						$result = $wpdb->query($sql);
 						if ($result === false) {
