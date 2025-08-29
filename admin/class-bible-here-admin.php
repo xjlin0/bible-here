@@ -199,12 +199,13 @@ class Bible_Here_Admin {
 		global $wpdb;
 
 		// Get all Bible versions
-		$versions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY rank");
+		$versions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY language, name");
 
 		// Check import status for each version
 		$import_status = [];
 		foreach ($versions as $version) {
-			$table_name = $wpdb->prefix . 'bible_here_' . strtolower($version->language) . '_' . strtolower($version->abbreviation);
+			// Use the table_name field from database instead of constructing it
+			$table_name = $wpdb->prefix . $version->table_name;
 			$table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") == $table_name;
 			$verse_count = 0;
 			if ($table_exists) {

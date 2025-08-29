@@ -96,16 +96,23 @@ class Bible_Here_XML_Importer {
 	 * @since    1.0.0
 	 * @return   string|false    Download URL or false on failure
 	 */
-	private function get_kjv_download_url() {
+	/**
+	 * Get download URL for a specific Bible version
+	 *
+	 * @since    1.0.0
+	 * @param    string    $version_abbreviation    Version abbreviation (e.g., 'kjv', 'cuv')
+	 * @return   string|false    Download URL or false on failure
+	 */
+	private function get_version_download_url($version_abbreviation) {
 		global $wpdb;
 		
-		error_log('Bible_Here_XML_Importer: Starting to get KJV download URL from database');
+		error_log('Bible_Here_XML_Importer: Starting to get ' . strtoupper($version_abbreviation) . ' download URL from database');
 		
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT download_url FROM {$table_name} WHERE abbreviation = %s",
-				'kjv'
+				$version_abbreviation
 			)
 		);
 		
@@ -122,22 +129,33 @@ class Bible_Here_XML_Importer {
 		}
 		
 		if (!$result) {
-			error_log('Bible_Here_XML_Importer: KJV version download URL not found');
+			error_log('Bible_Here_XML_Importer: ' . strtoupper($version_abbreviation) . ' version download URL not found');
 			return false;
 		}
 		
-		error_log('Bible_Here_XML_Importer: Successfully obtained KJV download URL');
+		error_log('Bible_Here_XML_Importer: Successfully obtained ' . strtoupper($version_abbreviation) . ' download URL');
 		return $result;
 	}
+
+	/**
+	 * Get KJV download URL (backward compatibility wrapper)
+	 *
+	 * @since    1.0.0
+	 * @return   string|false    Download URL or false on failure
+	 */
+	// private function get_kjv_download_url() {
+	// 	return $this->get_version_download_url('kjv');
+	// }
 
 	/**
 	 * Download ZIP file from URL
 	 *
 	 * @since    1.0.0
-	 * @param    string    $url    Download URL
+	 * @param    string    $url       Download URL
+	 * @param    string    $version   Version abbreviation for filename (optional, defaults to 'bible')
 	 * @return   string|false    Local file path or false on failure
 	 */
-	private function download_zip_file($url) {
+	private function download_zip_file($url, $version = 'bible') {
 		error_log('Bible_Here_XML_Importer: Starting ZIP file download: ' . $url);
 		
 		$upload_dir = wp_upload_dir();
@@ -149,7 +167,7 @@ class Bible_Here_XML_Importer {
 			error_log('Bible_Here_XML_Importer: Creating temporary directory: ' . $temp_dir);
 		}
 		
-		$zip_filename = 'kjv_bible_' . date('Y-m-d_H-i-s') . '.zip';
+		$zip_filename = $version . '_bible_' . date('Y-m-d_H-i-s') . '.zip';
 		$zip_file_path = $temp_dir . $zip_filename;
 		
 		error_log('Bible_Here_XML_Importer: Target file path: ' . $zip_file_path);
@@ -637,19 +655,22 @@ class Bible_Here_XML_Importer {
 		
 		error_log('Bible_Here_XML_Importer: Starting to import Bible data, total ' . count($bible_data) . ' verses, version: ' . $version_abbreviation);
 		
-		// Get table name from bible_here_versions
+		// Get table name and trim setting from bible_here_versions
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
-		$table_name_suffix = $wpdb->get_var(
+		$version_info = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT table_name FROM {$versions_table} WHERE abbreviation = %s",
+				"SELECT table_name, trim FROM {$versions_table} WHERE abbreviation = %s",
 				$version_abbreviation
 			)
 		);
 		
-		if (!$table_name_suffix) {
+		if (!$version_info || !$version_info->table_name) {
 			error_log('Bible_Here_XML_Importer: Error - Table name not found for version ' . $version_abbreviation);
 			return array('success' => false, 'message' => 'Version table name not found');
 		}
+		
+		$table_name_suffix = $version_info->table_name;
+		$should_trim = (bool) $version_info->trim;
 		
 		$table_name = $wpdb->prefix . $table_name_suffix;
 		error_log('Bible_Here_XML_Importer: Target table name: ' . $table_name);
@@ -685,7 +706,14 @@ class Bible_Here_XML_Importer {
 				$values[] = $verse['book_number'];
 				$values[] = $verse['chapter_number'];
 				$values[] = $verse['verse_number'];
-				$values[] = $verse['verse_text'];
+				
+				// Process verse text based on trim setting
+				$verse_text = $verse['verse_text'];
+				if ($should_trim) {
+					// Remove all whitespace characters (spaces, tabs, newlines, etc.)
+					$verse_text = preg_replace('/\s+/', '', $verse_text);
+				}
+				$values[] = $verse_text;
 				$placeholders[] = '(%s, %d, %d, %d, %s)';
 			}
 			
@@ -791,28 +819,33 @@ class Bible_Here_XML_Importer {
 	}
 
 	/**
-	 * Get version configuration for dynamic import
+	 * Get version information from database
 	 *
 	 * @since    1.0.0
-	 * @return   array    Version configurations
+	 * @param    string    $language    Language code (e.g., 'en', 'zh_tw', 'es')
+	 * @param    string    $version     Version abbreviation (e.g., 'kjv', 'cuv', 'rv')
+	 * @return   array|false    Version information or false if not found
 	 */
-	private function get_version_configs() {
-		return array(
-			'en' => array(
-				'kjv' => array(
-					'download_url_method' => 'get_kjv_download_url',
-					'xml_parser_method' => 'parse_zefania_xml',
-					'description' => 'King James Version (English)'
-				)
-			),
-			'zh_tw' => array(
-				'cuv' => array(
-					'download_url_method' => 'get_cuv_download_url',
-					'xml_parser_method' => 'parse_zefania_xml',
-					'description' => 'Chinese Union Version (Traditional Chinese)'
-				)
-			)
+	private function get_version_info_from_db($language, $version) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		$sql = $wpdb->prepare(
+			"SELECT * FROM {$table_name} WHERE language = %s AND abbreviation = %s",
+			$language,
+			$version
 		);
+		
+		$result = $wpdb->get_row($sql, ARRAY_A);
+		
+		if ($result) {
+			error_log('Bible_Here_XML_Importer: Found version in database: ' . $result['name'] . ' (' . $language . '/' . $version . ')');
+			return $result;
+		}
+		
+		error_log('Bible_Here_XML_Importer: Version not found in database: ' . $language . '/' . $version);
+		return false;
 	}
 
 	/**
@@ -826,29 +859,22 @@ class Bible_Here_XML_Importer {
 	public function import_bible($language, $version) {
 		error_log('Bible_Here_XML_Importer: Starting dynamic bible import - Language: ' . $language . ', Version: ' . $version);
 		
-		// Get version configuration
-		$configs = $this->get_version_configs();
+		// Get version configuration from database
+		$version_info = $this->get_version_info_from_db($language, $version);
 		
-		if (!isset($configs[$language]) || !isset($configs[$language][$version])) {
-			$error_msg = 'Unsupported language/version combination: ' . $language . '/' . $version;
+		if (!$version_info) {
+			$error_msg = 'Version not found in database: ' . $language . '/' . $version;
 			error_log('Bible_Here_XML_Importer: ' . $error_msg);
 			return array('success' => false, 'message' => $error_msg);
 		}
 		
-		$config = $configs[$language][$version];
-		error_log('Bible_Here_XML_Importer: Found configuration for ' . $language . '/' . $version . ': ' . $config['description']);
+		error_log('Bible_Here_XML_Importer: Found version in database - Name: ' . $version_info['name'] . ', Table: ' . $version_info['table_name']);
 		
 		try {
-			// Step 1: Get download URL using configured method
-			$download_url_method = $config['download_url_method'];
-			if (!method_exists($this, $download_url_method)) {
-				$error_msg = 'Download URL method not found: ' . $download_url_method;
-				error_log('Bible_Here_XML_Importer: ' . $error_msg);
-				return array('success' => false, 'message' => $error_msg);
-			}
-			
-			error_log('Bible_Here_XML_Importer: Getting download URL using method: ' . $download_url_method);
-			$download_url = $this->$download_url_method();
+			// Step 1: Get download URL using generic method
+			$version_abbreviation = $version_info['abbreviation'];
+			error_log('Bible_Here_XML_Importer: Getting download URL for version: ' . $version_abbreviation);
+			$download_url = $this->get_version_download_url($version_abbreviation);
 			
 			if (!$download_url) {
 				$error_msg = 'Failed to get download URL for ' . $language . '/' . $version;
@@ -859,7 +885,7 @@ class Bible_Here_XML_Importer {
 			error_log('Bible_Here_XML_Importer: Download URL obtained: ' . $download_url);
 			
 			// Step 2: Download ZIP file
-			$zip_file_path = $this->download_zip_file($download_url);
+			$zip_file_path = $this->download_zip_file($download_url, $version);
 			if (!$zip_file_path) {
 				$error_msg = 'Failed to download ZIP file for ' . $language . '/' . $version;
 				error_log('Bible_Here_XML_Importer: ' . $error_msg);
@@ -875,17 +901,10 @@ class Bible_Here_XML_Importer {
 				return array('success' => false, 'message' => $error_msg);
 			}
 			
-			// Step 4: Parse XML using configured method
-			$xml_parser_method = $config['xml_parser_method'];
-			if (!method_exists($this, $xml_parser_method)) {
-				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
-				$error_msg = 'XML parser method not found: ' . $xml_parser_method;
-				error_log('Bible_Here_XML_Importer: ' . $error_msg);
-				return array('success' => false, 'message' => $error_msg);
-			}
-			
+			// Step 4: Parse XML using Zefania XML parser (universal for all versions)
+			$xml_parser_method = 'parse_zefania_xml';
 			error_log('Bible_Here_XML_Importer: Parsing XML using method: ' . $xml_parser_method);
-			$bible_data = $this->$xml_parser_method($xml_file_path);
+			$bible_data = $this->parse_zefania_xml($xml_file_path);
 			
 			if (!$bible_data || !is_array($bible_data) || empty($bible_data)) {
 				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
@@ -920,7 +939,7 @@ class Bible_Here_XML_Importer {
 			// Step 8: Clean up temporary files
 			$this->cleanup_temp_files($zip_file_path, $xml_file_path);
 			
-			$success_msg = 'Successfully imported ' . $config['description'] . ' (' . $language . '/' . $version . ') - ' . $import_result['imported_count'] . ' verses';
+			$success_msg = 'Successfully imported ' . $version_info['name'] . ' (' . $language . '/' . $version . ') - ' . $import_result['imported_count'] . ' verses';
 			error_log('Bible_Here_XML_Importer: ' . $success_msg);
 			
 			return array(
@@ -943,43 +962,13 @@ class Bible_Here_XML_Importer {
 	}
 
 	/**
-	 * Get CUV download URL from database
+	 * Get CUV download URL (backward compatibility wrapper)
 	 *
 	 * @since    1.0.0
 	 * @return   string|false    Download URL or false on failure
 	 */
 	private function get_cuv_download_url() {
-		global $wpdb;
-		
-		error_log('Bible_Here_XML_Importer: Getting CUV download URL from database');
-		
-		$table_name = $wpdb->prefix . 'bible_here_versions';
-		$download_url = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT download_url FROM {$table_name} WHERE abbreviation = %s",
-				'cuv'
-			)
-		);
-		
-		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: Database error while getting CUV download URL: ' . $wpdb->last_error);
-			return false;
-		}
-		
-		if (!$download_url) {
-			error_log('Bible_Here_XML_Importer: CUV download URL not found in database');
-			return false;
-		}
-		
-		// Convert GitHub blob URL to raw download URL if needed
-		if (strpos($download_url, 'github.com') !== false && strpos($download_url, '/blob/') !== false) {
-			$download_url = str_replace('github.com', 'raw.githubusercontent.com', $download_url);
-			$download_url = str_replace('/blob/', '/', $download_url);
-			error_log('Bible_Here_XML_Importer: Converted GitHub blob URL to raw URL: ' . $download_url);
-		}
-		
-		error_log('Bible_Here_XML_Importer: CUV download URL: ' . $download_url);
-		return $download_url;
+		return $this->get_version_download_url('cuv');
 	}
 
 	/**

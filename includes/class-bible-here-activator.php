@@ -78,18 +78,19 @@ class Bible_Here_Activator {
 		// Bible versions table
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			id INT AUTO_INCREMENT PRIMARY KEY ,
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			trim BOOLEAN DEFAULT FALSE,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			info_text TEXT,
+			rank TINYINT(1) unsigned NULL,
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL COMMENT 'ascii English only for database table names',
 			name VARCHAR(100) NOT NULL,
-			info_text TEXT,
 			info_url VARCHAR(255),
 			publisher VARCHAR(100),
-			copyright TEXT,
+			copyright VARCHAR(100),
 			download_url VARCHAR(255),
-			rank TINYINT(1) unsigned NULL,
-			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			UNIQUE KEY unique_language_abbreviation (language, abbreviation)
 		) $charset_collate;";
 		dbDelta( $sql );
@@ -245,30 +246,84 @@ class Bible_Here_Activator {
 					foreach ($versions_data as $version) {
 						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs and rank
 						$rank = !empty($version['rank']) ? intval($version['rank']) : null;
+						$info_text = !empty($version['info_text']) ? $version['info_text'] : null;
+						$info_url = !empty($version['info_url']) ? $version['info_url'] : null;
+						$publisher = !empty($version['publisher']) ? $version['publisher'] : null;
+						$trim = isset($version['trim']) ? ($version['trim'] === 'true' ? 1 : 0) : 0;
 						
-						$sql = $wpdb->prepare(
-							"INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank) 
-							VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %d) 
-							ON DUPLICATE KEY UPDATE 
-							table_name = VALUES(table_name), 
-							name = VALUES(name), 
-							info_text = VALUES(info_text), 
-							info_url = VALUES(info_url), 
-							publisher = VALUES(publisher), 
-							copyright = VALUES(copyright), 
-							download_url = VALUES(download_url), 
-							rank = COALESCE(rank, VALUES(rank))",
-							$version['table_name'] ?? '',
-							$version['language'] ?? '',
-							$version['abbreviation'] ?? '',
-							$version['name'] ?? '',
-							$version['info_text'] ?? '',
-							$version['info_url'] ?? '',
-							$version['publisher'] ?? '',
-							$version['copyright'] ?? '',
-							$version['download_url'] ?? '',
-							$rank
-						);
+						// Build SQL dynamically to handle NULL values properly
+						$sql_parts = [];
+						$sql_values = [];
+						$update_parts = [];
+						
+						// Required fields (never null)
+						$sql_parts[] = '%s'; // table_name
+						$sql_values[] = $version['table_name'] ?? '';
+						$sql_parts[] = '%s'; // language
+						$sql_values[] = $version['language'] ?? '';
+						$sql_parts[] = '%s'; // abbreviation
+						$sql_values[] = $version['abbreviation'] ?? '';
+						$sql_parts[] = '%s'; // name
+						$sql_values[] = $version['name'] ?? '';
+						
+						// Optional fields (can be null)
+						if ($info_text === null) {
+							$sql_parts[] = 'NULL';
+						} else {
+							$sql_parts[] = '%s';
+							$sql_values[] = $info_text;
+						}
+						
+						if ($info_url === null) {
+							$sql_parts[] = 'NULL';
+						} else {
+							$sql_parts[] = '%s';
+							$sql_values[] = $info_url;
+						}
+						
+						if ($publisher === null) {
+							$sql_parts[] = 'NULL';
+						} else {
+							$sql_parts[] = '%s';
+							$sql_values[] = $publisher;
+						}
+						
+						// Required fields (never null)
+						$sql_parts[] = '%s'; // copyright
+						$sql_values[] = $version['copyright'] ?? '';
+						$sql_parts[] = '%s'; // download_url
+						$sql_values[] = $version['download_url'] ?? '';
+						
+						// Rank field
+						if ($rank === null) {
+							$sql_parts[] = 'NULL';
+						} else {
+							$sql_parts[] = '%d';
+							$sql_values[] = $rank;
+						}
+						
+						// Trim field
+						$sql_parts[] = '%d';
+						$sql_values[] = $trim;
+						
+						$sql_placeholders = implode(', ', $sql_parts);
+						
+						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank, trim) 
+								VALUES ($sql_placeholders) 
+								ON DUPLICATE KEY UPDATE 
+								table_name = VALUES(table_name), 
+								name = VALUES(name), 
+								info_text = VALUES(info_text), 
+								info_url = VALUES(info_url), 
+								publisher = VALUES(publisher), 
+								copyright = VALUES(copyright), 
+								download_url = VALUES(download_url), 
+								rank = COALESCE(rank, VALUES(rank)), 
+								trim = VALUES(trim)";
+						
+						if (!empty($sql_values)) {
+							$sql = $wpdb->prepare($sql, $sql_values);
+						}
 						$result = $wpdb->query($sql);
 						if ($result === false) {
 							$success = false;

@@ -32,6 +32,10 @@
 					return;
 				}
 				
+				// Immediately disable the clicked button and show downloading status
+				e.target.disabled = true;
+				e.target.textContent = 'Downloading...';
+				
 				startImport(language, version);
 			}
 		
@@ -205,7 +209,10 @@
 			const startImportBtn = document.getElementById('start-import-btn');
 			if (startImportBtn) startImportBtn.disabled = false;
 			const downloadBtns = document.querySelectorAll('.bible-download-btn');
-			downloadBtns.forEach(btn => btn.disabled = false);
+			downloadBtns.forEach(btn => {
+				btn.disabled = false;
+				btn.textContent = 'Download'; // Reset button text
+			});
 			const cancelBtn = document.getElementById('cancel-import-btn');
 			if (cancelBtn) cancelBtn.style.display = 'none';
 		}
@@ -235,9 +242,15 @@
 		// Only reset buttons to allow retry
 		importInProgress = false;
 		currentImportVersion = null;
-		$('#start-import-btn').prop('disabled', false);
-		$('.bible-download-btn').prop('disabled', false);
-		$('#cancel-import-btn').hide();
+		const startImportBtn = document.getElementById('start-import-btn');
+		if (startImportBtn) startImportBtn.disabled = false;
+		const downloadBtns = document.querySelectorAll('.bible-download-btn');
+		downloadBtns.forEach(btn => {
+			btn.disabled = false;
+			btn.textContent = 'Download'; // Reset button text
+		});
+		const cancelBtn = document.getElementById('cancel-import-btn');
+		if (cancelBtn) cancelBtn.style.display = 'none';
 	}
 
 	/**
@@ -316,7 +329,10 @@
 		if (startImportBtn) startImportBtn.disabled = false;
 		
 		const downloadBtns = document.querySelectorAll('.bible-download-btn');
-		downloadBtns.forEach(btn => btn.disabled = false);
+		downloadBtns.forEach(btn => {
+			btn.disabled = false;
+			btn.textContent = 'Download'; // Reset button text
+		});
 		
 		const cancelBtn = document.getElementById('cancel-import-btn');
 		if (cancelBtn) cancelBtn.disabled = true;
@@ -347,7 +363,10 @@
 		}
 		
 		const downloadBtns = document.querySelectorAll('.bible-download-btn');
-		downloadBtns.forEach(btn => btn.disabled = false);
+		downloadBtns.forEach(btn => {
+			btn.disabled = false;
+			btn.textContent = 'Download'; // Reset button text
+		});
 		
 		const cancelBtn = document.getElementById('cancel-import-btn');
 		if (cancelBtn) cancelBtn.style.display = 'none';
