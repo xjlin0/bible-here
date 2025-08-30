@@ -54,10 +54,10 @@ class Bible_Here_Activator {
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
 			genre_number TINYINT(1) unsigned NOT NULL,
-			book_number TINYINT(2) unsigned zerofill NOT NULL CHECK (book_number BETWEEN 1 AND 66),
+			chapters TINYINT(1) unsigned NOT NULL,
+			book_number TINYINT(2) unsigned NOT NULL,
 			title_short VARCHAR(20) NOT NULL,
 			title_full VARCHAR(100) NOT NULL,
-			chapters TINYINT NOT NULL CHECK (chapters BETWEEN 1 AND 150),
 			UNIQUE KEY unique_book (language, book_number),
 			INDEX idx_book_number (book_number)
 		) $charset_collate;";
@@ -68,10 +68,10 @@ class Bible_Here_Activator {
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
-			type VARCHAR(20) NOT NULL,
-			genre_number TINYINT(1) unsigned NOT NULL CHECK (genre_number BETWEEN 1 AND 10),
+			type VARCHAR(2) NOT NULL COMMENT 'ot/nt',
+			genre_number TINYINT(1) unsigned NOT NULL,
 			name VARCHAR(50) NOT NULL,
-			UNIQUE KEY unique_genre (language, genre_number)
+			UNIQUE KEY unique_genre_for_language (language, genre_number)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -79,20 +79,24 @@ class Bible_Here_Activator {
 		$table_name = $wpdb->prefix . 'bible_here_versions';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
-			trim BOOLEAN DEFAULT FALSE,
+			trim BOOLEAN DEFAULT FALSE COMMENT 'if trimming space from verses during importing required',
+			for_login BOOLEAN DEFAULT FALSE COMMENT 'only for logged in users',
+			seed BOOLEAN DEFAULT FALSE COMMENT 'seed data cannot be deleted',
 			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			info_text TEXT,
 			rank TINYINT(1) unsigned NULL,
+			type VARCHAR(10) NOT NULL DEFAULT 'Bible' COMMENT 'Bible/Commentary',
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			language VARCHAR(10) NOT NULL,
-			abbreviation VARCHAR(20) NOT NULL COMMENT 'ascii English only for database table names',
+			abbreviation VARCHAR(10) NOT NULL COMMENT 'ascii English only for database table names',
 			name VARCHAR(100) NOT NULL,
 			info_url VARCHAR(255),
 			publisher VARCHAR(100),
 			copyright VARCHAR(100),
-			download_url VARCHAR(255),
-			UNIQUE KEY unique_language_abbreviation (language, abbreviation)
-		) $charset_collate;";
+			download_url VARCHAR(512),
+			UNIQUE KEY uniq_table_name (table_name),
+			UNIQUE KEY uniq_language_abbreviation (language, abbreviation)
+		) $charset_collate COMMENT='For Bible or Commentary versions';";
 		dbDelta( $sql );
 
 		// Cross references table
@@ -102,7 +106,6 @@ class Bible_Here_Activator {
 			rank TINYINT(1) unsigned NOT NULL DEFAULT 0,
 			start INT(8) unsigned zerofill NOT NULL,
 			finish INT(8) unsigned zerofill NOT NULL DEFAULT 0,
-			INDEX idx_start (start)
 		) $charset_collate;";
 		dbDelta( $sql );
 
@@ -112,31 +115,10 @@ class Bible_Here_Activator {
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL,
-			book_number TINYINT(2) unsigned zerofill NOT NULL CHECK (book_number BETWEEN 1 AND 66),
+			book_number TINYINT(1) unsigned NOT NULL,
 			is_primary BOOLEAN DEFAULT FALSE,
-			UNIQUE KEY unique_abbr (language, abbreviation),
-			INDEX idx_book_number (book_number)
-		) $charset_collate;";
-		dbDelta( $sql );
-
-
-
-		// Bible commentaries table
-		$table_name = $wpdb->prefix . 'bible_here_commentaries';
-		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			installed BOOLEAN DEFAULT FALSE,
-			table_name VARCHAR(50) NOT NULL,
-			language VARCHAR(10) NOT NULL,
-			name VARCHAR(100) NOT NULL,
-			info_text TEXT,
-			info_url VARCHAR(255),
-			publisher VARCHAR(100),
-			copyright TEXT,
-			download_url VARCHAR(255),
-			INDEX idx_installed (installed),
-			INDEX idx_language (language)
-		) $charset_collate;";
+			UNIQUE KEY unique_abbr (language, abbreviation)
+		) $charset_collate COMMENT='store all possible abbreviations for scripture';";
 		dbDelta( $sql );
 	}
 
@@ -250,6 +232,8 @@ class Bible_Here_Activator {
 						$info_url = !empty($version['info_url']) ? $version['info_url'] : null;
 						$publisher = !empty($version['publisher']) ? $version['publisher'] : null;
 						$trim = isset($version['trim']) ? ($version['trim'] === 'true' ? 1 : 0) : 0;
+						$for_login = isset($version['for_login']) ? ($version['for_login'] === 'true' ? 1 : 0) : 0;
+						$seed = isset($version['seed']) ? ($version['seed'] === 'true' ? 1 : 0) : 0;
 						
 						// Build SQL dynamically to handle NULL values properly
 						$sql_parts = [];
@@ -306,21 +290,31 @@ class Bible_Here_Activator {
 						$sql_parts[] = '%d';
 						$sql_values[] = $trim;
 						
+						// For login field
+						$sql_parts[] = '%d';
+						$sql_values[] = $for_login;
+						
+						// Seed field
+						$sql_parts[] = '%d';
+						$sql_values[] = $seed;
+						
 						$sql_placeholders = implode(', ', $sql_parts);
 						
-						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank, trim) 
+						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
 								VALUES ($sql_placeholders) 
 								ON DUPLICATE KEY UPDATE 
-								table_name = VALUES(table_name), 
-								name = VALUES(name), 
-								info_text = VALUES(info_text), 
-								info_url = VALUES(info_url), 
-								publisher = VALUES(publisher), 
-								copyright = VALUES(copyright), 
-								download_url = VALUES(download_url), 
-								rank = COALESCE(rank, VALUES(rank)), 
-								trim = VALUES(trim)";
-						
+									table_name = VALUES(table_name), 
+									name = VALUES(name), 
+									info_text = VALUES(info_text), 
+									info_url = VALUES(info_url), 
+									publisher = VALUES(publisher), 
+									copyright = VALUES(copyright), 
+									download_url = VALUES(download_url), 
+									rank = COALESCE(rank, VALUES(rank)), 
+									trim = VALUES(trim), 
+									for_login = VALUES(for_login), 
+									seed = VALUES(seed)";
+
 						if (!empty($sql_values)) {
 							$sql = $wpdb->prepare($sql, $sql_values);
 						}

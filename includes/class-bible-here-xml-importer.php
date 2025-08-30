@@ -328,26 +328,26 @@ class Bible_Here_XML_Importer {
 	 */
 	private function extract_xml_from_zip($zip_file_path) {
 		error_log('Bible_Here_XML_Importer: Starting ZIP file extraction: ' . $zip_file_path);
-		
+
 		// Check if ZIP file exists before processing
 		if (!file_exists($zip_file_path)) {
 			error_log('Bible_Here_XML_Importer: Error - ZIP file does not exist: ' . $zip_file_path);
 			return false;
 		}
-		
+
 		$zip_file_size = filesize($zip_file_path);
 		error_log('Bible_Here_XML_Importer: ZIP file existence check passed, file size: ' . round($zip_file_size / 1024, 2) . ' KB');
-		
+
 		if (!class_exists('ZipArchive')) {
 			error_log('Bible_Here_XML_Importer: Error - ZipArchive class does not exist, please check if PHP zip extension is installed');
 			return false;
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: ZipArchive class check passed');
-		
+
 		$zip = new ZipArchive();
 		$result = $zip->open($zip_file_path);
-		
+
 		if ($result !== TRUE) {
 			$error_messages = [
 				ZipArchive::ER_OK => 'No error',
@@ -379,9 +379,9 @@ class Bible_Here_XML_Importer {
 			error_log('Bible_Here_XML_Importer: ZIP file opening failed, error code: ' . $result . ' (' . $error_message . ')');
 			return false;
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: ZIP file opened successfully, contains ' . $zip->numFiles . ' files');
-		
+
 		// List all files in ZIP for debugging
 		error_log('Bible_Here_XML_Importer: ZIP file content list:');
 		for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -392,7 +392,7 @@ class Bible_Here_XML_Importer {
 			$file_extension = pathinfo($filename, PATHINFO_EXTENSION);
 			error_log('Bible_Here_XML_Importer: [' . ($i + 1) . '] ' . $filename . ' (size: ' . $file_size . ' bytes, compressed: ' . $compressed_size . ' bytes, extension: ' . $file_extension . ')');
 		}
-		
+
 		// Find XML file in ZIP
 		$xml_file_name = null;
 		error_log('Bible_Here_XML_Importer: Starting XML file search...');
@@ -400,43 +400,43 @@ class Bible_Here_XML_Importer {
 			$file_info = $zip->statIndex($i);
 			$filename = $file_info['name'];
 			$file_extension = pathinfo($filename, PATHINFO_EXTENSION);
-			
+
 			if ($file_extension === 'xml') {
 				$xml_file_name = $filename;
 				error_log('Bible_Here_XML_Importer: Found XML file: ' . $xml_file_name . ' (size: ' . $file_info['size'] . ' bytes)');
 				break;
 			}
 		}
-		
+
 		if (!$xml_file_name) {
 			error_log('Bible_Here_XML_Importer: Error - No XML file found in ZIP archive');
 			error_log('Bible_Here_XML_Importer: Please check if ZIP file contains valid XML file');
 			$zip->close();
 			return false;
 		}
-		
+
 		// Extract XML file
 		$upload_dir = wp_upload_dir();
 		$temp_dir = $upload_dir['basedir'] . '/bible-here-temp/';
 		// Use basename to get final filename, but keep track of full path for extraction
 		$xml_final_name = basename($xml_file_name);
 		$xml_file_path = $temp_dir . $xml_final_name;
-		
+
 		error_log('Bible_Here_XML_Importer: Preparing XML file extraction');
 		error_log('Bible_Here_XML_Importer: Source file: ' . $xml_file_name);
 		error_log('Bible_Here_XML_Importer: Final filename: ' . $xml_final_name);
 		error_log('Bible_Here_XML_Importer: Target path: ' . $xml_file_path);
 		error_log('Bible_Here_XML_Importer: Temp directory: ' . $temp_dir);
-		
+
 		// Ensure temp directory exists
 		if (!file_exists($temp_dir)) {
 			error_log('Bible_Here_XML_Importer: Temp directory does not exist, creating: ' . $temp_dir);
 			wp_mkdir_p($temp_dir);
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: Starting extraction...');
 		$extraction_result = $zip->extractTo($temp_dir, $xml_file_name);
-		
+
 		if (!$extraction_result) {
 			$last_error = $zip->getStatusString();
 			$zip_error_code = $zip->status;
@@ -447,14 +447,14 @@ class Bible_Here_XML_Importer {
 			$zip->close();
 			return false;
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: Extraction operation completed, closing ZIP file');
 		$zip->close();
-		
+
 		// Check if file was extracted with directory structure
 		$extracted_file_with_path = $temp_dir . $xml_file_name;
 		error_log('Bible_Here_XML_Importer: Checking extracted file (with path): ' . $extracted_file_with_path);
-		
+
 		if (file_exists($extracted_file_with_path)) {
 			// File extracted with directory structure, move it to final location
 			error_log('Bible_Here_XML_Importer: File extracted to subdirectory, moving to final location');
@@ -492,12 +492,12 @@ class Bible_Here_XML_Importer {
 				return false;
 			}
 		}
-		
+
 		$xml_file_size = filesize($xml_file_path);
 		$xml_file_size_kb = round($xml_file_size / 1024, 2);
 		error_log('Bible_Here_XML_Importer: XML file extraction successful');
 		error_log('Bible_Here_XML_Importer: XML file size: ' . $xml_file_size . ' bytes (' . $xml_file_size_kb . ' KB)');
-		
+
 		return $xml_file_path;
 	}
 
@@ -510,10 +510,10 @@ class Bible_Here_XML_Importer {
 	 */
 	private function parse_zefania_xml($xml_file_path) {
 		error_log('Bible_Here_XML_Importer: Starting Zefania XML file parsing: ' . $xml_file_path);
-		
+
 		libxml_use_internal_errors(true);
 		$xml = simplexml_load_file($xml_file_path);
-		
+
 		if ($xml === false) {
 			$errors = libxml_get_errors();
 			foreach ($errors as $error) {
@@ -521,27 +521,27 @@ class Bible_Here_XML_Importer {
 			}
 			return false;
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: XML file loaded successfully');
-		
+
 		$bible_data = array();
 		$verse_count = 0;
 		$book_count = 0;
-		
+
 		// Parse books
 		if (isset($xml->BIBLEBOOK)) {
 			foreach ($xml->BIBLEBOOK as $book) {
 				$book_number = (int)$book['bnumber'];
 				$book_name = (string)$book['bname'];
 				$book_count++;
-				
+
 				error_log('Bible_Here_XML_Importer: Processing book ' . $book_count . ': ' . $book_name . ' (Number: ' . $book_number . ')');
-				
+
 				// Parse chapters
 				if (isset($book->CHAPTER)) {
 					foreach ($book->CHAPTER as $chapter) {
 						$chapter_number = (int)$chapter['cnumber'];
-						
+
 						// Parse verses
 						if (isset($chapter->VERS)) {
 							foreach ($chapter->VERS as $verse) {
@@ -567,9 +567,9 @@ class Bible_Here_XML_Importer {
 				}
 			}
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: XML parsing completed, parsed ' . $book_count . ' books, ' . $verse_count . ' verses');
-		
+
 		return $bible_data;
 	}
 
@@ -582,9 +582,9 @@ class Bible_Here_XML_Importer {
 	 */
 	private function create_version_content_table($version_abbreviation) {
 		global $wpdb;
-		
+
 		error_log('Bible_Here_XML_Importer: Starting to create version-specific content table: ' . $version_abbreviation);
-		
+
 		// Get table name from bible_here_versions
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
 		$table_name_suffix = $wpdb->get_var(
@@ -593,12 +593,12 @@ class Bible_Here_XML_Importer {
 				$version_abbreviation
 			)
 		);
-		
+
 		if (!$table_name_suffix) {
 			error_log('Bible_Here_XML_Importer: Error - Table name not found for version ' . $version_abbreviation);
 			return false;
 		}
-		
+
 		$table_name = $wpdb->prefix . $table_name_suffix;
 		error_log('Bible_Here_XML_Importer: Target table name: ' . $table_name);
 		
@@ -607,37 +607,37 @@ class Bible_Here_XML_Importer {
 			error_log('Bible_Here_XML_Importer: Version content table already exists, skipping creation: ' . $table_name);
 			return true;
 		}
-		
+
 		$charset_collate = $wpdb->get_charset_collate();
 		$index_name = 'uniq_'.$table_name;
-		
+
 		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
 			verse_id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT COMMENT 'verse ID: 2-digit book_number + 3-digit chapter_number + 3-digit verse_number',
 			book_number tinyint(1) unsigned NOT NULL,
 	        chapter_number tinyint(1) unsigned NOT NULL,
 	        verse_number tinyint(1) unsigned NOT NULL,
-			verse_text text NOT NULL,
 			verse_strong text,
+			verse_text text NOT NULL,
 		  PRIMARY KEY (verse_id),
 		  UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
 		) {$charset_collate};";
-		
+
 		error_log('Bible_Here_XML_Importer: Executing SQL to create table: ' . $sql);
-		
+
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
-		
+
 		if ($wpdb->last_error) {
 			error_log('Bible_Here_XML_Importer: Table creation failed, database error: ' . $wpdb->last_error);
 			return false;
 		}
-		
+
 		// Verify table creation
 		if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") != $table_name) {
 			error_log('Bible_Here_XML_Importer: Table creation verification failed');
 			return false;
 		}
-		
+
 		error_log('Bible_Here_XML_Importer: Version content table created successfully: ' . $table_name);
 		return true;
 	}
@@ -992,16 +992,16 @@ class Bible_Here_XML_Importer {
 	 * @param    string    $xml_file_path    Path to XML file
 	 * @return   array|false    Array of bible verses or false on failure
 	 */
-	private function parse_cuv_xml($xml_file_path) {
-		error_log('Bible_Here_XML_Importer: Starting to parse CUV XML file: ' . $xml_file_path);
+	// private function parse_cuv_xml($xml_file_path) {
+	// 	error_log('Bible_Here_XML_Importer: Starting to parse CUV XML file: ' . $xml_file_path);
 		
-		if (!file_exists($xml_file_path)) {
-			error_log('Bible_Here_XML_Importer: CUV XML file does not exist: ' . $xml_file_path);
-			return false;
-		}
+	// 	if (!file_exists($xml_file_path)) {
+	// 		error_log('Bible_Here_XML_Importer: CUV XML file does not exist: ' . $xml_file_path);
+	// 		return false;
+	// 	}
 		
-		// Use the standard Zefania XML parser
-		// This can be customized later if CUV XML has different structure
-		return $this->parse_zefania_xml($xml_file_path);
-	}
+	// 	// Use the standard Zefania XML parser
+	// 	// This can be customized later if CUV XML has different structure
+	// 	return $this->parse_zefania_xml($xml_file_path);
+	// }
 }

@@ -172,6 +172,18 @@ class Bible_Here {
 		
 		// Register AJAX hook for reloading CSV data
 		$this->loader->add_action( 'wp_ajax_bible_here_reload_csv', $plugin_admin, 'handle_ajax_reload_csv' );
+		
+		// Register AJAX hook for getting versions (duplicate check)
+		$this->loader->add_action( 'wp_ajax_bible_here_get_versions', $plugin_admin, 'handle_ajax_get_versions' );
+		
+		// Register AJAX hook for saving version
+		$this->loader->add_action( 'wp_ajax_bible_here_save_version', $plugin_admin, 'handle_ajax_save_version' );
+		
+		// Register AJAX hook for adding version
+		$this->loader->add_action( 'wp_ajax_bible_here_add_version', $plugin_admin, 'handle_ajax_add_version' );
+		
+		// Register AJAX hook for deleting version row
+		$this->loader->add_action( 'wp_ajax_bible_here_delete_version_row', $plugin_admin, 'handle_ajax_delete_version_row' );
 
 	}
 

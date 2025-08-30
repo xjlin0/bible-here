@@ -52,6 +52,12 @@ class Bible_Here_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
+		// Register AJAX handlers for version management
+		add_action('wp_ajax_bible_here_save_version', array($this, 'handle_ajax_save_version'));
+		add_action('wp_ajax_bible_here_add_version', array($this, 'handle_ajax_add_version'));
+		add_action('wp_ajax_bible_here_delete_version_row', array($this, 'handle_ajax_delete_version_row'));
+		add_action('wp_ajax_bible_here_get_version_data', array($this, 'handle_ajax_get_version_data'));
+
 	}
 
 	/**
@@ -218,39 +224,88 @@ class Bible_Here_Admin {
 		}
 
 		echo '<div class="wrap">';
-		echo '<h1>Download versions</h1>';
+		echo '<h1>Bible Versions Management</h1>';
 		
-		// Reload CSV data button
-		echo '<div style="margin-bottom: 20px;">';
-		echo '<button id="reload-csv-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer;">🔄 Reload All CSV Data</button>';
-		echo '<p style="margin-top: 5px; color: #666; font-style: italic;">Click to reload books, genres, and versions data from CSV files</p>';
+		// Add styles for table and modal
+		echo '<style>
+			.versions-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+			.versions-table th, .versions-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+			.versions-table th { background-color: #f0f0f0; color: #000; font-weight: bold; }
+			.versions-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+			.versions-table tbody tr:nth-child(odd) { background-color: #ffffff; }
+			.btn-add { background: #00a32a; color: white; border: none; padding: 8px 16px; cursor: pointer; margin-bottom: 10px; }
+			.btn-edit { background: #0073aa; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+			.btn-download { background: #0073aa; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 12px; margin-left: 4px; }
+			.status-imported { color: #00a32a; font-weight: bold; }
+			.status-not-imported { color: #666; }
+			.truncate { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+			
+			/* Modal styles */
+			.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+			.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 800px; max-height: 70vh; border-radius: 5px; overflow-y: auto; }
+			.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+			.modal-header h2 { margin: 0; }
+			.close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+			.close:hover { color: black; }
+			.modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+			.modal-form .full-width { grid-column: 1 / -1; }
+			.modal-form .type-for-login-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; grid-column: 1 / -1; }
+			.modal-form label { font-weight: bold; margin-bottom: 5px; display: block; }
+			.modal-form input, .modal-form select, .modal-form textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+			.modal-form textarea { height: 80px; resize: vertical; }
+			.modal-actions { margin-top: 20px; text-align: right; }
+			.modal-actions button { margin-left: 10px; padding: 8px 16px; border: none; border-radius: 3px; cursor: pointer; }
+			.btn-save { background: #00a32a; color: white; }
+			.btn-delete { background: #d63638; color: white; }
+			.btn-cancel { background: #666; color: white; }
+		</style>';
+		
+		// Button row with flexbox layout
+		echo '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
+		echo '<button id="reload-csv-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer; min-width: 200px;" title="Click to reload books, genres, and versions data from CSV files">🔄 Reload default seed data</button>';
+		echo '<button id="add-version-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer; min-width: 200px;" title="Click to add a new version (no content)">+ Add New Version</button>';
 		echo '</div>';
 		
 		echo '<div class="bible-versions-list">';
 
 		if ($versions) {
-			echo '<h2>Bible</h2>';
-			echo '<table class="wp-list-table widefat fixed striped">';
-			echo '<thead><tr><th>Language</th><th>Name</th><th>Abbreviation</th><th>Display order</th><th>Updated At</th><th>Status</th><th>Actions</th></tr></thead>';
+			echo '<h2>Bible Versions</h2>';
+			echo '<table id="versions-table" class="versions-table">';
+			echo '<thead><tr>';
+			// Hide ID column
+			echo '<th style="display: none;">ID</th>';
+			echo '<th>Language</th>';
+			echo '<th>Abbreviation</th>';
+			echo '<th>Name</th>';
+			echo '<th>Type</th>';
+			echo '<th>Publisher</th>';
+			echo '<th>Status</th>';
+			echo '<th>Actions</th>';
+			echo '</tr></thead>';
 			echo '<tbody>';
 			foreach ($versions as $version) {
 				$status = $import_status[$version->abbreviation];
-				echo '<tr>';
+				echo '<tr data-id="' . esc_attr($version->id) . '">';
+				// Hide ID column
+				echo '<td style="display: none;">' . esc_html($version->id) . '</td>';
 				echo '<td>' . esc_html($version->language) . '</td>';
-				echo '<td>' . esc_html($version->name) . '</td>';
 				echo '<td>' . esc_html($version->abbreviation) . '</td>';
-				echo '<td>' . esc_html($version->rank) . '</td>';
-				echo '<td>' . esc_html($version->updated_at) . '</td>';
+				echo '<td><div class="truncate">' . esc_html($version->name) . '</div></td>';
+				echo '<td>' . esc_html($version->type ?? 'Bible') . '</td>';
+				echo '<td><div class="truncate">' . esc_html($version->publisher ?? '') . '</div></td>';
 				if ($status['imported'] && $version->rank !== null) {
-				echo '<td><span class="dashicons dashicons-yes-alt" style="color: green;"></span> Imported (' . number_format($status['verse_count']) . ' verses)</td>';
-				echo '<td>';
-				echo '<button class="button" style="background-color: #d63638; color: white; margin-right: 5px;" data-version="' . esc_attr($version->abbreviation) . '" data-action="delete">Delete</button>';
-				echo '<button class="button" style="background-color: #00a32a; color: white;" data-version="' . esc_attr($version->abbreviation) . '" data-action="strong" disabled>Strong</button>';
-				echo '</td>';
-			} else {
-				echo '<td><span class="dashicons dashicons-minus" style="color: #ccc;"></span> Not imported</td>';
-				echo '<td><button class="button button-primary bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import">Download</button></td>';
-			}
+					echo '<td class="status-imported">✓ Imported (' . number_format($status['verse_count']) . ')</td>';
+					echo '<td>';
+					echo '<button class="btn-edit edit-version-btn" data-action="edit" data-version-id="' . esc_attr($version->id) . '">Edit</button>';
+					echo '<button class="btn-download" data-action="delete" data-version="' . esc_attr($version->abbreviation) . '" style="background: #d63638; margin-left: 4px;">Delete content</button>';
+					echo '</td>';
+				} else {
+					echo '<td class="status-not-imported">Not imported</td>';
+					echo '<td>';
+					echo '<button class="btn-edit edit-version-btn" data-action="edit" data-version-id="' . esc_attr($version->id) . '">Edit</button>';
+					echo '<button class="btn-download bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import" style="margin-left: 4px;">Install</button>';
+					echo '</td>';
+				}
 				echo '</tr>';
 			}
 			echo '</tbody></table>';
@@ -275,7 +330,111 @@ class Bible_Here_Admin {
 		echo '</div>';
 		echo '</div>';
 
-		echo '</div></div>';
+		echo '</div>';
+		
+		// Add Modal HTML
+		echo '<div id="version-modal" class="modal">';
+		echo '<div class="modal-content">';
+		echo '<div class="modal-header">';
+		echo '<h2 id="modal-title">Edit Version</h2>';
+		echo '<span class="close">&times;</span>';
+		echo '</div>';
+		echo '<form id="version-form" class="modal-form">';
+		echo '<input type="hidden" id="version-id" name="version_id">';
+		
+		// Required fields in specified order: language/abbreviation/name/table_name
+		echo '<div>';
+		echo '<label for="language">Language: <span style="color:red;">*</span></label>';
+		echo '<input type="text" id="language" name="language" required>';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="abbreviation">Abbreviation: <span style="color:red;">*</span></label>';
+		echo '<input type="text" id="abbreviation" name="abbreviation" required>';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="name">Name: <span style="color:red;">*</span></label>';
+		echo '<input type="text" id="name" name="name" required>';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="table-name">Table Name: <span style="color:red;">*</span></label>';
+		echo '<input type="text" id="table-name" name="table_name" required>';
+		echo '</div>';
+		
+		echo '<div class="type-for-login-row">';
+		echo '<div>';
+		echo '<label for="type">Type: <span style="color:red;">*</span></label>';
+		echo '<select id="type" name="type" required>';
+		echo '<option value="Bible">Bible</option>';
+		echo '<option value="Commentary">Commentary</option>';
+		echo '</select>';
+		echo '</div>';
+		echo '<div>';
+		echo '<label for="for-login">For Login:</label>';
+		echo '<select id="for-login" name="for_login">';
+		echo '<option value="0">No</option>';
+		echo '<option value="1">Yes</option>';
+		echo '</select>';
+		echo '</div>';
+		echo '</div>';
+		
+		echo '<div class="full-width">';
+		echo '<label for="info-text">Info Text:</label>';
+		echo '<textarea id="info-text" name="info_text" placeholder="Optional"></textarea>';
+		echo '</div>';
+		
+		echo '<div class="full-width">';
+		echo '<label for="info-url">Info URL:</label>';
+		echo '<input type="url" id="info-url" name="info_url" placeholder="Optional">';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="publisher">Publisher:</label>';
+		echo '<input type="text" id="publisher" name="publisher" placeholder="Optional">';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="copyright">Copyright:</label>';
+		echo '<input type="text" id="copyright" name="copyright" required>';
+		echo '</div>';
+		
+		echo '<div class="full-width">';
+		echo '<label for="download-url">Download URL:</label>';
+		echo '<textarea id="download-url" name="download_url" rows="5" required></textarea>';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="rank">Rank:</label>';
+		echo '<input type="number" id="rank" name="rank" min="0" placeholder="Optional">';
+		echo '</div>';
+		
+		echo '<div>';
+		echo '<label for="trim">Trim:</label>';
+		echo '<select id="trim" name="trim">';
+		echo '<option value="0">No</option>';
+		echo '<option value="1">Yes</option>';
+		echo '</select>';
+		echo '</div>';
+		
+
+		
+		echo '</form>';
+		echo '<div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center;">';
+		echo '<div>';
+		echo '<button type="button" id="save-version" class="btn-save">Save</button>';
+		echo '<button type="button" id="delete-version" class="btn-delete" style="display:none;">Delete version</button>';
+		echo '<button type="button" id="cancel-modal" class="btn-cancel">Cancel</button>';
+		echo '</div>';
+		echo '<div id="duplicate-warning" class="duplicate-warning" style="display:none; color:#c62828; font-size:14px; margin-left:10px;">';
+		echo '<span id="duplicate-message"></span>';
+		echo '</div>';
+		echo '</div>';
+		echo '</div>';
+		echo '</div>';
+		
+		echo '</div>';
 	}
 
 
@@ -385,7 +544,13 @@ class Bible_Here_Admin {
 		
 		// Send JSON response
 		if ($result['success']) {
-			wp_send_json_success($result['message']);
+			// Include imported_count in the response data
+			$response_data = array(
+				'message' => $result['message'],
+				'imported_count' => isset($result['imported_count']) ? $result['imported_count'] : 0,
+				'execution_time' => isset($result['execution_time']) ? $result['execution_time'] : null
+			);
+			wp_send_json_success($response_data);
 		} else {
 			wp_send_json_error($result['message']);
 		}
@@ -440,17 +605,23 @@ class Bible_Here_Admin {
 				return;
 			}
 			
-			// Drop the content table
+			// Clear the content table (TRUNCATE instead of DROP)
 			$content_table = $wpdb->prefix . $version_info->table_name;
-			error_log('Bible_Here_Admin: Preparing to delete content table: ' . $content_table);
+			error_log('Bible_Here_Admin: Preparing to clear content table: ' . $content_table);
 			
-			$drop_result = $wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
-			if ($drop_result === false) {
-				error_log('Bible_Here_Admin: ❌ Failed to delete content table: ' . $wpdb->last_error);
-				wp_send_json(array('success' => false, 'message' => 'Failed to delete content table'));
-				return;
+			// Check if table exists before truncating
+			$table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$content_table}'");
+			if ($table_exists) {
+				$truncate_result = $wpdb->query("TRUNCATE TABLE `{$content_table}`");
+				if ($truncate_result === false) {
+					error_log('Bible_Here_Admin: ❌ Failed to clear content table: ' . $wpdb->last_error);
+					wp_send_json(array('success' => false, 'message' => 'Failed to clear content table'));
+					return;
+				}
+				error_log('Bible_Here_Admin: ✅ Content table cleared successfully');
+			} else {
+				error_log('Bible_Here_Admin: ⚠️ Content table does not exist, skipping truncate');
 			}
-			error_log('Bible_Here_Admin: ✅ Content table deleted successfully');
 			
 			// Reset rank to null in versions table
 			$update_result = $wpdb->update(
@@ -470,7 +641,7 @@ class Bible_Here_Admin {
 			
 			$result = array(
 				'success' => true,
-				'message' => 'Version deleted successfully'
+				'message' => 'Version data cleared successfully (table content removed, version record preserved)'
 			);
 			
 		} catch (Exception $e) {
@@ -543,6 +714,357 @@ class Bible_Here_Admin {
 		}
 		
 		error_log('Bible_Here_Admin: ========== AJAX Reload CSV Request Ended ==========');
+	}
+
+	/**
+	 * Handle AJAX save version request
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_save_version() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		// Get version ID
+		$version_id = intval($_POST['version_id']);
+		
+		// First, get existing data from database
+		$existing_data = $wpdb->get_row($wpdb->prepare(
+			"SELECT * FROM {$table_name} WHERE id = %d",
+			$version_id
+		));
+		
+		if (!$existing_data) {
+			wp_send_json_error('Version not found');
+			return;
+		}
+		
+		// Get form data and merge with existing data
+		$table_name_value = sanitize_text_field($_POST['table_name'] ?? $existing_data->table_name);
+		$language = sanitize_text_field($_POST['language'] ?? $existing_data->language);
+		$abbreviation = sanitize_text_field($_POST['abbreviation'] ?? $existing_data->abbreviation);
+		$name = sanitize_text_field($_POST['name'] ?? $existing_data->name);
+		$info_text = sanitize_textarea_field($_POST['info_text'] ?? $existing_data->info_text);
+		$info_url = esc_url_raw($_POST['info_url'] ?? $existing_data->info_url);
+		$publisher = sanitize_text_field($_POST['publisher'] ?? $existing_data->publisher);
+		$copyright = sanitize_text_field($_POST['copyright'] ?? $existing_data->copyright);
+		// Keep existing download_url if not provided in form
+		$download_url = !empty($_POST['download_url']) ? esc_url_raw($_POST['download_url']) : $existing_data->download_url;
+		$rank = isset($_POST['rank']) && $_POST['rank'] !== '' ? intval($_POST['rank']) : $existing_data->rank;
+		$trim = isset($_POST['trim']) ? intval($_POST['trim']) : $existing_data->trim;
+		$for_login = isset($_POST['for_login']) ? intval($_POST['for_login']) : $existing_data->for_login;
+		$type = sanitize_text_field($_POST['type'] ?? $existing_data->type);
+		
+		// Validate required fields
+		if (empty($table_name_value) || empty($language) || empty($abbreviation) || empty($name)) {
+			wp_send_json_error('Required fields are missing');
+			return;
+		}
+		
+		// Update the database
+		$result = $wpdb->update(
+			$table_name,
+			array(
+				'table_name' => $table_name_value,
+				'language' => $language,
+				'abbreviation' => $abbreviation,
+				'name' => $name,
+				'info_text' => $info_text,
+				'info_url' => $info_url,
+				'publisher' => $publisher,
+				'copyright' => $copyright,
+				'download_url' => $download_url,
+				'rank' => $rank,
+				'trim' => $trim,
+				'for_login' => $for_login,
+				'type' => $type
+			),
+			array('id' => $version_id),
+			array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', $rank === null ? null : '%d', '%d', '%d', '%s'),
+			array('%d')
+		);
+		
+		if ($result !== false) {
+			wp_send_json_success('Version updated successfully');
+		} else {
+			// Get detailed error message
+			$error_message = $wpdb->last_error;
+			
+			// Log the full error for debugging
+			error_log('Bible_Here_Admin: Database error in save_version: ' . $error_message);
+			
+			wp_send_json_error($error_message ?: 'Failed to update version');
+		}
+	}
+	
+	/**
+	 * Handle AJAX add version request
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_add_version() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		// Get form data
+		$table_name_value = sanitize_text_field($_POST['table_name'] ?? '');
+		$language = sanitize_text_field($_POST['language'] ?? '');
+		$abbreviation = sanitize_text_field($_POST['abbreviation'] ?? '');
+		$name = sanitize_text_field($_POST['name'] ?? '');
+		$info_text = sanitize_textarea_field($_POST['info_text'] ?? '');
+		$type = sanitize_text_field($_POST['type'] ?? '');
+		$info_url = esc_url_raw($_POST['info_url'] ?? '');
+		$publisher = sanitize_text_field($_POST['publisher'] ?? '');
+		$copyright = sanitize_text_field($_POST['copyright'] ?? '');
+		$download_url = esc_url_raw($_POST['download_url'] ?? '');
+		$rank = $_POST['rank'] !== '' ? intval($_POST['rank']) : null;
+		$trim = intval($_POST['trim'] ?? 0);
+		$for_login = intval($_POST['for_login'] ?? 0);
+		
+		// Validate required fields
+		if (empty($table_name_value) || empty($language) || empty($abbreviation) || empty($name)) {
+			wp_send_json_error('Required fields are missing');
+			return;
+		}
+		
+		// Insert new version
+		$result = $wpdb->insert(
+			$table_name,
+			array(
+				'table_name' => $table_name_value,
+				'language' => $language,
+				'abbreviation' => $abbreviation,
+				'name' => $name,
+				'info_text' => $info_text,
+				'info_url' => $info_url,
+				'publisher' => $publisher,
+				'copyright' => $copyright,
+				'download_url' => $download_url,
+				'rank' => $rank,
+				'trim' => $trim,
+				'type' => $type,
+				'for_login' => $for_login,
+				'seed' => 0
+			),
+			array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', $rank === null ? null : '%d', '%d', '%s', '%d', '%d')
+		);
+		
+		if ($result !== false) {
+			$new_id = $wpdb->insert_id;
+			wp_send_json_success(array(
+				'message' => 'Version added successfully',
+				'version_id' => $new_id
+			));
+		} else {
+			// Get detailed error message
+			$error_message = $wpdb->last_error;
+			
+			// Log the full error for debugging
+			error_log('Bible_Here_Admin: Database error in add_version: ' . $error_message);
+			
+			wp_send_json_error($error_message ?: 'Failed to add version');
+		}
+	}
+	
+	/**
+	 * Handle AJAX delete version row request
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_delete_version_row() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		$version_id = intval($_POST['version_id']);
+		
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		// Get version info before deletion
+		$version_info = $wpdb->get_row($wpdb->prepare(
+			"SELECT * FROM {$table_name} WHERE id = %d",
+			$version_id
+		));
+		
+		if (!$version_info) {
+			wp_send_json_error('Version not found');
+			return;
+		}
+		
+		// If version is imported (has rank), also drop the content table
+		if (!is_null($version_info->rank)) {
+			$content_table = $wpdb->prefix . $version_info->table_name;
+			$wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
+		}
+		
+		// Delete the version record
+		$result = $wpdb->delete(
+			$table_name,
+			array('id' => $version_id),
+			array('%d')
+		);
+		
+		if ($result !== false) {
+			wp_send_json_success('Version deleted successfully');
+		} else {
+			wp_send_json_error('Failed to delete version: ' . $wpdb->last_error);
+		}
+	}
+	
+	/**
+	 * Handle AJAX get versions request (for duplicate checking)
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_versions() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		$language = sanitize_text_field($_POST['language'] ?? '');
+		$abbreviation = sanitize_text_field($_POST['abbreviation'] ?? '');
+		$exclude_id = intval($_POST['exclude_id'] ?? 0); // For edit mode, exclude current record
+		
+		if (empty($language) || empty($abbreviation)) {
+			wp_send_json_error('Language and abbreviation are required');
+			return;
+		}
+		
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		// Check if language/abbreviation combination exists
+		$query = $wpdb->prepare(
+			"SELECT id, name FROM {$table_name} WHERE language = %s AND abbreviation = %s",
+			$language,
+			$abbreviation
+		);
+		
+		// Exclude current record if editing
+		if ($exclude_id > 0) {
+			$query = $wpdb->prepare(
+				"SELECT id, name FROM {$table_name} WHERE language = %s AND abbreviation = %s AND id != %d",
+				$language,
+				$abbreviation,
+				$exclude_id
+			);
+		}
+		
+		$existing_version = $wpdb->get_row($query);
+		
+		if ($existing_version) {
+			wp_send_json_success(array(
+				'exists' => true,
+				'message' => "Language '{$language}' already has abbreviation '{$abbreviation}'!",
+				'existing_id' => $existing_version->id,
+				'existing_name' => $existing_version->name
+			));
+		} else {
+			wp_send_json_success(array(
+				'exists' => false,
+				'message' => 'Language/abbreviation combination is available'
+			));
+		}
+	}
+
+	/**
+	 * Handle AJAX get version data request (for loading complete version data into modal)
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_version_data() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		$version_id = intval($_POST['version_id'] ?? 0);
+		
+		if ($version_id <= 0) {
+			wp_send_json_error('Invalid version ID');
+			return;
+		}
+		
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bible_here_versions';
+		
+		// Get complete version data from database
+		$version_data = $wpdb->get_row($wpdb->prepare(
+			"SELECT * FROM {$table_name} WHERE id = %d",
+			$version_id
+		));
+		
+		if (!$version_data) {
+			wp_send_json_error('Version not found');
+			return;
+		}
+		
+		// Return complete version data
+		wp_send_json_success(array(
+			'id' => $version_data->id,
+			'table_name' => $version_data->table_name,
+			'language' => $version_data->language,
+			'abbreviation' => $version_data->abbreviation,
+			'name' => $version_data->name,
+			'info_text' => $version_data->info_text,
+			'info_url' => $version_data->info_url,
+			'publisher' => $version_data->publisher,
+			'copyright' => $version_data->copyright,
+			'download_url' => $version_data->download_url,
+			'rank' => $version_data->rank,
+			'trim' => $version_data->trim,
+			'for_login' => $version_data->for_login,
+			'type' => $version_data->type,
+			'seed' => $version_data->seed
+		));
 	}
 
 }

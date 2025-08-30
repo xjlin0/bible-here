@@ -60,6 +60,47 @@
     margin-bottom: 10px;
 }
 
+/* Versions table styling */
+.versions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.versions-table thead th {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #0073aa;
+}
+
+.versions-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.versions-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.versions-table tbody tr:hover {
+    background-color: #e8f4f8;
+}
+
+.versions-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: middle;
+}
+
+.versions-table .truncate {
+    max-width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 @media (max-width: 768px) {
     .bible-here-dashboard {
         grid-template-columns: 1fr;

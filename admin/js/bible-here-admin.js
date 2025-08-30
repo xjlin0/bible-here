@@ -59,7 +59,7 @@
 			
 			// Handle reload CSV data button click
 			if (e.target.id === 'reload-csv-btn') {
-				if (!confirm('Are you sure you want to reload all CSV data? This will update books, genres, and versions from the CSV files.')) {
+				if (!confirm('Are you sure you want to reload default seed data? This will update books, genres, and versions from the CSV files.')) {
 					return;
 				}
 				
@@ -160,10 +160,19 @@
 		var duration = Math.round((endTime - importStartTime) / 1000);
 		
 		if (response.success) {
-			updateProgress(100, bible_here_ajax.import_success);
+			// Use the actual version being imported instead of fixed KJV message
+			const versionName = currentImportVersion ? currentImportVersion.toUpperCase() : 'Bible';
+			const successMessage = versionName + ' Bible imported successfully!';
+			
+			// Get data from response.data (wp_send_json_success format)
+			const responseData = response.data || response;
+			const importedCount = responseData.imported_count || 0;
+			const executionTime = responseData.execution_time || duration;
+			
+			updateProgress(100, successMessage);
 			addLogMessage('Download and import completed successfully!');
-			addLogMessage('Imported verses: ' + (response.imported_count || 'Unknown'));
-			addLogMessage('Execution time: ' + (response.execution_time || duration) + ' seconds');
+			addLogMessage('Imported verses: ' + importedCount);
+			addLogMessage('Execution time: ' + executionTime + ' seconds');
 			addLogMessage('Finished at: ' + endTime.toLocaleString());
 			
 			// Ensure progress text shows success with green color
@@ -176,7 +185,7 @@
 			}
 			
 			// Show success message
-			showNotice('KJV Bible download and import completed successfully! Imported ' + (response.imported_count || 'Unknown') + ' verses.', 'success');
+			showNotice(versionName + ' Bible download and import completed successfully! Imported ' + importedCount + ' verses.', 'success');
 			
 			// Reset UI only on success
 			resetImportUI();
@@ -451,13 +460,12 @@
 	function showNotice(message, type) {
 		console.log('Bible Here: Showing notice:', message, type);
 		
-		// Use correct ID selector
-		var statusElement = document.getElementById('import-status');
-		if (statusElement) {
-			// Ensure element is visible
-			statusElement.style.display = 'block';
-			
-			// Create notice message element without overwriting existing content
+		// Find the Import Progress section to display notice above it
+		var importSection = document.querySelector('.bible-import-section');
+		var importProgressTitle = importSection ? importSection.querySelector('h2') : null;
+		
+		if (importProgressTitle) {
+			// Create notice message element
 			var noticeHtml = '';
 			if (type === 'error') {
 				noticeHtml = '<div class="bible-here-notice bible-here-error" style="color: #d63384; background: #f8d7da; border: 1px solid #f5c2c7; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Error:</strong>' + message + '</div>';
@@ -467,19 +475,20 @@
 				noticeHtml = '<div class="bible-here-notice bible-here-info" style="color: #055160; background: #cff4fc; border: 1px solid #b6effb; padding: 10px; margin: 10px 0; border-radius: 4px;">' + message + '</div>';
 			}
 			
-			// Remove previous notice messages (if any)
-			const notices = statusElement.querySelectorAll('.bible-here-notice');
-			notices.forEach(notice => notice.remove());
+			// Remove previous notice messages (if any) from the import section
+			const existingNotices = importSection.querySelectorAll('.bible-here-notice');
+			existingNotices.forEach(notice => notice.remove());
 			
-			// Append notice message below existing content instead of overwriting
-			statusElement.insertAdjacentHTML('beforeend', noticeHtml);
+			// Insert notice message above the Import Progress title
+			importProgressTitle.insertAdjacentHTML('beforebegin', noticeHtml);
 			
-			// Scroll to bottom to show new notice
-			if (typeof statusElement.scrollHeight !== 'undefined') {
-				statusElement.scrollTop = statusElement.scrollHeight;
+			// Scroll to the notice to make it visible
+			const newNotice = importSection.querySelector('.bible-here-notice');
+			if (newNotice) {
+				newNotice.scrollIntoView({ behavior: 'smooth', block: 'center' });
 			}
 		} else {
-			console.error('Bible Here: Download and Import status element (#import-status) not found');
+			console.error('Bible Here: Import Progress section not found');
 		}
 	}
 
@@ -487,7 +496,7 @@
 	 * Reload CSV data
 	 */
 	function reloadCSVData() {
-		console.log('Bible Here: Starting CSV data reload process');
+		console.log('Bible Here: Starting default seed data reload process');
 		
 		// Disable the reload button during operation
 		const reloadBtn = document.getElementById('reload-csv-btn');
@@ -517,22 +526,604 @@
 					location.reload();
 				}, 2000);
 			} else {
-				showNotice('Failed to reload CSV data: ' + (response.message || 'Unknown error'), 'error');
+				showNotice('Failed to reload default seed data: ' + (response.message || 'Unknown error'), 'error');
 				// Re-enable button on error
 				if (reloadBtn) {
 					reloadBtn.disabled = false;
-					reloadBtn.textContent = '🔄 Reload All CSV Data';
+					reloadBtn.textContent = '🔄 Reload default seed data';
 				}
 			}
 		})
 		.catch(error => {
-			console.error('Bible Here: CSV reload request failed', error);
-			showNotice('CSV reload request failed: ' + error.message, 'error');
+			console.error('Bible Here: Seed data reload request failed', error);
+			showNotice('Seed data reload request failed: ' + error.message, 'error');
 			// Re-enable button on error
 			if (reloadBtn) {
 				reloadBtn.disabled = false;
-				reloadBtn.textContent = '🔄 Reload All CSV Data';
+				reloadBtn.textContent = '🔄 Reload default seed data';
 			}
+		});
+	}
+
+	// Version table modal editing functionality
+	document.addEventListener('DOMContentLoaded', function() {
+		initVersionModalEditing();
+	});
+
+	/**
+	 * Initialize version modal editing functionality
+	 */
+	function initVersionModalEditing() {
+		const modal = document.getElementById('version-modal');
+		if (!modal) return;
+
+		// Handle Add New Version button
+		const addVersionBtn = document.getElementById('add-version-btn');
+		if (addVersionBtn) {
+			addVersionBtn.addEventListener('click', function() {
+				openVersionModal();
+			});
+		}
+
+		// Handle Edit buttons in table
+		document.addEventListener('click', function(e) {
+			if (e.target.classList.contains('edit-version-btn')) {
+				const versionId = e.target.getAttribute('data-version-id');
+				openVersionModal(versionId);
+			}
+		});
+
+		// Handle modal close
+		const closeBtn = modal.querySelector('.close');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				closeVersionModalWithConfirm();
+			});
+		}
+
+		// Handle cancel button
+		const cancelBtn = document.getElementById('cancel-modal');
+		if (cancelBtn) {
+			cancelBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				closeVersionModalWithConfirm();
+			});
+		}
+
+		// Handle save button
+		const saveBtn = document.getElementById('save-version');
+		if (saveBtn) {
+			saveBtn.addEventListener('click', saveVersion);
+		}
+
+		// Handle delete button
+		const deleteBtn = document.getElementById('delete-version');
+		if (deleteBtn) {
+			deleteBtn.addEventListener('click', deleteVersionFromModal);
+		}
+
+		// Close modal when clicking outside
+		modal.addEventListener('click', function(e) {
+			if (e.target === modal) {
+				e.preventDefault();
+				closeVersionModalWithConfirm();
+			}
+		});
+
+		// Track form changes
+		const formInputs = modal.querySelectorAll('input, select, textarea');
+		formInputs.forEach(input => {
+			input.addEventListener('input', markFormModified);
+			input.addEventListener('change', markFormModified);
+		});
+
+		// Setup language/abbreviation change handlers for duplicate checking and auto-fill
+		const languageInput = document.getElementById('language');
+		const abbreviationInput = document.getElementById('abbreviation');
+		const tableNameInput = document.getElementById('table-name');
+
+		if (languageInput && abbreviationInput) {
+			languageInput.addEventListener('input', handleLanguageAbbreviationChange);
+			abbreviationInput.addEventListener('input', handleLanguageAbbreviationChange);
+		}
+
+		// Handle ESC key to close modal
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && modal.style.display === 'block') {
+				e.preventDefault();
+				closeVersionModalWithConfirm();
+			}
+		});
+	}
+	
+
+	/**
+	 * Open version modal for editing or adding
+	 */
+	function openVersionModal(versionId = null) {
+		const modal = document.getElementById('version-modal');
+		const modalTitle = document.getElementById('modal-title');
+		const deleteBtn = document.getElementById('delete-version');
+		const form = document.getElementById('version-form');
+
+		// Reset form modified state when opening modal
+		resetFormModified();
+
+		if (versionId) {
+			// Edit mode
+			modalTitle.textContent = 'Edit Version';
+			deleteBtn.style.display = 'inline-block';
+			loadVersionData(versionId);
+		} else {
+			// Add mode
+			modalTitle.textContent = 'Add New Version';
+			deleteBtn.style.display = 'none';
+			clearVersionForm();
+		}
+
+		modal.style.display = 'block';
+	}
+
+	/**
+	 * Close version modal with confirmation
+	 */
+	function closeVersionModalWithConfirm() {
+		console.log('closeVersionModalWithConfirm called, formModified:', formModified);
+		// Always show confirmation dialog regardless of form modification status
+		console.log('Showing confirmation dialog');
+		if (!confirm('Are you sure you want to close this dialog?')) {
+			console.log('User cancelled close action');
+			return;
+		}
+		console.log('User confirmed close action');
+		closeVersionModal();
+	}
+
+	/**
+	 * Close version modal without confirmation (for internal use)
+	 */
+	function closeVersionModal() {
+		const modal = document.getElementById('version-modal');
+		modal.style.display = 'none';
+		resetFormModified();
+	}
+
+	/**
+	 * Load version data into modal form
+	 */
+	function loadVersionData(versionId) {
+		// Set version ID immediately
+		document.getElementById('version-id').value = versionId;
+
+		// Disable delete button during loading to prevent premature clicks
+		const deleteBtn = document.getElementById('delete-version');
+		if (deleteBtn) {
+			deleteBtn.disabled = true;
+			deleteBtn.textContent = 'Loading...';
+		}
+
+		// Load complete data from database via AJAX
+		const formData = new FormData();
+		formData.append('action', 'bible_here_get_version_data');
+		formData.append('version_id', versionId);
+		formData.append('nonce', bible_here_ajax.nonce);
+
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(response => {
+			if (response.success) {
+				const data = response.data;
+				
+				// Populate all form fields with complete data
+				document.getElementById('table-name').value = data.table_name || '';
+				document.getElementById('language').value = data.language || '';
+				document.getElementById('abbreviation').value = data.abbreviation || '';
+				document.getElementById('name').value = data.name || '';
+				document.getElementById('info-text').value = data.info_text || '';
+				document.getElementById('info-url').value = data.info_url || '';
+				document.getElementById('publisher').value = data.publisher || '';
+				document.getElementById('copyright').value = data.copyright || '';
+				document.getElementById('download-url').value = data.download_url || '';
+				document.getElementById('rank').value = data.rank || '';
+				document.getElementById('trim').value = data.trim || '0';
+				document.getElementById('for-login').value = data.for_login || '0';
+				document.getElementById('type').value = data.type || 'Bible';
+				
+				// Reset form modified state after loading data
+				resetFormModified();
+				
+				// Show/hide delete button based on rank and seed conditions
+				const deleteVersionBtn = document.getElementById('delete-version');
+				if (deleteVersionBtn) {
+					// Show delete button only if rank is null and seed is false
+					const rankValue = data.rank;
+					const seedValue = data.seed;
+					
+					if (rankValue === null && (seedValue == 0 || seedValue === false)) {
+						deleteVersionBtn.style.display = 'inline-block';
+					} else {
+						deleteVersionBtn.style.display = 'none';
+					}
+				}
+				
+				// Implement conditional editing logic for seed=true records
+				const seedValue = data.seed;
+				const rankValue = data.rank;
+				
+				if (seedValue == 1 || seedValue === true) {
+					// For seed=true records, only allow editing for_login and rank (if rank is not null)
+					const readonlyFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'trim', 'type'];
+					readonlyFields.forEach(fieldId => {
+						const field = document.getElementById(fieldId);
+						if (field) {
+							// Use disabled for select elements, readOnly for input/textarea
+							if (field.tagName === 'SELECT') {
+								field.disabled = true;
+							} else {
+								field.readOnly = true;
+							}
+							field.style.backgroundColor = '#f5f5f5';
+						}
+					});
+				} else {
+					// For seed=false records, allow editing all fields
+					const allFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
+					allFields.forEach(fieldId => {
+						const field = document.getElementById(fieldId);
+						if (field) {
+							// Use disabled for select elements, readOnly for input/textarea
+							if (field.tagName === 'SELECT') {
+								field.disabled = false;
+							} else {
+								field.readOnly = false;
+							}
+							field.style.backgroundColor = '';
+						}
+					});
+				}
+				
+				// Disable rank field if rank is null (regardless of seed value)
+				const rankField = document.getElementById('rank');
+				if (rankField && (rankValue === null || rankValue === '')) {
+					rankField.readOnly = true;
+					rankField.style.backgroundColor = '#f5f5f5';
+				}
+				
+				// Re-enable delete button after successful data loading
+				if (deleteBtn) {
+					deleteBtn.disabled = false;
+					deleteBtn.textContent = 'Delete Record';
+				}
+			} else {
+				console.error('Failed to load version data:', response.message);
+				showNotice('Error: Failed to load version data', 'error');
+				
+				// Re-enable delete button even on error, but keep version ID
+				if (deleteBtn) {
+					deleteBtn.disabled = false;
+					deleteBtn.textContent = 'Delete Record';
+				}
+			}
+		})
+		.catch(error => {
+			console.error('Version data request failed:', error);
+			showNotice('Error: Failed to load version data', 'error');
+			
+			// Re-enable delete button even on error, but keep version ID
+			if (deleteBtn) {
+				deleteBtn.disabled = false;
+				deleteBtn.textContent = 'Delete Record';
+			}
+		});
+	}
+
+	/**
+	 * Clear version form
+	 */
+	function clearVersionForm() {
+		document.getElementById('version-id').value = '';
+		document.getElementById('table-name').value = '';
+		document.getElementById('language').value = '';
+		document.getElementById('abbreviation').value = '';
+		document.getElementById('name').value = '';
+		document.getElementById('info-text').value = '';
+		document.getElementById('info-url').value = '';
+		document.getElementById('publisher').value = '';
+		document.getElementById('copyright').value = '';
+		document.getElementById('download-url').value = '';
+		document.getElementById('rank').value = '';
+		document.getElementById('trim').value = '0';
+		document.getElementById('for-login').value = '0';
+		document.getElementById('type').value = 'Bible'; // Set default type
+
+		// Clear warning message and enable save button
+		const warningDiv = document.getElementById('duplicate-warning');
+		const saveBtn = document.getElementById('save-version');
+		const deleteVersionBtn = document.getElementById('delete-version');
+		
+		if (warningDiv) {
+			warningDiv.style.display = 'none';
+		}
+		if (saveBtn) {
+			saveBtn.disabled = false;
+		}
+		// Hide delete button for new versions
+		if (deleteVersionBtn) {
+			deleteVersionBtn.style.display = 'none';
+		}
+		
+		// Reset all field states to editable for new version form
+		const allFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
+		allFields.forEach(fieldId => {
+			const field = document.getElementById(fieldId);
+			if (field) {
+				// Use disabled for select elements, readOnly for input/textarea
+				if (field.tagName === 'SELECT') {
+					field.disabled = false;
+				} else {
+					field.readOnly = false;
+				}
+				field.style.backgroundColor = '';
+			}
+		});
+		
+		// For new versions, disable rank field since it starts as empty (null)
+		const rankField = document.getElementById('rank');
+		if (rankField) {
+			rankField.readOnly = true;
+			rankField.style.backgroundColor = '#f5f5f5';
+		}
+	}
+
+	/**
+	 * Handle language/abbreviation input changes for duplicate checking and auto-fill
+	 */
+	function handleLanguageAbbreviationChange() {
+		const languageInput = document.getElementById('language');
+		const abbreviationInput = document.getElementById('abbreviation');
+		const tableNameInput = document.getElementById('table-name');
+		const warningDiv = document.getElementById('duplicate-warning');
+		const saveBtn = document.getElementById('save-version');
+
+		const language = languageInput.value.trim();
+		const abbreviation = abbreviationInput.value.trim();
+
+		// Auto-fill table name if empty
+		if (language && abbreviation && !tableNameInput.value.trim()) {
+			tableNameInput.value = `wp_bible_here_${language}_${abbreviation}`;
+			markFormModified();
+		}
+
+		// Check for duplicates if both fields have values
+		if (language && abbreviation) {
+			checkVersionDuplicate(language, abbreviation);
+		} else {
+			// Clear warning and enable save button if fields are empty
+			if (warningDiv) {
+				warningDiv.style.display = 'none';
+			}
+			if (saveBtn) {
+				saveBtn.disabled = false;
+			}
+		}
+	}
+
+	/**
+	 * Check if language/abbreviation combination already exists
+	 */
+	function checkVersionDuplicate(language, abbreviation) {
+		const versionId = document.getElementById('version-id').value;
+		const warningDiv = document.getElementById('duplicate-warning');
+		const saveBtn = document.getElementById('save-version');
+
+		const formData = new FormData();
+		formData.append('action', 'bible_here_get_versions');
+		formData.append('language', language);
+		formData.append('abbreviation', abbreviation);
+		formData.append('exclude_id', versionId || '0'); // Exclude current record in edit mode
+		formData.append('nonce', bible_here_ajax.nonce);
+
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(response => {
+			if (response.success) {
+				if (response.data.exists) {
+				// Show warning and disable save button
+				if (warningDiv) {
+					warningDiv.innerHTML = `<strong>Bad:</strong> ${response.data.message}`;
+					warningDiv.style.display = 'block';
+				}
+					if (saveBtn) {
+						saveBtn.disabled = true;
+					}
+				} else {
+					// Hide warning and enable save button
+					if (warningDiv) {
+						warningDiv.style.display = 'none';
+					}
+					if (saveBtn) {
+						saveBtn.disabled = false;
+					}
+				}
+			} else {
+				console.error('Version check failed:', response.message);
+			}
+		})
+		.catch(error => {
+			console.error('Version check request failed:', error);
+		});
+	}
+
+	/**
+	 * Save version data
+	 */
+	function saveVersion() {
+		// Add confirmation dialog
+		const versionId = document.getElementById('version-id').value;
+		const action = versionId ? 'update' : 'add';
+		const confirmMessage = versionId ? 'Are you sure you want to save changes to this version?' : 'Are you sure you want to add this new version?';
+
+		if (!confirm(confirmMessage)) {
+			return;
+		}
+
+		// Validate required fields
+		const language = document.getElementById('language').value.trim();
+		const abbreviation = document.getElementById('abbreviation').value.trim();
+		const name = document.getElementById('name').value.trim();
+		const tableName = document.getElementById('table-name').value.trim();
+
+		if (!language || !abbreviation || !name || !tableName) {
+			showNotice('Error: Please fill in all required fields: Language, Abbreviation, Name, and Table Name.', 'error');
+			return;
+		}
+		const form = document.getElementById('version-form');
+		const formData = new FormData(form);
+		// const versionId = document.getElementById('version-id').value;
+
+		if (versionId) {
+			formData.append('action', 'bible_here_save_version');
+		} else {
+			formData.append('action', 'bible_here_add_version');
+		}
+		formData.append('nonce', bible_here_ajax.nonce);
+
+		// Disable save button during request
+		const saveBtn = document.getElementById('save-version');
+		saveBtn.disabled = true;
+		saveBtn.textContent = 'Saving...';
+
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => {
+			// Check if response is JSON
+			const contentType = response.headers.get('content-type');
+			if (contentType && contentType.includes('application/json')) {
+				return response.json();
+			} else {
+				// If not JSON, get text to see the actual error
+				return response.text().then(text => {
+					throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+				});
+			}
+		})
+		.then(response => {
+			saveBtn.disabled = false;
+			saveBtn.textContent = 'Save';
+
+			if (response.success) {
+				showNotice(versionId ? 'Version updated successfully!' : 'Version added successfully!', 'success');
+				resetFormModified();
+				closeVersionModal();
+				// Reload page to show changes
+				setTimeout(() => location.reload(), 1000);
+			} else {
+				// Extract more detailed error message
+				let errorMessage = response.message || 'Unknown error';
+				// Check for database duplicate entry error
+				if (errorMessage.includes('Duplicate entry')) {
+					const match = errorMessage.match(/Duplicate entry '([^']+)' for key '([^']+)'/);
+					if (match) {
+						errorMessage = `Duplicate entry detected: '${match[1]}' already exists. Please use a different value.`;
+					} else {
+						errorMessage = 'This entry already exists. Please use different values.';
+					}
+				}
+				showNotice('Failed to save version: ' + errorMessage, 'error');
+			}
+		})
+		.catch(error => {
+			saveBtn.disabled = false;
+			saveBtn.textContent = 'Save';
+			showNotice('Save failed: ' + error.message, 'error');
+		});
+	}
+
+	// Form modification tracking
+	let formModified = false;
+
+	/**
+	 * Mark form as modified
+	 */
+	function markFormModified() {
+		formModified = true;
+		console.log('Form marked as modified');
+	}
+
+	/**
+	 * Check if form has been modified
+	 */
+	function isFormModified() {
+		return formModified;
+	}
+
+	/**
+	 * Reset form modified state
+	 */
+	function resetFormModified() {
+		formModified = false;
+	}
+
+	/**
+	 * Delete version from modal
+	 */
+	function deleteVersionFromModal() {
+		const versionId = document.getElementById('version-id').value;
+		const versionName = document.getElementById('name').value || 'this version';
+
+		console.log('deleteVersion called, versionId:', versionId, 'versionName:', versionName);
+
+		if (!versionId) {
+			console.log('No version ID found, showing error');
+			showNotice('No version selected for deletion', 'error');
+			return;
+		}
+
+		if (!confirm('Are you sure you want to delete "' + versionName + '"? This action cannot be undone.')) {
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('action', 'bible_here_delete_version_row');
+		formData.append('version_id', versionId);
+		formData.append('nonce', bible_here_ajax.nonce);
+
+		// Disable delete button during request
+		const deleteBtn = document.getElementById('delete-version');
+		deleteBtn.disabled = true;
+		deleteBtn.textContent = 'Deleting...';
+
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(response => {
+			deleteBtn.disabled = false;
+			deleteBtn.textContent = 'Delete Record';
+
+			if (response.success) {
+				showNotice('Version deleted successfully!', 'success');
+				closeVersionModal();
+				// Reload page to show changes
+				setTimeout(() => location.reload(), 1000);
+			} else {
+				showNotice('Failed to delete version: ' + (response.message || 'Unknown error'), 'error');
+			}
+		})
+		.catch(error => {
+			deleteBtn.disabled = false;
+			deleteBtn.textContent = 'Delete Record';
+			showNotice('Delete failed: ' + error.message, 'error');
 		});
 	}
 
