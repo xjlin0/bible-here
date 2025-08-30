@@ -227,44 +227,12 @@ class Bible_Here_Admin {
 		echo '<div class="wrap">';
 		echo '<h1>Bible Versions Management</h1>';
 		
-		// Add styles for table and modal
-		echo '<style>
-			.versions-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-			.versions-table th, .versions-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-			.versions-table th { background-color: #f0f0f0; color: #000; font-weight: bold; }
-			.versions-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
-			.versions-table tbody tr:nth-child(odd) { background-color: #ffffff; }
-			.btn-add { background: #00a32a; color: white; border: none; padding: 8px 16px; cursor: pointer; margin-bottom: 10px; }
-			.btn-edit { background: #0073aa; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 12px; }
-			.btn-download { background: #0073aa; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 12px; margin-left: 4px; }
-			.status-imported { color: #00a32a; font-weight: bold; }
-			.status-not-imported { color: #666; }
-			.truncate { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-			
-			/* Modal styles */
-			.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-			.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 800px; max-height: 70vh; border-radius: 5px; overflow-y: auto; }
-			.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-			.modal-header h2 { margin: 0; }
-			.close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
-			.close:hover { color: black; }
-			.modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-			.modal-form .full-width { grid-column: 1 / -1; }
-			.modal-form .type-for-login-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; grid-column: 1 / -1; }
-			.modal-form label { font-weight: bold; margin-bottom: 5px; display: block; }
-			.modal-form input, .modal-form select, .modal-form textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
-			.modal-form textarea { height: 80px; resize: vertical; }
-			.modal-actions { margin-top: 20px; text-align: right; }
-			.modal-actions button { margin-left: 10px; padding: 8px 16px; border: none; border-radius: 3px; cursor: pointer; }
-			.btn-save { background: #00a32a; color: white; }
-			.btn-delete { background: #d63638; color: white; }
-			.btn-cancel { background: #666; color: white; }
-		</style>';
+
 		
 		// Button row with flexbox layout
-		echo '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
-		echo '<button id="reload-csv-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer; min-width: 200px;" title="Click to reload books, genres, and versions data from CSV files">🔄 Reload default seed data</button>';
-		echo '<button id="add-version-btn" class="button" style="background-color: #00a32a; color: white; font-size: 16px; padding: 10px 20px; height: auto; border: none; border-radius: 3px; cursor: pointer; min-width: 200px;" title="Click to add a new version (no content)">+ Add New Version</button>';
+		echo '<div class="bible-here-button-row">';
+		echo '<button id="reload-csv-btn" class="button bible-here-reload-btn" title="Click to reload books, genres, and versions data from CSV files">🔄 Reload default seed data</button>';
+		echo '<button id="add-version-btn" class="button bible-here-add-btn" title="Click to add a new version (no content)">+ Add New Version</button>';
 		echo '</div>';
 		
 		echo '<div class="bible-versions-list">';
@@ -274,7 +242,7 @@ class Bible_Here_Admin {
 			echo '<table id="versions-table" class="versions-table">';
 			echo '<thead><tr>';
 			// Hide ID column
-			echo '<th style="display: none;">ID</th>';
+			echo '<th class="bible-here-hidden">ID</th>';
 			echo '<th>Language</th>';
 			echo '<th>Abbreviation</th>';
 			echo '<th>Name</th>';
@@ -288,7 +256,7 @@ class Bible_Here_Admin {
 				$status = $import_status[$version->abbreviation];
 				echo '<tr data-id="' . esc_attr($version->id) . '">';
 				// Hide ID column
-				echo '<td style="display: none;">' . esc_html($version->id) . '</td>';
+				echo '<td class="bible-here-hidden">' . esc_html($version->id) . '</td>';
 				echo '<td>' . esc_html($version->language) . '</td>';
 				echo '<td>' . esc_html($version->abbreviation) . '</td>';
 				echo '<td><div class="truncate">' . esc_html($version->name) . '</div></td>';
@@ -298,7 +266,7 @@ class Bible_Here_Admin {
 					echo '<td class="status-imported">✓ Imported (' . number_format($status['verse_count']) . ')</td>';
 					echo '<td>';
 					echo '<button class="btn-edit edit-version-btn" data-action="edit" data-version-id="' . esc_attr($version->id) . '">Edit</button>';
-					echo '<button class="btn-download" data-action="delete" data-version="' . esc_attr($version->abbreviation) . '" style="background: #d63638; margin-left: 4px;">Delete content</button>';
+					echo '<button class="btn-download" data-action="delete" data-version="' . esc_attr($version->abbreviation) . '">Delete content</button>';
 					echo '</td>';
 				} else {
 					echo '<td class="status-not-imported">Not imported</td>';
@@ -308,9 +276,9 @@ class Bible_Here_Admin {
 					// Check if this version needs upload button (no download_url and rank is null, but has table_name/language/abbreviation)
 					if (empty($version->download_url) && $version->rank === null && 
 						!empty($version->table_name) && !empty($version->language) && !empty($version->abbreviation)) {
-						echo '<button class="btn-upload upload-csv-btn" data-version-id="' . esc_attr($version->id) . '" data-language="' . esc_attr($version->language) . '" data-table-name="' . esc_attr($version->table_name) . '" data-action="upload" style="background: #00a32a; margin-left: 4px;">Upload</button>';
+						echo '<button class="btn-upload upload-csv-btn" data-version-id="' . esc_attr($version->id) . '" data-language="' . esc_attr($version->language) . '" data-table-name="' . esc_attr($version->table_name) . '" data-action="upload">Upload</button>';
 					} else {
-						echo '<button class="btn-download bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import" style="margin-left: 4px;">Install</button>';
+						echo '<button class="btn-download bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import">Install</button>';
 					}
 					echo '</td>';
 				}
@@ -322,18 +290,18 @@ class Bible_Here_Admin {
 		}
 
 		// Import functionality section
-		echo '<div class="bible-import-section" style="margin-top: 30px;">';
+		echo '<div class="bible-import-section">';
 		echo '<h2>Import Progress</h2>';
-		echo '<div id="import-status" style="display: none;">';
+		echo '<div id="import-status" class="bible-here-import-status">';
 		echo '<div class="import-controls">';
-		echo '<button id="cancel-import-btn" class="button" type="button" style="display:none;">Cancel Import</button>';
+		echo '<button id="cancel-import-btn" class="button bible-here-hidden" type="button">Cancel Import</button>';
 		echo '</div>';
-		echo '<div id="import-progress" style="margin-top: 15px;">';
-		echo '<div class="progress-bar-container" style="width:100%; height:20px; background:#f0f0f0; border:1px solid #ccc; margin:10px 0;">';
-		echo '<div id="progress-bar" style="width:0%; height:100%; background:#0073aa; transition:width 0.3s;"></div>';
+		echo '<div id="import-progress" class="bible-here-import-progress">';
+		echo '<div class="progress-bar-container">';
+		echo '<div id="progress-bar"></div>';
 		echo '</div>';
 		echo '<div id="progress-text">Ready to start...</div>';
-		echo '<div id="import-log" style="background:#f9f9f9; border:1px solid #ddd; padding:10px; height:200px; overflow-y:scroll; font-family:monospace; font-size:12px; margin-top:10px;"></div>';
+		echo '<div id="import-log" class="bible-here-import-log"></div>';
 		echo '</div>';
 		echo '</div>';
 		echo '</div>';
@@ -352,28 +320,28 @@ class Bible_Here_Admin {
 		
 		// Required fields in specified order: language/abbreviation/name/table_name
 		echo '<div>';
-		echo '<label for="language">Language: <span style="color:red;">*</span></label>';
+		echo '<label for="language">Language: <span class="bible-here-required">*</span></label>';
 		echo '<input type="text" id="language" name="language" required>';
 		echo '</div>';
 		
 		echo '<div>';
-		echo '<label for="abbreviation">Abbreviation: <span style="color:red;">*</span></label>';
+		echo '<label for="abbreviation">Abbreviation: <span class="bible-here-required">*</span></label>';
 		echo '<input type="text" id="abbreviation" name="abbreviation" required>';
 		echo '</div>';
 		
 		echo '<div>';
-		echo '<label for="name">Name: <span style="color:red;">*</span></label>';
+		echo '<label for="name">Name: <span class="bible-here-required">*</span></label>';
 		echo '<input type="text" id="name" name="name" required>';
 		echo '</div>';
 		
 		echo '<div>';
-		echo '<label for="table-name">Table Name: <span style="color:red;">*</span></label>';
+		echo '<label for="table-name">Table Name: <span class="bible-here-required">*</span></label>';
 		echo '<input type="text" id="table-name" name="table_name" required>';
 		echo '</div>';
 		
 		echo '<div class="type-for-login-row">';
 		echo '<div>';
-		echo '<label for="type">Type: <span style="color:red;">*</span></label>';
+		echo '<label for="type">Type: <span class="bible-here-required">*</span></label>';
 		echo '<select id="type" name="type" required>';
 		echo '<option value="Bible">Bible</option>';
 		echo '<option value="Commentary">Commentary</option>';
@@ -429,13 +397,13 @@ class Bible_Here_Admin {
 
 		
 		echo '</form>';
-		echo '<div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center;">';
+		echo '<div class="modal-actions bible-here-modal-actions">';
 		echo '<div>';
 		echo '<button type="button" id="save-version" class="btn-save">Save</button>';
-		echo '<button type="button" id="delete-version" class="btn-delete" style="display:none;">Delete version</button>';
+		echo '<button type="button" id="delete-version" class="btn-delete bible-here-hidden">Delete version</button>';
 		echo '<button type="button" id="cancel-modal" class="btn-cancel">Cancel</button>';
 		echo '</div>';
-		echo '<div id="duplicate-warning" class="duplicate-warning" style="display:none; color:#c62828; font-size:14px; margin-left:10px;">';
+		echo '<div id="duplicate-warning" class="duplicate-warning">';
 		echo '<span id="duplicate-message"></span>';
 		echo '</div>';
 		echo '</div>';
@@ -452,25 +420,26 @@ class Bible_Here_Admin {
 		echo '<span class="close upload-close">&times;</span>';
 		echo '</div>';
 		echo '<div class="modal-body">';
-		echo '<p>Please select a CSV file to upload. The CSV should have the following format:</p>';
-		echo '<code>book_number,chapter_number,verse_number,verse_text</code>';
-		echo '<p>Example:</p>';
-		echo '<code>1,1,1,起初，　神創造天地。</code>';
+		echo '<p>Please select a CSV file to upload. The quoted CSV should have headers in the following format:</p>';
+		echo '<p>';
+		echo '<blockquote>book_number, chapter_number, verse_number, verse_text<br>';
+		echo '1, 1, 1, "In the beginning God created the heaven and the earth."</blockquote>';
+		echo '</p>';
 		echo '<form id="upload-form" enctype="multipart/form-data">';
 		echo '<input type="hidden" id="csv-version-id" name="version">';
 		echo '<input type="hidden" id="csv-language" name="language">';
 		echo '<input type="hidden" id="csv-table-name" name="table_name">';
-		echo '<div style="margin: 20px 0;">';
-		echo '<label for="csv-file">Select CSV File:</label>';
-		echo '<input type="file" id="csv-file" name="csv_file" accept=".csv" required style="margin-left: 10px;">';
+		echo '<div class="bible-here-csv-section">';
+		echo '<label for="csv-file">Upload CSV file:</label>';
+		echo '<input type="file" id="csv-file" name="csv_file" accept=".csv" required class="bible-here-csv-file">';
 		echo '</div>';
-		echo '<div id="csv-progress" style="display: none; margin: 20px 0;">';
-		echo '<div class="progress-bar-container" style="width:100%; height:20px; background:#f0f0f0; border:1px solid #ccc;">';
-		echo '<div class="progress-bar" style="width:0%; height:100%; background:#0073aa; transition:width 0.3s;"></div>';
+		echo '<div id="csv-progress" class="bible-here-csv-progress">';
+		echo '<div class="progress-bar-container">';
+		echo '<div class="progress-bar"></div>';
 		echo '</div>';
-		echo '<div id="csv-progress-text">Preparing upload...</div>';
+		echo '<div id="csv-progress-text">Uploading...</div>';
 		echo '</div>';
-		echo '<div id="csv-result" style="display: none; margin: 20px 0; padding: 10px; border-radius: 4px;"></div>';
+		echo '<div id="csv-result" class="bible-here-csv-result"></div>';
 		echo '</form>';
 		echo '</div>';
 		echo '<div class="modal-actions">';
@@ -649,22 +618,22 @@ class Bible_Here_Admin {
 				return;
 			}
 			
-			// Clear the content table (TRUNCATE instead of DROP)
+			// Drop the content table completely
 			$content_table = $wpdb->prefix . $version_info->table_name;
-			error_log('Bible_Here_Admin: Preparing to clear content table: ' . $content_table);
+			error_log('Bible_Here_Admin: Preparing to drop content table: ' . $content_table);
 			
-			// Check if table exists before truncating
+			// Check if table exists before dropping
 			$table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$content_table}'");
 			if ($table_exists) {
-				$truncate_result = $wpdb->query("TRUNCATE TABLE `{$content_table}`");
-				if ($truncate_result === false) {
-					error_log('Bible_Here_Admin: ❌ Failed to clear content table: ' . $wpdb->last_error);
-					wp_send_json(array('success' => false, 'message' => 'Failed to clear content table'));
+				$drop_result = $wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
+				if ($drop_result === false) {
+					error_log('Bible_Here_Admin: ❌ Failed to drop content table: ' . $wpdb->last_error);
+					wp_send_json(array('success' => false, 'message' => 'Failed to drop content table'));
 					return;
 				}
-				error_log('Bible_Here_Admin: ✅ Content table cleared successfully');
+				error_log('Bible_Here_Admin: ✅ Content table dropped successfully');
 			} else {
-				error_log('Bible_Here_Admin: ⚠️ Content table does not exist, skipping truncate');
+				error_log('Bible_Here_Admin: ⚠️ Content table does not exist, skipping drop');
 			}
 			
 			// Reset rank to null in versions table
@@ -685,7 +654,7 @@ class Bible_Here_Admin {
 			
 			$result = array(
 				'success' => true,
-				'message' => 'Version data cleared successfully (table content removed, version record preserved)'
+				'message' => 'Version data deleted successfully (table dropped, version record preserved)'
 			);
 			
 		} catch (Exception $e) {
@@ -1200,11 +1169,14 @@ class Bible_Here_Admin {
 			return;
 		}
 		
-		// Insert CSV data
+		// Insert CSV data using batch processing
 		$inserted_count = 0;
 		$error_count = 0;
 		$errors = array();
+		$batch_size = 1000;
+		$valid_rows = array();
 		
+		// First pass: validate and prepare data
 		foreach ($csv_rows as $index => $row) {
 			// Handle both array format [0,1,2,3] and object format {book_number:1, chapter_number:1, verse_number:1, verse_text:"..."}
 			if (is_array($row) && isset($row[0])) {
@@ -1237,22 +1209,41 @@ class Bible_Here_Admin {
 				continue;
 			}
 			
-			$insert_result = $wpdb->insert(
-				$content_table,
-				array(
-					'book_number' => $book_number,
-					'chapter_number' => $chapter_number,
-					'verse_number' => $verse_number,
-					'verse_text' => $verse_text
-				),
-				array('%d', '%d', '%d', '%s')
+			$valid_rows[] = array(
+				'book_number' => $book_number,
+				'chapter_number' => $chapter_number,
+				'verse_number' => $verse_number,
+				'verse_text' => $verse_text
 			);
+		}
+		
+		// Second pass: batch insert valid data
+		if (!empty($valid_rows)) {
+			$batches = array_chunk($valid_rows, $batch_size);
 			
-			if ($insert_result !== false) {
-				$inserted_count++;
-			} else {
-				$error_count++;
-				$errors[] = "Row " . ($index + 1) . ": Database insert failed";
+			foreach ($batches as $batch_index => $batch) {
+				$values = array();
+				$placeholders = array();
+				
+				foreach ($batch as $row) {
+					$values[] = $row['book_number'];
+					$values[] = $row['chapter_number'];
+					$values[] = $row['verse_number'];
+					$values[] = $row['verse_text'];
+					$placeholders[] = '(%d, %d, %d, %s)';
+				}
+				
+				$sql = "INSERT INTO `{$content_table}` (book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+				$prepared_sql = $wpdb->prepare($sql, $values);
+				
+				$batch_result = $wpdb->query($prepared_sql);
+				
+				if ($batch_result !== false) {
+					$inserted_count += count($batch);
+				} else {
+					$error_count += count($batch);
+					$errors[] = "Batch " . ($batch_index + 1) . ": Database batch insert failed - " . $wpdb->last_error;
+				}
 			}
 		}
 		

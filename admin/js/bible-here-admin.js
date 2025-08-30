@@ -74,7 +74,7 @@
 	function startImport(language, version) {
 		language = language || 'en'; // Default to English if no language specified
 		version = version || 'kjv'; // Default to KJV if no version specified
-		console.log('Bible Here: Starting XML download and import process for ' + language + ' ' + version);
+
 		
 		// Reset UI to clear any previous error messages or logs
 		resetImportUI();
@@ -138,7 +138,7 @@
 				return;
 			}
 			
-			console.log('Bible Here: Download response received', response);
+
 			handleImportResponse(response);
 		})
 		.catch(error => {
@@ -266,7 +266,7 @@
 	 * Delete a Bible version
 	 */
 	function deleteVersion(version) {
-		console.log('Bible Here: Starting delete process for ' + version);
+
 		
 		// Disable delete button during operation
 		const deleteBtn = document.querySelector('button[data-action="delete"][data-version="' + version + '"]');
@@ -287,7 +287,7 @@
 		})
 		.then(response => response.json())
 		.then(response => {
-			console.log('Bible Here: Delete response received', response);
+
 			
 			if (response.success) {
 				showNotice(version.toUpperCase() + ' Bible data deleted successfully!', 'success');
@@ -359,7 +359,7 @@
 	 * Reset the import UI to initial state
 	 */
 	function resetImportUI() {
-		console.log('Bible Here: Resetting import UI');
+
 		
 		importInProgress = false;
 		currentImportVersion = null;
@@ -451,14 +451,14 @@
 			}
 		}
 		
-		console.log('Bible Here Download and Import Log: ' + logEntry);
+
 	}
 
 	/**
 	 * Show admin notice
 	 */
 	function showNotice(message, type) {
-		console.log('Bible Here: Showing notice:', message, type);
+
 		
 		// Find the Import Progress section to display notice above it
 		var importSection = document.querySelector('.bible-import-section');
@@ -468,11 +468,11 @@
 			// Create notice message element
 			var noticeHtml = '';
 			if (type === 'error') {
-				noticeHtml = '<div class="bible-here-notice bible-here-error" style="color: #d63384; background: #f8d7da; border: 1px solid #f5c2c7; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Error:</strong>' + message + '</div>';
-			} else if (type === 'success') {
-				noticeHtml = '<div class="bible-here-notice bible-here-success" style="color: #0f5132; background: #d1e7dd; border: 1px solid #badbcc; padding: 10px; margin: 10px 0; border-radius: 4px;"><strong>Success:</strong>' + message + '</div>';
-			} else {
-				noticeHtml = '<div class="bible-here-notice bible-here-info" style="color: #055160; background: #cff4fc; border: 1px solid #b6effb; padding: 10px; margin: 10px 0; border-radius: 4px;">' + message + '</div>';
+			noticeHtml = '<div class="bible-here-notice bible-here-error"><strong>Error:</strong>' + message + '</div>';
+		} else if (type === 'success') {
+			noticeHtml = '<div class="bible-here-notice bible-here-success"><strong>Success:</strong>' + message + '</div>';
+		} else {
+			noticeHtml = '<div class="bible-here-notice bible-here-info">' + message + '</div>';
 			}
 			
 			// Remove previous notice messages (if any) from the import section
@@ -496,7 +496,7 @@
 	 * Reload CSV data
 	 */
 	function reloadCSVData() {
-		console.log('Bible Here: Starting default seed data reload process');
+
 		
 		// Disable the reload button during operation
 		const reloadBtn = document.getElementById('reload-csv-btn');
@@ -516,7 +516,7 @@
 		})
 		.then(response => response.json())
 		.then(response => {
-			console.log('Bible Here: CSV reload response received', response);
+
 			
 			if (response.success) {
 				showNotice('CSV data reloaded successfully! ' + (response.message || ''), 'success');
@@ -547,23 +547,23 @@
 
 	// Version table modal editing functionality
 	document.addEventListener('DOMContentLoaded', function() {
-		console.log('DOMContentLoaded event fired, initializing version modal editing and CSV upload...');
+	
 		initVersionModalEditing();
 		initCSVUploadModal();
-		console.log('Initialization completed.');
+	
 	});
 
 	/**
 	 * Initialize version modal editing functionality
 	 */
 	function initVersionModalEditing() {
-		console.log('Initializing version modal editing...');
+
 		const modal = document.getElementById('version-modal');
 		if (!modal) {
 			console.error('Version modal not found!');
 			return;
 		}
-		console.log('Version modal found, setting up event listeners...');
+		
 
 		// Handle Add New Version button
 		const addVersionBtn = document.getElementById('add-version-btn');
@@ -583,18 +583,13 @@
 
 		// Handle Upload buttons in table
 		document.addEventListener('click', function(e) {
-			console.log('Click event detected on element:', e.target);
-			console.log('Element classes:', e.target.classList);
+			
 			
 			if (e.target.classList.contains('upload-csv-btn')) {
-				console.log('Upload CSV button clicked!');
 				const versionId = e.target.getAttribute('data-version-id');
 				const tableName = e.target.getAttribute('data-table-name');
 				const language = e.target.getAttribute('data-language');
-				console.log('Button attributes - versionId:', versionId, 'tableName:', tableName, 'language:', language);
-				console.log('About to call openCSVUploadModal...');
 				openCSVUploadModal(versionId, tableName, language);
-				console.log('openCSVUploadModal call completed.');
 			}
 		});
 
@@ -688,22 +683,21 @@
 		}
 
 		modal.style.display = 'block';
-		console.log('CSV upload modal opened successfully! Modal display style set to block.');
-		console.log('Modal visibility check - offsetHeight:', modal.offsetHeight, 'offsetWidth:', modal.offsetWidth);
+
 	}
 
 	/**
 	 * Close version modal with confirmation
 	 */
 	function closeVersionModalWithConfirm() {
-		console.log('closeVersionModalWithConfirm called, formModified:', formModified);
+
 		// Always show confirmation dialog regardless of form modification status
-		console.log('Showing confirmation dialog');
+		
 		if (!confirm('Are you sure you want to close this dialog?')) {
-			console.log('User cancelled close action');
+			
 			return;
 		}
-		console.log('User confirmed close action');
+		
 		closeVersionModal();
 	}
 
@@ -1083,7 +1077,7 @@
 	 */
 	function markFormModified() {
 		formModified = true;
-		console.log('Form marked as modified');
+
 	}
 
 	/**
@@ -1107,10 +1101,10 @@
 		const versionId = document.getElementById('version-id').value;
 		const versionName = document.getElementById('name').value || 'this version';
 
-		console.log('deleteVersion called, versionId:', versionId, 'versionName:', versionName);
+
 
 		if (!versionId) {
-			console.log('No version ID found, showing error');
+
 			showNotice('No version selected for deletion', 'error');
 			return;
 		}
@@ -1158,18 +1152,18 @@
 	 * Initialize CSV upload modal functionality
 	 */
 	function initCSVUploadModal() {
-		console.log('Initializing CSV upload modal...');
+
 		const modal = document.getElementById('csv-upload-modal');
 		if (!modal) {
 			console.error('CSV upload modal not found!');
 			return;
 		}
-		console.log('CSV upload modal found, setting up event listeners...');
+		
 
 		// Handle modal close
 		const closeBtn = modal.querySelector('.close');
 		if (closeBtn) {
-			console.log('CSV modal close button found, adding event listener');
+
 			closeBtn.addEventListener('click', function(e) {
 				e.preventDefault();
 				closeCSVUploadModal();
@@ -1181,7 +1175,7 @@
 		// Handle cancel button
 		const cancelBtn = document.getElementById('cancel-csv-upload');
 		if (cancelBtn) {
-			console.log('CSV modal cancel button found, adding event listener');
+
 			cancelBtn.addEventListener('click', function(e) {
 				e.preventDefault();
 				closeCSVUploadModal();
@@ -1193,11 +1187,7 @@
 		// Handle upload button
 		const uploadBtn = document.getElementById('upload-csv-btn');
 		if (uploadBtn) {
-			console.log('Upload button found, adding click event listener');
 			uploadBtn.addEventListener('click', uploadCSVFile);
-			console.log('Upload button event listener added successfully');
-		} else {
-			console.error('Upload button not found!');
 		}
 
 		// Close modal when clicking outside
@@ -1221,13 +1211,13 @@
 	 * Open CSV upload modal
 	 */
 	function openCSVUploadModal(versionId, tableName, language) {
-		console.log('Opening CSV upload modal with params:', {versionId, tableName, language});
+
 		const modal = document.getElementById('csv-upload-modal');
 		if (!modal) {
 			console.error('CSV upload modal element not found!');
 			return;
 		}
-		console.log('Modal element found, proceeding to open...');
+
 		const versionInput = document.getElementById('csv-version-id');
 		const tableNameInput = document.getElementById('csv-table-name');
 		const languageInput = document.getElementById('csv-language');
@@ -1236,11 +1226,6 @@
 		const resultDiv = document.getElementById('csv-result');
 
 		// Set form data
-		console.log('Checking form elements:');
-		console.log('versionInput:', versionInput ? 'found' : 'NOT FOUND');
-		console.log('tableNameInput:', tableNameInput ? 'found' : 'NOT FOUND');
-		console.log('languageInput:', languageInput ? 'found' : 'NOT FOUND');
-		console.log('fileInput:', fileInput ? 'found' : 'NOT FOUND');
 		
 		if (versionInput) versionInput.value = versionId;
 		if (tableNameInput) tableNameInput.value = tableName;
@@ -1272,7 +1257,7 @@
 	 * Upload and process CSV file
 	 */
 	function uploadCSVFile() {
-		console.log('uploadCSVFile function called');
+
 		const fileInput = document.getElementById('csv-file');
 		const versionId = document.getElementById('csv-version-id').value;
 		const tableName = document.getElementById('csv-table-name').value;
@@ -1282,13 +1267,13 @@
 		const uploadBtn = document.getElementById('upload-csv-btn');
 
 		if (!fileInput.files[0]) {
-			showCSVResult('請選擇一個 CSV 檔案', 'error');
+			showCSVResult('Please select a CSV file', 'error');
 			return;
 		}
 
 		const file = fileInput.files[0];
 		if (!file.name.toLowerCase().endsWith('.csv')) {
-			showCSVResult('請選擇 CSV 格式的檔案', 'error');
+			showCSVResult('Please select a CSV format file', 'error');
 			return;
 		}
 
@@ -1301,7 +1286,7 @@
 		// Disable upload button
 		if (uploadBtn) {
 			uploadBtn.disabled = true;
-			uploadBtn.textContent = '上傳中...';
+			uploadBtn.textContent = 'Uploading...';
 		}
 
 		// Read and parse CSV file
@@ -1312,7 +1297,7 @@
 				const parsedData = parseCSV(csvContent);
 
 				if (parsedData.length === 0) {
-					throw new Error('CSV 檔案為空或格式不正確');
+					throw new Error('CSV file is empty or format is incorrect');
 				}
 
 				// Update progress
@@ -1324,13 +1309,13 @@
 				uploadCSVData(versionId, tableName, language, parsedData);
 
 			} catch (error) {
-				showCSVResult('CSV 解析錯誤: ' + error.message, 'error');
+				showCSVResult('CSV parsing error: ' + error.message, 'error');
 				resetUploadButton();
 			}
 		};
 
 		reader.onerror = function() {
-			showCSVResult('檔案讀取失敗', 'error');
+			showCSVResult('File reading failed', 'error');
 			resetUploadButton();
 		};
 
@@ -1354,7 +1339,6 @@
 				firstLine.toLowerCase().includes('verse_number') && 
 				firstLine.toLowerCase().includes('verse_text')) {
 				startIndex = 1;
-				console.log('CSV header detected, skipping first line');
 			}
 		}
 
@@ -1366,7 +1350,7 @@
 			const columns = parseCSVLine(line);
 
 			if (columns.length !== 4) {
-				throw new Error(`第 ${i - startIndex + 1} 行格式錯誤：應該有 4 個欄位 (book_number,chapter_number,verse_number,verse_text)`);
+				throw new Error(`Line ${i - startIndex + 1} format error: should have 4 columns (book_number,chapter_number,verse_number,verse_text)`);
 			}
 
 			const bookNumber = parseInt(columns[0]);
@@ -1375,7 +1359,7 @@
 			const verseText = columns[3];
 
 			if (isNaN(bookNumber) || isNaN(chapterNumber) || isNaN(verseNumber)) {
-				throw new Error(`第 ${i - startIndex + 1} 行格式錯誤：book_number, chapter_number, verse_number 必須是數字`);
+				throw new Error(`Line ${i - startIndex + 1} format error: book_number, chapter_number, verse_number must be numbers`);
 			}
 
 			// Allow empty verse_text and set it to null
@@ -1435,14 +1419,6 @@
 	 * Upload CSV data to server
 	 */
 	function uploadCSVData(versionId, tableName, language, data) {
-		console.log('uploadCSVData function called with parameters:');
-		console.log('- versionId:', versionId);
-		console.log('- tableName:', tableName);
-		console.log('- language:', language);
-		console.log('- data length:', data.length);
-		console.log('- first 3 data items:', data.slice(0, 3));
-		console.log('- ajax_url:', bible_here_ajax.ajax_url);
-		console.log('- nonce:', bible_here_ajax.nonce);
 
 		const formData = new FormData();
 		formData.append('action', 'bible_here_upload_csv');
@@ -1452,36 +1428,27 @@
 		formData.append('csv_data', JSON.stringify(data));
 		formData.append('nonce', bible_here_ajax.nonce);
 
-		console.log('FormData prepared, sending fetch request...');
+
 
 		fetch(bible_here_ajax.ajax_url, {
 			method: 'POST',
 			body: formData
 		})
 		.then(response => {
-			console.log('Fetch response received:');
-			console.log('- status:', response.status);
-			console.log('- statusText:', response.statusText);
-			console.log('- ok:', response.ok);
-			console.log('- headers:', response.headers);
 			
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			
 			return response.text().then(text => {
-				console.log('Raw response text:', text);
 				try {
 					return JSON.parse(text);
 				} catch (e) {
-					console.error('JSON parse error:', e);
-					console.error('Response text that failed to parse:', text);
 					throw new Error('Invalid JSON response from server');
 				}
 			});
 		})
 		.then(response => {
-			console.log('Parsed JSON response:', response);
 			
 			const progressBar = document.getElementById('csv-progress');
 			if (progressBar) {
@@ -1489,24 +1456,19 @@
 			}
 
 			if (response.success) {
-				console.log('Upload successful:', response.data);
-				showCSVResult(`上傳成功！共匯入 ${response.data.imported_count} 筆經文`, 'success');
+				showCSVResult(`Upload successful! Imported ${response.data.inserted_count} verses`, 'success');
 				// Reload page after 2 seconds
 				setTimeout(() => {
 					location.reload();
 				}, 2000);
 			} else {
-				console.error('Upload failed:', response);
-				showCSVResult('上傳失敗: ' + (response.message || '未知錯誤'), 'error');
+				showCSVResult('Upload failed: ' + (response.message || 'Unknown error'), 'error');
 			}
 
 			resetUploadButton();
 		})
 		.catch(error => {
-			console.error('Fetch error caught:', error);
-			console.error('Error message:', error.message);
-			console.error('Error stack:', error.stack);
-			showCSVResult('上傳失敗: ' + error.message, 'error');
+			showCSVResult('Upload failed: ' + error.message, 'error');
 			resetUploadButton();
 		});
 	}
@@ -1531,7 +1493,7 @@
 
 		if (uploadBtn) {
 			uploadBtn.disabled = false;
-			uploadBtn.textContent = 'Upload';
+			uploadBtn.textContent = 'Upload CSV';
 		}
 
 		if (progressBar) {

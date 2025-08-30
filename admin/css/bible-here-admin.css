@@ -110,3 +110,309 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* =================================================================
+   MOVED FROM INLINE STYLES - Bible Here Admin
+   ================================================================= */
+
+/* Button Styles */
+.btn-add {
+    background: #00a32a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.btn-edit {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-download {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.btn-upload {
+    background: #00a32a;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+/* Delete content button override */
+.btn-download[data-action="delete"] {
+    background: #d63638 !important;
+}
+
+/* Install button override */
+.btn-download.bible-download-btn {
+    margin-left: 4px;
+}
+
+/* Status Styles */
+.status-imported {
+    color: #00a32a;
+    font-weight: bold;
+}
+
+.status-not-imported {
+    color: #666;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    max-height: 70vh;
+    border-radius: 5px;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+
+.modal-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.modal-form .full-width {
+    grid-column: 1 / -1;
+}
+
+.modal-form .type-for-login-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    grid-column: 1 / -1;
+}
+
+.modal-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.modal-form input,
+.modal-form select,
+.modal-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.modal-form textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.modal-actions button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn-save {
+    background: #00a32a;
+    color: white;
+}
+
+.btn-delete {
+    background: #d63638;
+    color: white;
+}
+
+.btn-cancel {
+    background: #666;
+    color: white;
+}
+
+/* Layout Styles */
+.bible-here-button-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.bible-here-reload-btn,
+.bible-here-add-btn {
+    background-color: #00a32a;
+    color: white;
+    font-size: 16px;
+    padding: 10px 20px;
+    height: auto;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+/* Hidden elements */
+.bible-here-hidden {
+    display: none;
+}
+
+/* Import Section */
+.bible-import-section {
+    margin-top: 30px;
+}
+
+.bible-here-import-status {
+    display: none;
+}
+
+.bible-here-import-progress {
+    margin-top: 15px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 20px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    margin: 10px 0;
+}
+
+.progress-bar,
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #0073aa;
+    transition: width 0.3s;
+}
+
+.bible-here-import-log {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 200px;
+    overflow-y: scroll;
+    font-family: monospace;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+/* Required field indicator */
+.bible-here-required {
+    color: red;
+}
+
+/* Modal actions layout */
+.bible-here-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Duplicate warning */
+.duplicate-warning {
+    display: none;
+    color: #c62828;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+/* CSV Upload Section */
+.bible-here-csv-section {
+    margin: 20px 0;
+}
+
+.bible-here-csv-file {
+    margin-left: 10px;
+}
+
+.bible-here-csv-progress {
+    display: none;
+    margin: 20px 0;
+}
+
+.bible-here-csv-result {
+    display: none;
+    margin: 20px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Notice Styles (from JS) */
+.bible-here-notice {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.bible-here-notice.bible-here-error {
+    color: #d63384;
+    background: #f8d7da;
+    border: 1px solid #f5c2c7;
+}
+
+.bible-here-notice.bible-here-success {
+    color: #0f5132;
+    background: #d1e7dd;
+    border: 1px solid #badbcc;
+}
+
+.bible-here-notice.bible-here-info {
+    color: #055160;
+    background: #cff4fc;
+    border: 1px solid #b6effb;
+}
