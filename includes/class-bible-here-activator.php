@@ -105,7 +105,7 @@ class Bible_Here_Activator {
 			verse_id INT(8) unsigned zerofill NOT NULL PRIMARY KEY AUTO_INCREMENT,
 			rank TINYINT(1) unsigned NOT NULL DEFAULT 0,
 			start INT(8) unsigned zerofill NOT NULL,
-			finish INT(8) unsigned zerofill NOT NULL DEFAULT 0,
+			finish INT(8) unsigned zerofill NOT NULL DEFAULT 0
 		) $charset_collate;";
 		dbDelta( $sql );
 

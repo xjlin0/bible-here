@@ -269,7 +269,7 @@ class Bible_Here_Admin {
 		echo '<div class="bible-versions-list">';
 
 		if ($versions) {
-			echo '<h2>Bible Versions</h2>';
+			echo '<h2>Versions</h2>';
 			echo '<table id="versions-table" class="versions-table">';
 			echo '<thead><tr>';
 			// Hide ID column

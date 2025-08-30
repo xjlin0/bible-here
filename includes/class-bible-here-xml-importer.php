@@ -717,7 +717,7 @@ class Bible_Here_XML_Importer {
 				$placeholders[] = '(%s, %d, %d, %d, %s)';
 			}
 			
-			$sql = "INSERT INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+			$sql = "REPLACE INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
 			$prepared_sql = $wpdb->prepare($sql, $values);
 			
 			$result = $wpdb->query($prepared_sql);
@@ -920,6 +920,13 @@ class Bible_Here_XML_Importer {
 				$error_msg = 'Failed to create version content table for ' . $version;
 				error_log('Bible_Here_XML_Importer: ' . $error_msg);
 				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 5.5: Set version rank to 0 at the beginning of import
+			// This allows deletion even if import fails later
+			$rank_set = $this->update_version_rank($version, 0);
+			if (!$rank_set) {
+				error_log('Bible_Here_XML_Importer: Warning - Failed to set initial rank to 0, continuing with import');
 			}
 			
 			// Step 6: Import data to database
