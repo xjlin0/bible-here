@@ -580,7 +580,7 @@ class Bible_Here_XML_Importer {
 	 * @param    string    $version_abbreviation    Version abbreviation (e.g., 'kjv')
 	 * @return   bool    True on success, false on failure
 	 */
-	private function create_version_content_table($version_abbreviation) {
+	private function create_version_content_table($version_abbreviation, $table_comment) {
 		global $wpdb;
 
 		error_log('Bible_Here_XML_Importer: Starting to create version-specific content table: ' . $version_abbreviation);
@@ -608,38 +608,17 @@ class Bible_Here_XML_Importer {
 			return true;
 		}
 
-		$charset_collate = $wpdb->get_charset_collate();
-		$index_name = 'uniq_'.$table_name;
-
-		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
-			verse_id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT COMMENT 'verse ID: 2-digit book_number + 3-digit chapter_number + 3-digit verse_number',
-			book_number tinyint(1) unsigned NOT NULL,
-	        chapter_number tinyint(1) unsigned NOT NULL,
-	        verse_number tinyint(1) unsigned NOT NULL,
-			verse_strong text,
-			verse_text text NOT NULL,
-		  PRIMARY KEY (verse_id),
-		  UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
-		) {$charset_collate};";
-
-		error_log('Bible_Here_XML_Importer: Executing SQL to create table: ' . $sql);
-
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-
-		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: Table creation failed, database error: ' . $wpdb->last_error);
-			return false;
+		// Use unified table creation method from Activator
+		require_once plugin_dir_path(__FILE__) . 'class-bible-here-activator.php';
+		$result = Bible_Here_Activator::create_version_content_table($table_name, $table_comment);
+		
+		if ($result) {
+			error_log('Bible_Here_XML_Importer: Version content table created successfully: ' . $table_name);
+		} else {
+			error_log('Bible_Here_XML_Importer: Table creation failed: ' . $wpdb->last_error);
 		}
-
-		// Verify table creation
-		if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") != $table_name) {
-			error_log('Bible_Here_XML_Importer: Table creation verification failed');
-			return false;
-		}
-
-		error_log('Bible_Here_XML_Importer: Version content table created successfully: ' . $table_name);
-		return true;
+		
+		return $result;
 	}
 
 	/**
@@ -675,7 +654,7 @@ class Bible_Here_XML_Importer {
 		$table_name = $wpdb->prefix . $table_name_suffix;
 		error_log('Bible_Here_XML_Importer: Target table name: ' . $table_name);
 		$imported_count = 0;
-		$batch_size = 100; // Process in batches of 100 verses
+		$batch_size = 1000; // Process in batches of 1000 verses
 		$total_verses = count($bible_data);
 		
 		// Clear existing data
@@ -914,7 +893,7 @@ class Bible_Here_XML_Importer {
 			}
 			
 			// Step 5: Create version content table
-			$table_created = $this->create_version_content_table($version);
+			$table_created = $this->create_version_content_table($version, 'From '.$download_url);
 			if (!$table_created) {
 				$this->cleanup_temp_files($zip_file_path, $xml_file_path);
 				$error_msg = 'Failed to create version content table for ' . $version;

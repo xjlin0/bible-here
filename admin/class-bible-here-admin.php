@@ -409,7 +409,6 @@ class Bible_Here_Admin {
 		echo '</div>';
 		echo '</div>';
 		echo '</div>';
-		
 		echo '</div>';
 		
 		// Add CSV Upload Modal HTML
@@ -421,10 +420,31 @@ class Bible_Here_Admin {
 		echo '</div>';
 		echo '<div class="modal-body">';
 		echo '<p>Please select a CSV file to upload. The quoted CSV should have headers in the following format:</p>';
-		echo '<p>';
-		echo '<blockquote>book_number, chapter_number, verse_number, verse_text<br>';
-		echo '1, 1, 1, "In the beginning God created the heaven and the earth."</blockquote>';
-		echo '</p>';
+		echo '<p><strong>Required fields:</strong> book_number, chapter_number, verse_number, verse_text</p>';
+		echo '<p><strong>Optional fields:</strong> verse_strong, label</p>';
+		echo '<table class="csv-format">';
+		echo '    <caption><em>Note: verse_strong and label columns are optional and can be omitted</em></caption>';
+		echo '    <thead>';
+		echo '        <tr>';
+		echo '            <th>book_number,</th>';
+		echo '            <th>chapter_number,</th>';
+		echo '            <th>verse_number,</th>';
+		echo '            <th>verse_text,</th>';
+		echo '            <th>verse_strong,</th>';
+		echo '            <th>label</th>';
+		echo '        </tr>';
+		echo '    </thead>';
+		echo '    <tbody>';
+		echo '        <tr>';
+		echo '            <td>1,</td>';
+		echo '            <td>1,</td>';
+		echo '            <td>1,</td>';
+		echo '            <td>"In the beginning God created the heaven and the earth.",</td>';
+		echo '            <td>"In the beginning{H7225} God{H430} created{H1254}{(H8804)}{H853} the heaven{H8064} and{H853} the earth{H776}.",</td>';
+		echo '            <td>"Creation"</td>';
+		echo '        </tr>';
+		echo '    </tbody>';
+		echo '</table>';
 		echo '<form id="upload-form" enctype="multipart/form-data">';
 		echo '<input type="hidden" id="csv-version-id" name="version">';
 		echo '<input type="hidden" id="csv-language" name="language">';
@@ -1100,6 +1120,7 @@ class Bible_Here_Admin {
 		
 		$version_id = intval($_POST['version_id'] ?? 0);
 		$csv_data = $_POST['csv_data'] ?? '';
+		$file_name = $_POST['file_name'] ?? '';
 		
 		if ($version_id <= 0) {
 			wp_send_json_error('Invalid version ID');
@@ -1144,27 +1165,16 @@ class Bible_Here_Admin {
 			return;
 		}
 		
-		// Create content table
+		// Create content table using unified method
 		$content_table = $wpdb->prefix . $version_info->table_name;
 		
-		// Drop existing table if exists
-		$wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
+		// Prepare table comment
+		$table_comment = (!empty($file_name) ? 'From CSV: ' . $file_name : 'From CSV upload').' at '.date('c');
 		
-		// Create new table
-		$create_table_sql = "
-			CREATE TABLE `{$content_table}` (
-				`id` int(11) NOT NULL AUTO_INCREMENT,
-				`book_number` int(11) NOT NULL,
-				`chapter_number` int(11) NOT NULL,
-				`verse_number` int(11) NOT NULL,
-				`verse_text` text NULL,
-				PRIMARY KEY (`id`),
-				KEY `book_chapter_verse` (`book_number`, `chapter_number`, `verse_number`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-		";
-		
-		$result = $wpdb->query($create_table_sql);
-		if ($result === false) {
+		// Use unified table creation method from Activator
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-activator.php';
+		$result = Bible_Here_Activator::create_version_content_table($content_table, $table_comment);
+		if (!$result) {
 			wp_send_json_error('Failed to create content table: ' . $wpdb->last_error);
 			return;
 		}
@@ -1178,7 +1188,7 @@ class Bible_Here_Admin {
 		
 		// First pass: validate and prepare data
 		foreach ($csv_rows as $index => $row) {
-			// Handle both array format [0,1,2,3] and object format {book_number:1, chapter_number:1, verse_number:1, verse_text:"..."}
+			// Handle both array format [0,1,2,3,4,5] and object format {book_number:1, chapter_number:1, verse_number:1, verse_text:"...", verse_strong:"...", label:"..."}
 			if (is_array($row) && isset($row[0])) {
 				// Array format (legacy support)
 				if (count($row) < 4) {
@@ -1190,6 +1200,8 @@ class Bible_Here_Admin {
 				$chapter_number = intval($row[1]);
 				$verse_number = intval($row[2]);
 				$verse_text = !empty($row[3]) ? sanitize_text_field($row[3]) : null;
+				$verse_strong = (count($row) > 4 && !empty($row[4])) ? sanitize_text_field($row[4]) : null;
+				$label = (count($row) > 5 && !empty($row[5])) ? sanitize_text_field($row[5]) : null;
 			} else {
 				// Object format (current frontend format)
 				if (!isset($row['book_number']) || !isset($row['chapter_number']) || !isset($row['verse_number'])) {
@@ -1201,6 +1213,8 @@ class Bible_Here_Admin {
 				$chapter_number = intval($row['chapter_number']);
 				$verse_number = intval($row['verse_number']);
 				$verse_text = !empty($row['verse_text']) ? sanitize_text_field($row['verse_text']) : null;
+				$verse_strong = !empty($row['verse_strong']) ? sanitize_text_field($row['verse_strong']) : null;
+				$label = !empty($row['label']) ? sanitize_text_field($row['label']) : null;
 			}
 			
 			if ($book_number <= 0 || $chapter_number <= 0 || $verse_number <= 0) {
@@ -1213,7 +1227,9 @@ class Bible_Here_Admin {
 				'book_number' => $book_number,
 				'chapter_number' => $chapter_number,
 				'verse_number' => $verse_number,
-				'verse_text' => $verse_text
+				'verse_text' => $verse_text,
+				'verse_strong' => $verse_strong,
+				'label' => $label
 			);
 		}
 		
@@ -1226,14 +1242,19 @@ class Bible_Here_Admin {
 				$placeholders = array();
 				
 				foreach ($batch as $row) {
+					// Generate custom verse_id: 2-digit book + 3-digit chapter + 3-digit verse
+					$custom_id = sprintf('%02d%03d%03d', $row['book_number'], $row['chapter_number'], $row['verse_number']);
+					$values[] = $custom_id;
 					$values[] = $row['book_number'];
 					$values[] = $row['chapter_number'];
 					$values[] = $row['verse_number'];
+					$values[] = $row['verse_strong'];
 					$values[] = $row['verse_text'];
-					$placeholders[] = '(%d, %d, %d, %s)';
+					$values[] = $row['label'];
+					$placeholders[] = '(%s, %d, %d, %d, %s, %s, %s)';
 				}
 				
-				$sql = "INSERT INTO `{$content_table}` (book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+				$sql = "REPLACE INTO `{$content_table}` (verse_id, book_number, chapter_number, verse_number, verse_strong, verse_text, label) VALUES " . implode(', ', $placeholders);
 				$prepared_sql = $wpdb->prepare($sql, $values);
 				
 				$batch_result = $wpdb->query($prepared_sql);

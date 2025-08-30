@@ -560,7 +560,7 @@
 
 		const modal = document.getElementById('version-modal');
 		if (!modal) {
-			console.error('Version modal not found!');
+			// Silently return if modal not found (likely on non-Bible Here pages)
 			return;
 		}
 		
@@ -644,8 +644,8 @@
 		const tableNameInput = document.getElementById('table-name');
 
 		if (languageInput && abbreviationInput) {
-			languageInput.addEventListener('input', handleLanguageAbbreviationChange);
-			abbreviationInput.addEventListener('input', handleLanguageAbbreviationChange);
+			languageInput.addEventListener('blur', handleLanguageAbbreviationChange);
+		abbreviationInput.addEventListener('blur', handleLanguageAbbreviationChange);
 		}
 
 		// Handle ESC key to close modal
@@ -915,7 +915,10 @@
 
 		// Auto-fill table name if empty
 		if (language && abbreviation && !tableNameInput.value.trim()) {
-			tableNameInput.value = `wp_bible_here_${language}_${abbreviation}`;
+			// Convert to lowercase and replace spaces/symbols with underscores
+			const cleanLanguage = language.toLowerCase().replace(/[\s\W]+/g, '_');
+			const cleanAbbreviation = abbreviation.toLowerCase().replace(/[\s\W]+/g, '_');
+			tableNameInput.value = `bible_here_${cleanLanguage}_${cleanAbbreviation}`;
 			markFormModified();
 		}
 
@@ -1155,7 +1158,7 @@
 
 		const modal = document.getElementById('csv-upload-modal');
 		if (!modal) {
-			console.error('CSV upload modal not found!');
+			// Silently return if modal not found (likely on non-Bible Here pages)
 			return;
 		}
 		
@@ -1168,9 +1171,8 @@
 				e.preventDefault();
 				closeCSVUploadModal();
 			});
-		} else {
-			console.error('CSV modal close button not found!');
 		}
+		// Silently continue if close button not found
 
 		// Handle cancel button
 		const cancelBtn = document.getElementById('cancel-csv-upload');
@@ -1180,9 +1182,8 @@
 				e.preventDefault();
 				closeCSVUploadModal();
 			});
-		} else {
-			console.error('CSV modal cancel button not found!');
 		}
+		// Silently continue if cancel button not found
 
 		// Handle upload button
 		const uploadBtn = document.getElementById('upload-csv-btn');
@@ -1214,7 +1215,7 @@
 
 		const modal = document.getElementById('csv-upload-modal');
 		if (!modal) {
-			console.error('CSV upload modal element not found!');
+			// Silently return if modal not found (likely on non-Bible Here pages)
 			return;
 		}
 
@@ -1272,7 +1273,8 @@
 		}
 
 		const file = fileInput.files[0];
-		if (!file.name.toLowerCase().endsWith('.csv')) {
+		const fileName = file.name;
+		if (!fileName.toLowerCase().endsWith('.csv')) {
 			showCSVResult('Please select a CSV format file', 'error');
 			return;
 		}
@@ -1306,7 +1308,7 @@
 				}
 
 				// Send data to server
-				uploadCSVData(versionId, tableName, language, parsedData);
+				uploadCSVData(versionId, tableName, language, parsedData, fileName);
 
 			} catch (error) {
 				showCSVResult('CSV parsing error: ' + error.message, 'error');
@@ -1332,12 +1334,14 @@
 
 		// Check if first line is header
 		if (lines.length > 0) {
-			const firstLine = lines[0].trim();
-			// Skip header if it contains the expected column names
-			if (firstLine.toLowerCase().includes('book_number') && 
-				firstLine.toLowerCase().includes('chapter_number') && 
-				firstLine.toLowerCase().includes('verse_number') && 
-				firstLine.toLowerCase().includes('verse_text')) {
+			const firstLine = lines[0].trim().toLowerCase();
+			// Skip header if it contains the required column names
+			// Required: book_number, chapter_number, verse_number, verse_text
+			// Optional: verse_strong, label
+			if (firstLine.includes('book_number') && 
+				firstLine.includes('chapter_number') && 
+				firstLine.includes('verse_number') && 
+				firstLine.includes('verse_text')) {
 				startIndex = 1;
 			}
 		}
@@ -1349,28 +1353,43 @@
 			// Parse CSV line (handle quotes)
 			const columns = parseCSVLine(line);
 
-			if (columns.length !== 4) {
-				throw new Error(`Line ${i - startIndex + 1} format error: should have 4 columns (book_number,chapter_number,verse_number,verse_text)`);
+			// Support 4-6 columns: book_number, chapter_number, verse_number, verse_text, [verse_strong], [label]
+			if (columns.length < 4 || columns.length > 6) {
+				throw new Error(`Line ${i - startIndex + 1} format error: should have 4-6 columns (book_number,chapter_number,verse_number,verse_text,[verse_strong],[label]). Problematic line: '${line}'`);
 			}
 
 			const bookNumber = parseInt(columns[0]);
 			const chapterNumber = parseInt(columns[1]);
 			const verseNumber = parseInt(columns[2]);
 			const verseText = columns[3];
+			const verseStrong = columns.length > 4 ? columns[4] : null;
+			const label = columns.length > 5 ? columns[5] : null;
 
 			if (isNaN(bookNumber) || isNaN(chapterNumber) || isNaN(verseNumber)) {
-				throw new Error(`Line ${i - startIndex + 1} format error: book_number, chapter_number, verse_number must be numbers`);
+				throw new Error(`Line ${i - startIndex + 1} format error: book_number, chapter_number, verse_number must be numbers. Problematic line: '${line}'`);
 			}
 
-			// Allow empty verse_text and set it to null
-			const finalVerseText = verseText.trim() === '' ? null : verseText;
+			// Allow empty fields and set them to null
+			const finalVerseText = verseText && verseText.trim() !== '' ? verseText : null;
+			const finalVerseStrong = verseStrong && verseStrong.trim() !== '' ? verseStrong : null;
+			const finalLabel = label && label.trim() !== '' ? label : null;
 
-			data.push({
+			const rowData = {
 				book_number: bookNumber,
 				chapter_number: chapterNumber,
 				verse_number: verseNumber,
 				verse_text: finalVerseText
-			});
+			};
+
+			// Add optional fields only if they exist
+			if (finalVerseStrong !== null) {
+				rowData.verse_strong = finalVerseStrong;
+			}
+			if (finalLabel !== null) {
+				rowData.label = finalLabel;
+			}
+
+			data.push(rowData);
 		}
 
 		return data;
@@ -1418,7 +1437,7 @@
 	/**
 	 * Upload CSV data to server
 	 */
-	function uploadCSVData(versionId, tableName, language, data) {
+	function uploadCSVData(versionId, tableName, language, data, fileName) {
 
 		const formData = new FormData();
 		formData.append('action', 'bible_here_upload_csv');
@@ -1426,6 +1445,7 @@
 		formData.append('table_name', tableName);
 		formData.append('language', language);
 		formData.append('csv_data', JSON.stringify(data));
+		formData.append('file_name', fileName);
 		formData.append('nonce', bible_here_ajax.nonce);
 
 

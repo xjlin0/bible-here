@@ -123,6 +123,49 @@ class Bible_Here_Activator {
 	}
 
 	/**
+	 * Create version-specific content table with unified schema
+	 *
+	 * @since    1.0.0
+	 * @param    string    $table_name    Full table name (with prefix)
+	 * @return   bool      True on success, false on failure
+	 */
+	public static function create_version_content_table($table_name, $table_comment) {
+		global $wpdb;
+
+		// Drop existing table if exists
+		$wpdb->query("DROP TABLE IF EXISTS `{$table_name}`");
+		$charset_collate = $wpdb->get_charset_collate();
+		$index_name = 'uniq_' . str_replace($wpdb->prefix, '', $table_name);
+		$comment = $table_comment ? " COMMENT='{$table_comment}'" : '';
+
+		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+			verse_id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT COMMENT 'verse ID: 2-digit book_number + 3-digit chapter_number + 3-digit verse_number',
+			book_number tinyint(1) unsigned NOT NULL,
+			chapter_number tinyint(1) unsigned NOT NULL,
+			verse_number tinyint(1) unsigned NOT NULL,
+			verse_text text COMMENT 'some verse are empty due to translation syntax',
+			verse_strong text COMMENT 'verse with strong number',
+			label VARCHAR(50) COMMENT 'label before the verse',
+			PRIMARY KEY (verse_id),
+			UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
+		) {$charset_collate} {$comment};";
+
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+		dbDelta($sql);
+
+		if ($wpdb->last_error) {
+			return false;
+		}
+
+		// Verify table creation
+		if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") != $table_name) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Insert initial data into database tables.
 	 *
 	 * @since    1.0.0

@@ -191,11 +191,16 @@
     margin: 5% auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 80%;
-    max-width: 800px;
+    width: 70%;
+    max-width: none;
     max-height: 70vh;
     border-radius: 5px;
     overflow-y: auto;
+}
+
+.modal-content table.csv-format {
+    background-color: Gainsboro;
+    text-align: left;
 }
 
 .modal-header {
