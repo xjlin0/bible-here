@@ -57,6 +57,7 @@ class Bible_Here_Admin {
 		add_action('wp_ajax_bible_here_add_version', array($this, 'handle_ajax_add_version'));
 		add_action('wp_ajax_bible_here_delete_version_row', array($this, 'handle_ajax_delete_version_row'));
 		add_action('wp_ajax_bible_here_get_version_data', array($this, 'handle_ajax_get_version_data'));
+		add_action('wp_ajax_bible_here_upload_csv', array($this, 'handle_ajax_upload_csv'));
 
 	}
 
@@ -303,7 +304,14 @@ class Bible_Here_Admin {
 					echo '<td class="status-not-imported">Not imported</td>';
 					echo '<td>';
 					echo '<button class="btn-edit edit-version-btn" data-action="edit" data-version-id="' . esc_attr($version->id) . '">Edit</button>';
-					echo '<button class="btn-download bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import" style="margin-left: 4px;">Install</button>';
+					
+					// Check if this version needs upload button (no download_url and rank is null, but has table_name/language/abbreviation)
+					if (empty($version->download_url) && $version->rank === null && 
+						!empty($version->table_name) && !empty($version->language) && !empty($version->abbreviation)) {
+						echo '<button class="btn-upload upload-csv-btn" data-version-id="' . esc_attr($version->id) . '" data-language="' . esc_attr($version->language) . '" data-table-name="' . esc_attr($version->table_name) . '" data-action="upload" style="background: #00a32a; margin-left: 4px;">Upload</button>';
+					} else {
+						echo '<button class="btn-download bible-download-btn" data-version="' . esc_attr($version->abbreviation) . '" data-language="' . esc_attr($version->language) . '" data-action="import" style="margin-left: 4px;">Install</button>';
+					}
 					echo '</td>';
 				}
 				echo '</tr>';
@@ -434,6 +442,42 @@ class Bible_Here_Admin {
 		echo '</div>';
 		echo '</div>';
 		
+		echo '</div>';
+		
+		// Add CSV Upload Modal HTML
+		echo '<div id="csv-upload-modal" class="modal">';
+		echo '<div class="modal-content">';
+		echo '<div class="modal-header">';
+		echo '<h2 id="upload-modal-title">Upload CSV File</h2>';
+		echo '<span class="close upload-close">&times;</span>';
+		echo '</div>';
+		echo '<div class="modal-body">';
+		echo '<p>Please select a CSV file to upload. The CSV should have the following format:</p>';
+		echo '<code>book_number,chapter_number,verse_number,verse_text</code>';
+		echo '<p>Example:</p>';
+		echo '<code>1,1,1,起初，　神創造天地。</code>';
+		echo '<form id="upload-form" enctype="multipart/form-data">';
+		echo '<input type="hidden" id="csv-version-id" name="version">';
+		echo '<input type="hidden" id="csv-language" name="language">';
+		echo '<input type="hidden" id="csv-table-name" name="table_name">';
+		echo '<div style="margin: 20px 0;">';
+		echo '<label for="csv-file">Select CSV File:</label>';
+		echo '<input type="file" id="csv-file" name="csv_file" accept=".csv" required style="margin-left: 10px;">';
+		echo '</div>';
+		echo '<div id="csv-progress" style="display: none; margin: 20px 0;">';
+		echo '<div class="progress-bar-container" style="width:100%; height:20px; background:#f0f0f0; border:1px solid #ccc;">';
+		echo '<div class="progress-bar" style="width:0%; height:100%; background:#0073aa; transition:width 0.3s;"></div>';
+		echo '</div>';
+		echo '<div id="csv-progress-text">Preparing upload...</div>';
+		echo '</div>';
+		echo '<div id="csv-result" style="display: none; margin: 20px 0; padding: 10px; border-radius: 4px;"></div>';
+		echo '</form>';
+		echo '</div>';
+		echo '<div class="modal-actions">';
+		echo '<button type="button" id="upload-csv-btn" class="btn-save">Upload</button>';
+		echo '<button type="button" id="cancel-csv-upload" class="btn-cancel">Cancel</button>';
+		echo '</div>';
+		echo '</div>';
 		echo '</div>';
 	}
 
@@ -1065,6 +1109,189 @@ class Bible_Here_Admin {
 			'type' => $version_data->type,
 			'seed' => $version_data->seed
 		));
+	}
+
+	/**
+	 * Handle AJAX CSV upload request
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_upload_csv() {
+		// Verify nonce for security
+		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
+			wp_send_json_error('Security check failed');
+			return;
+		}
+		
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+		
+		$version_id = intval($_POST['version_id'] ?? 0);
+		$csv_data = $_POST['csv_data'] ?? '';
+		
+		if ($version_id <= 0) {
+			wp_send_json_error('Invalid version ID');
+			return;
+		}
+		
+		if (empty($csv_data)) {
+			wp_send_json_error('No CSV data provided');
+			return;
+		}
+		
+		global $wpdb;
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
+		
+		// Get version info
+		$version_info = $wpdb->get_row($wpdb->prepare(
+			"SELECT * FROM {$versions_table} WHERE id = %d",
+			$version_id
+		));
+		
+		if (!$version_info) {
+			wp_send_json_error('Version not found');
+			return;
+		}
+		
+		// Check if version is eligible for upload (no download_url and rank is null)
+		if (!empty($version_info->download_url) || !is_null($version_info->rank)) {
+			wp_send_json_error('This version is not eligible for CSV upload');
+			return;
+		}
+		
+		// Check required fields
+		if (empty($version_info->table_name) || empty($version_info->language) || empty($version_info->abbreviation)) {
+			wp_send_json_error('Version missing required information');
+			return;
+		}
+		
+		// Parse CSV data
+		$csv_rows = json_decode(stripslashes($csv_data), true);
+		if (!is_array($csv_rows) || empty($csv_rows)) {
+			wp_send_json_error('Invalid CSV data format');
+			return;
+		}
+		
+		// Create content table
+		$content_table = $wpdb->prefix . $version_info->table_name;
+		
+		// Drop existing table if exists
+		$wpdb->query("DROP TABLE IF EXISTS `{$content_table}`");
+		
+		// Create new table
+		$create_table_sql = "
+			CREATE TABLE `{$content_table}` (
+				`id` int(11) NOT NULL AUTO_INCREMENT,
+				`book_number` int(11) NOT NULL,
+				`chapter_number` int(11) NOT NULL,
+				`verse_number` int(11) NOT NULL,
+				`verse_text` text NULL,
+				PRIMARY KEY (`id`),
+				KEY `book_chapter_verse` (`book_number`, `chapter_number`, `verse_number`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		";
+		
+		$result = $wpdb->query($create_table_sql);
+		if ($result === false) {
+			wp_send_json_error('Failed to create content table: ' . $wpdb->last_error);
+			return;
+		}
+		
+		// Insert CSV data
+		$inserted_count = 0;
+		$error_count = 0;
+		$errors = array();
+		
+		foreach ($csv_rows as $index => $row) {
+			// Handle both array format [0,1,2,3] and object format {book_number:1, chapter_number:1, verse_number:1, verse_text:"..."}
+			if (is_array($row) && isset($row[0])) {
+				// Array format (legacy support)
+				if (count($row) < 4) {
+					$error_count++;
+					$errors[] = "Row " . ($index + 1) . ": Invalid format";
+					continue;
+				}
+				$book_number = intval($row[0]);
+				$chapter_number = intval($row[1]);
+				$verse_number = intval($row[2]);
+				$verse_text = !empty($row[3]) ? sanitize_text_field($row[3]) : null;
+			} else {
+				// Object format (current frontend format)
+				if (!isset($row['book_number']) || !isset($row['chapter_number']) || !isset($row['verse_number'])) {
+					$error_count++;
+					$errors[] = "Row " . ($index + 1) . ": Missing required fields";
+					continue;
+				}
+				$book_number = intval($row['book_number']);
+				$chapter_number = intval($row['chapter_number']);
+				$verse_number = intval($row['verse_number']);
+				$verse_text = !empty($row['verse_text']) ? sanitize_text_field($row['verse_text']) : null;
+			}
+			
+			if ($book_number <= 0 || $chapter_number <= 0 || $verse_number <= 0) {
+				$error_count++;
+				$errors[] = "Row " . ($index + 1) . ": book_number, chapter_number, verse_number must be positive numbers";
+				continue;
+			}
+			
+			$insert_result = $wpdb->insert(
+				$content_table,
+				array(
+					'book_number' => $book_number,
+					'chapter_number' => $chapter_number,
+					'verse_number' => $verse_number,
+					'verse_text' => $verse_text
+				),
+				array('%d', '%d', '%d', '%s')
+			);
+			
+			if ($insert_result !== false) {
+				$inserted_count++;
+			} else {
+				$error_count++;
+				$errors[] = "Row " . ($index + 1) . ": Database insert failed";
+			}
+		}
+		
+		// Update version rank to 1 if any data was inserted
+		if ($inserted_count > 0) {
+			$update_result = $wpdb->update(
+				$versions_table,
+				array('rank' => 1),
+				array('id' => $version_id),
+				array('%d'),
+				array('%d')
+			);
+			
+			if ($update_result === false) {
+				wp_send_json_error('Data imported but failed to update version rank: ' . $wpdb->last_error);
+				return;
+			}
+		}
+		
+		// Return results
+		$response = array(
+			'inserted_count' => $inserted_count,
+			'error_count' => $error_count,
+			'total_rows' => count($csv_rows)
+		);
+		
+		if (!empty($errors)) {
+			$response['errors'] = array_slice($errors, 0, 10); // Limit to first 10 errors
+		}
+		
+		if ($inserted_count > 0) {
+			$response['message'] = "Successfully imported {$inserted_count} verses";
+			if ($error_count > 0) {
+				$response['message'] .= " with {$error_count} errors";
+			}
+			wp_send_json_success($response);
+		} else {
+			wp_send_json_error('No data was imported. Please check your CSV format.');
+		}
 	}
 
 }

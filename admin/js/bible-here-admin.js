@@ -547,15 +547,23 @@
 
 	// Version table modal editing functionality
 	document.addEventListener('DOMContentLoaded', function() {
+		console.log('DOMContentLoaded event fired, initializing version modal editing and CSV upload...');
 		initVersionModalEditing();
+		initCSVUploadModal();
+		console.log('Initialization completed.');
 	});
 
 	/**
 	 * Initialize version modal editing functionality
 	 */
 	function initVersionModalEditing() {
+		console.log('Initializing version modal editing...');
 		const modal = document.getElementById('version-modal');
-		if (!modal) return;
+		if (!modal) {
+			console.error('Version modal not found!');
+			return;
+		}
+		console.log('Version modal found, setting up event listeners...');
 
 		// Handle Add New Version button
 		const addVersionBtn = document.getElementById('add-version-btn');
@@ -570,6 +578,23 @@
 			if (e.target.classList.contains('edit-version-btn')) {
 				const versionId = e.target.getAttribute('data-version-id');
 				openVersionModal(versionId);
+			}
+		});
+
+		// Handle Upload buttons in table
+		document.addEventListener('click', function(e) {
+			console.log('Click event detected on element:', e.target);
+			console.log('Element classes:', e.target.classList);
+			
+			if (e.target.classList.contains('upload-csv-btn')) {
+				console.log('Upload CSV button clicked!');
+				const versionId = e.target.getAttribute('data-version-id');
+				const tableName = e.target.getAttribute('data-table-name');
+				const language = e.target.getAttribute('data-language');
+				console.log('Button attributes - versionId:', versionId, 'tableName:', tableName, 'language:', language);
+				console.log('About to call openCSVUploadModal...');
+				openCSVUploadModal(versionId, tableName, language);
+				console.log('openCSVUploadModal call completed.');
 			}
 		});
 
@@ -663,6 +688,8 @@
 		}
 
 		modal.style.display = 'block';
+		console.log('CSV upload modal opened successfully! Modal display style set to block.');
+		console.log('Modal visibility check - offsetHeight:', modal.offsetHeight, 'offsetWidth:', modal.offsetWidth);
 	}
 
 	/**
@@ -1125,6 +1152,392 @@
 			deleteBtn.textContent = 'Delete Record';
 			showNotice('Delete failed: ' + error.message, 'error');
 		});
+	}
+
+	/**
+	 * Initialize CSV upload modal functionality
+	 */
+	function initCSVUploadModal() {
+		console.log('Initializing CSV upload modal...');
+		const modal = document.getElementById('csv-upload-modal');
+		if (!modal) {
+			console.error('CSV upload modal not found!');
+			return;
+		}
+		console.log('CSV upload modal found, setting up event listeners...');
+
+		// Handle modal close
+		const closeBtn = modal.querySelector('.close');
+		if (closeBtn) {
+			console.log('CSV modal close button found, adding event listener');
+			closeBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				closeCSVUploadModal();
+			});
+		} else {
+			console.error('CSV modal close button not found!');
+		}
+
+		// Handle cancel button
+		const cancelBtn = document.getElementById('cancel-csv-upload');
+		if (cancelBtn) {
+			console.log('CSV modal cancel button found, adding event listener');
+			cancelBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				closeCSVUploadModal();
+			});
+		} else {
+			console.error('CSV modal cancel button not found!');
+		}
+
+		// Handle upload button
+		const uploadBtn = document.getElementById('upload-csv-btn');
+		if (uploadBtn) {
+			console.log('Upload button found, adding click event listener');
+			uploadBtn.addEventListener('click', uploadCSVFile);
+			console.log('Upload button event listener added successfully');
+		} else {
+			console.error('Upload button not found!');
+		}
+
+		// Close modal when clicking outside
+		modal.addEventListener('click', function(e) {
+			if (e.target === modal) {
+				e.preventDefault();
+				closeCSVUploadModal();
+			}
+		});
+
+		// Handle ESC key to close modal
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && modal.style.display === 'block') {
+				e.preventDefault();
+				closeCSVUploadModal();
+			}
+		});
+	}
+
+	/**
+	 * Open CSV upload modal
+	 */
+	function openCSVUploadModal(versionId, tableName, language) {
+		console.log('Opening CSV upload modal with params:', {versionId, tableName, language});
+		const modal = document.getElementById('csv-upload-modal');
+		if (!modal) {
+			console.error('CSV upload modal element not found!');
+			return;
+		}
+		console.log('Modal element found, proceeding to open...');
+		const versionInput = document.getElementById('csv-version-id');
+		const tableNameInput = document.getElementById('csv-table-name');
+		const languageInput = document.getElementById('csv-language');
+		const fileInput = document.getElementById('csv-file');
+		const progressBar = document.getElementById('csv-progress');
+		const resultDiv = document.getElementById('csv-result');
+
+		// Set form data
+		console.log('Checking form elements:');
+		console.log('versionInput:', versionInput ? 'found' : 'NOT FOUND');
+		console.log('tableNameInput:', tableNameInput ? 'found' : 'NOT FOUND');
+		console.log('languageInput:', languageInput ? 'found' : 'NOT FOUND');
+		console.log('fileInput:', fileInput ? 'found' : 'NOT FOUND');
+		
+		if (versionInput) versionInput.value = versionId;
+		if (tableNameInput) tableNameInput.value = tableName;
+		if (languageInput) languageInput.value = language;
+
+		// Reset form
+		if (fileInput) fileInput.value = '';
+		if (progressBar) {
+			progressBar.style.display = 'none';
+			progressBar.querySelector('.progress-bar').style.width = '0%';
+		}
+		if (resultDiv) {
+			resultDiv.style.display = 'none';
+			resultDiv.innerHTML = '';
+		}
+
+		modal.style.display = 'block';
+	}
+
+	/**
+	 * Close CSV upload modal
+	 */
+	function closeCSVUploadModal() {
+		const modal = document.getElementById('csv-upload-modal');
+		modal.style.display = 'none';
+	}
+
+	/**
+	 * Upload and process CSV file
+	 */
+	function uploadCSVFile() {
+		console.log('uploadCSVFile function called');
+		const fileInput = document.getElementById('csv-file');
+		const versionId = document.getElementById('csv-version-id').value;
+		const tableName = document.getElementById('csv-table-name').value;
+		const language = document.getElementById('csv-language').value;
+		const progressBar = document.getElementById('csv-progress');
+		const resultDiv = document.getElementById('csv-result');
+		const uploadBtn = document.getElementById('upload-csv-btn');
+
+		if (!fileInput.files[0]) {
+			showCSVResult('請選擇一個 CSV 檔案', 'error');
+			return;
+		}
+
+		const file = fileInput.files[0];
+		if (!file.name.toLowerCase().endsWith('.csv')) {
+			showCSVResult('請選擇 CSV 格式的檔案', 'error');
+			return;
+		}
+
+		// Show progress bar
+		if (progressBar) {
+			progressBar.style.display = 'block';
+			progressBar.querySelector('.progress-bar').style.width = '10%';
+		}
+
+		// Disable upload button
+		if (uploadBtn) {
+			uploadBtn.disabled = true;
+			uploadBtn.textContent = '上傳中...';
+		}
+
+		// Read and parse CSV file
+		const reader = new FileReader();
+		reader.onload = function(e) {
+			try {
+				const csvContent = e.target.result;
+				const parsedData = parseCSV(csvContent);
+
+				if (parsedData.length === 0) {
+					throw new Error('CSV 檔案為空或格式不正確');
+				}
+
+				// Update progress
+				if (progressBar) {
+					progressBar.querySelector('.progress-bar').style.width = '50%';
+				}
+
+				// Send data to server
+				uploadCSVData(versionId, tableName, language, parsedData);
+
+			} catch (error) {
+				showCSVResult('CSV 解析錯誤: ' + error.message, 'error');
+				resetUploadButton();
+			}
+		};
+
+		reader.onerror = function() {
+			showCSVResult('檔案讀取失敗', 'error');
+			resetUploadButton();
+		};
+
+		reader.readAsText(file, 'UTF-8');
+	}
+
+	/**
+	 * Parse CSV content
+	 */
+	function parseCSV(csvContent) {
+		const lines = csvContent.trim().split('\n');
+		const data = [];
+		let startIndex = 0;
+
+		// Check if first line is header
+		if (lines.length > 0) {
+			const firstLine = lines[0].trim();
+			// Skip header if it contains the expected column names
+			if (firstLine.toLowerCase().includes('book_number') && 
+				firstLine.toLowerCase().includes('chapter_number') && 
+				firstLine.toLowerCase().includes('verse_number') && 
+				firstLine.toLowerCase().includes('verse_text')) {
+				startIndex = 1;
+				console.log('CSV header detected, skipping first line');
+			}
+		}
+
+		for (let i = startIndex; i < lines.length; i++) {
+			const line = lines[i].trim();
+			if (!line) continue;
+
+			// Parse CSV line (handle quotes)
+			const columns = parseCSVLine(line);
+
+			if (columns.length !== 4) {
+				throw new Error(`第 ${i - startIndex + 1} 行格式錯誤：應該有 4 個欄位 (book_number,chapter_number,verse_number,verse_text)`);
+			}
+
+			const bookNumber = parseInt(columns[0]);
+			const chapterNumber = parseInt(columns[1]);
+			const verseNumber = parseInt(columns[2]);
+			const verseText = columns[3];
+
+			if (isNaN(bookNumber) || isNaN(chapterNumber) || isNaN(verseNumber)) {
+				throw new Error(`第 ${i - startIndex + 1} 行格式錯誤：book_number, chapter_number, verse_number 必須是數字`);
+			}
+
+			// Allow empty verse_text and set it to null
+			const finalVerseText = verseText.trim() === '' ? null : verseText;
+
+			data.push({
+				book_number: bookNumber,
+				chapter_number: chapterNumber,
+				verse_number: verseNumber,
+				verse_text: finalVerseText
+			});
+		}
+
+		return data;
+	}
+
+	/**
+	 * Parse a single CSV line (handle quotes)
+	 */
+	function parseCSVLine(line) {
+		const result = [];
+		let current = '';
+		let inQuotes = false;
+		let i = 0;
+
+		while (i < line.length) {
+			const char = line[i];
+
+			if (char === '"') {
+				if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+					// Escaped quote
+					current += '"';
+					i += 2;
+				} else {
+					// Toggle quote state
+					inQuotes = !inQuotes;
+					i++;
+				}
+			} else if (char === ',' && !inQuotes) {
+				// Field separator
+				result.push(current.trim());
+				current = '';
+				i++;
+			} else {
+				current += char;
+				i++;
+			}
+		}
+
+		// Add the last field
+		result.push(current.trim());
+
+		return result;
+	}
+
+	/**
+	 * Upload CSV data to server
+	 */
+	function uploadCSVData(versionId, tableName, language, data) {
+		console.log('uploadCSVData function called with parameters:');
+		console.log('- versionId:', versionId);
+		console.log('- tableName:', tableName);
+		console.log('- language:', language);
+		console.log('- data length:', data.length);
+		console.log('- first 3 data items:', data.slice(0, 3));
+		console.log('- ajax_url:', bible_here_ajax.ajax_url);
+		console.log('- nonce:', bible_here_ajax.nonce);
+
+		const formData = new FormData();
+		formData.append('action', 'bible_here_upload_csv');
+		formData.append('version_id', versionId);
+		formData.append('table_name', tableName);
+		formData.append('language', language);
+		formData.append('csv_data', JSON.stringify(data));
+		formData.append('nonce', bible_here_ajax.nonce);
+
+		console.log('FormData prepared, sending fetch request...');
+
+		fetch(bible_here_ajax.ajax_url, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => {
+			console.log('Fetch response received:');
+			console.log('- status:', response.status);
+			console.log('- statusText:', response.statusText);
+			console.log('- ok:', response.ok);
+			console.log('- headers:', response.headers);
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			return response.text().then(text => {
+				console.log('Raw response text:', text);
+				try {
+					return JSON.parse(text);
+				} catch (e) {
+					console.error('JSON parse error:', e);
+					console.error('Response text that failed to parse:', text);
+					throw new Error('Invalid JSON response from server');
+				}
+			});
+		})
+		.then(response => {
+			console.log('Parsed JSON response:', response);
+			
+			const progressBar = document.getElementById('csv-progress');
+			if (progressBar) {
+				progressBar.querySelector('.progress-bar').style.width = '100%';
+			}
+
+			if (response.success) {
+				console.log('Upload successful:', response.data);
+				showCSVResult(`上傳成功！共匯入 ${response.data.imported_count} 筆經文`, 'success');
+				// Reload page after 2 seconds
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			} else {
+				console.error('Upload failed:', response);
+				showCSVResult('上傳失敗: ' + (response.message || '未知錯誤'), 'error');
+			}
+
+			resetUploadButton();
+		})
+		.catch(error => {
+			console.error('Fetch error caught:', error);
+			console.error('Error message:', error.message);
+			console.error('Error stack:', error.stack);
+			showCSVResult('上傳失敗: ' + error.message, 'error');
+			resetUploadButton();
+		});
+	}
+
+	/**
+	 * Show CSV upload result
+	 */
+	function showCSVResult(message, type) {
+		const resultDiv = document.getElementById('csv-result');
+		if (resultDiv) {
+			resultDiv.innerHTML = `<div class="notice notice-${type === 'error' ? 'error' : 'success'}"><p>${message}</p></div>`;
+			resultDiv.style.display = 'block';
+		}
+	}
+
+	/**
+	 * Reset upload button state
+	 */
+	function resetUploadButton() {
+		const uploadBtn = document.getElementById('upload-csv-btn');
+		const progressBar = document.getElementById('csv-progress');
+
+		if (uploadBtn) {
+			uploadBtn.disabled = false;
+			uploadBtn.textContent = 'Upload';
+		}
+
+		if (progressBar) {
+			progressBar.style.display = 'none';
+			progressBar.querySelector('.progress-bar').style.width = '0%';
+		}
 	}
 
 })();
