@@ -521,7 +521,7 @@
 
 			
 			if (response.success) {
-				showNotice('CSV data reloaded successfully! ' + (response.message || ''), 'success');
+				showNotice('Reload default seed data success', 'success');
 				
 				// Refresh page after 2 seconds to update UI
 				setTimeout(function() {

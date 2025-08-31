@@ -30,8 +30,11 @@ class Bible_Here_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+		$start_time = microtime(true);
 		self::create_database_tables();
 		self::insert_initial_data();
+		$total_time = microtime(true) - $start_time;
+		error_log('[Bible Here] Plugin activation completed in ' . round($total_time, 3) . ' seconds');
 	}
 
 	/**
@@ -194,10 +197,13 @@ class Bible_Here_Activator {
 	 */
 	public static function load_csv_data($force_reload = false) {
 		global $wpdb;
+        $start_time = microtime(true);
+		error_log('[Bible Here] CSV data loading started at ' . date('Y-m-d H:i:s') . ($force_reload ? ' (force reload)' : ''));
 
 		// Get plugin directory path
 		$plugin_dir = plugin_dir_path(dirname(__FILE__));
 		$data_dir = $plugin_dir . 'data/';
+
 		$success = true;
 
 		// Load books data from CSV
@@ -209,29 +215,54 @@ class Bible_Here_Activator {
 				// Check if books data already exists
 				$existing_books = $wpdb->get_var("SELECT COUNT(*) FROM $books_table");
 				if ($existing_books == 0 || $force_reload) {
-					foreach ($books_data as $book) {
-						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
-						$sql = $wpdb->prepare(
-							"INSERT INTO $books_table (language, genre_number, book_number, title_short, title_full, chapters) 
-							VALUES (%s, %d, %d, %s, %s, %d) 
-							ON DUPLICATE KEY UPDATE 
-							genre_number = VALUES(genre_number), 
-							title_short = VALUES(title_short), 
-							title_full = VALUES(title_full), 
-							chapters = VALUES(chapters)",
-							$book['language'] ?? '',
-							intval($book['genre_number'] ?? 0),
-							intval($book['book_number'] ?? 0),
-							$book['title_short'] ?? '',
-							$book['title_full'] ?? '',
-							intval($book['chapters'] ?? 0)
-						);
-						$result = $wpdb->query($sql);
-						if ($result === false) {
-							$success = false;
+					// Use batch insert for better performance
+					$batch_size = 1000;
+					$total_entries = count($books_data);
+					$inserted_count = 0;
+					$batch_count = 0;
+					
+					// Process data in batches
+					for ($i = 0; $i < $total_entries; $i += $batch_size) {
+						$batch_count++;
+						$batch_data = array_slice($books_data, $i, $batch_size);
+						
+						$values_array = [];
+						$sql_values = [];
+						
+						foreach ($batch_data as $book) {
+							$values_array[] = '(%s, %d, %d, %s, %s, %d)';
+							$sql_values[] = $book['language'] ?? '';
+							$sql_values[] = intval($book['genre_number'] ?? 0);
+							$sql_values[] = intval($book['book_number'] ?? 0);
+							$sql_values[] = $book['title_short'] ?? '';
+							$sql_values[] = $book['title_full'] ?? '';
+							$sql_values[] = intval($book['chapters'] ?? 0);
+						}
+						
+						if (!empty($values_array)) {
+							$values_string = implode(', ', $values_array);
+							
+							$sql = "INSERT INTO $books_table (language, genre_number, book_number, title_short, title_full, chapters) 
+									VALUES $values_string 
+									ON DUPLICATE KEY UPDATE 
+									genre_number = VALUES(genre_number), 
+									title_short = VALUES(title_short), 
+									title_full = VALUES(title_full), 
+									chapters = VALUES(chapters)";
+							
+							$sql = $wpdb->prepare($sql, $sql_values);
+							$result = $wpdb->query($sql);
+							if ($result === false) {
+								error_log('[Bible Here] ERROR: Failed to insert books batch ' . $batch_count . ': ' . $wpdb->last_error);
+								$success = false;
+								break;
+							} else {
+								$batch_inserted = count($batch_data);
+								$inserted_count += $batch_inserted;
+							}
 						}
 					}
-			}
+				}
 			}
 		} else {
 			$success = false;
@@ -246,22 +277,47 @@ class Bible_Here_Activator {
 				// Check if genres data already exists
 				$existing_genres = $wpdb->get_var("SELECT COUNT(*) FROM $genres_table");
 				if ($existing_genres == 0 || $force_reload) {
-					foreach ($genres_data as $genre) {
-						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
-						$sql = $wpdb->prepare(
-							"INSERT INTO $genres_table (language, type, genre_number, name) 
-							VALUES (%s, %s, %d, %s) 
-							ON DUPLICATE KEY UPDATE 
-							type = VALUES(type), 
-							name = VALUES(name)",
-							$genre['language'] ?? '',
-							$genre['type'] ?? '',
-							intval($genre['genre_number'] ?? 0),
-							$genre['name'] ?? ''
-						);
-						$result = $wpdb->query($sql);
-						if ($result === false) {
-							$success = false;
+					// Use batch insert for better performance
+					$batch_size = 1000;
+					$total_entries = count($genres_data);
+					$inserted_count = 0;
+					$batch_count = 0;
+					
+					// Process data in batches
+					for ($i = 0; $i < $total_entries; $i += $batch_size) {
+						$batch_count++;
+						$batch_data = array_slice($genres_data, $i, $batch_size);
+						
+						$values_array = [];
+						$sql_values = [];
+						
+						foreach ($batch_data as $genre) {
+							$values_array[] = '(%s, %s, %d, %s)';
+							$sql_values[] = $genre['language'] ?? '';
+							$sql_values[] = $genre['type'] ?? '';
+							$sql_values[] = intval($genre['genre_number'] ?? 0);
+							$sql_values[] = $genre['name'] ?? '';
+						}
+						
+						if (!empty($values_array)) {
+							$values_string = implode(', ', $values_array);
+							
+							$sql = "INSERT INTO $genres_table (language, type, genre_number, name) 
+									VALUES $values_string 
+									ON DUPLICATE KEY UPDATE 
+									type = VALUES(type), 
+									name = VALUES(name)";
+							
+							$sql = $wpdb->prepare($sql, $sql_values);
+							$result = $wpdb->query($sql);
+							if ($result === false) {
+								error_log('[Bible Here] ERROR: Failed to insert genres batch ' . $batch_count . ': ' . $wpdb->last_error);
+								$success = false;
+								break;
+							} else {
+								$batch_inserted = count($batch_data);
+								$inserted_count += $batch_inserted;
+							}
 						}
 					}
 				}
@@ -422,24 +478,45 @@ class Bible_Here_Activator {
 				// Check if abbreviations data already exists
 				$existing_abbreviations = $wpdb->get_var("SELECT COUNT(*) FROM $abbreviations_table");
 				if ($existing_abbreviations == 0 || $force_reload) {
-					foreach ($abbreviations_data as $abbreviation) {
-						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs
-						$is_primary = !empty($abbreviation['is_primary']) ? intval($abbreviation['is_primary']) : 0;
+					// Use batch insert for better performance
+					$batch_size = 1000;
+					$total_entries = count($abbreviations_data);
+					$inserted_count = 0;
+					$batch_count = 0;
+					
+					// Process data in batches
+					for ($i = 0; $i < $total_entries; $i += $batch_size) {
+						$batch_count++;
+						$batch_data = array_slice($abbreviations_data, $i, $batch_size);
 						
-						$sql = $wpdb->prepare(
-							"INSERT INTO $abbreviations_table (language, abbreviation, book_number, is_primary) 
-							VALUES (%s, %s, %d, %d) 
-							ON DUPLICATE KEY UPDATE 
-							book_number = VALUES(book_number), 
-							is_primary = VALUES(is_primary)",
-							$abbreviation['language'] ?? '',
-							$abbreviation['abbreviation'] ?? '',
-							intval($abbreviation['book_number'] ?? 0),
-							$is_primary
-						);
-						$result = $wpdb->query($sql);
-						if ($result === false) {
-							$success = false;
+						$values_array = [];
+						$sql_values = [];
+						
+						foreach ($batch_data as $abbreviation) {
+							$values_array[] = '(%s, %d, %s)';
+							$sql_values[] = $abbreviation['language'] ?? '';
+							$sql_values[] = intval($abbreviation['book_number'] ?? 0);
+							$sql_values[] = $abbreviation['abbreviation'] ?? '';
+						}
+						
+						if (!empty($values_array)) {
+							$values_string = implode(', ', $values_array);
+							
+							$sql = "INSERT INTO $abbreviations_table (language, book_number, abbreviation) 
+									VALUES $values_string 
+									ON DUPLICATE KEY UPDATE 
+									abbreviation = VALUES(abbreviation)";
+							
+							$sql = $wpdb->prepare($sql, $sql_values);
+							$result = $wpdb->query($sql);
+							if ($result === false) {
+								error_log('[Bible Here] ERROR: Failed to insert abbreviations batch ' . $batch_count . ': ' . $wpdb->last_error);
+								$success = false;
+								break;
+							} else {
+								$batch_inserted = count($batch_data);
+								$inserted_count += $batch_inserted;
+							}
 						}
 					}
 				}
@@ -448,7 +525,183 @@ class Bible_Here_Activator {
 			$success = false;
 		}
 
+		// Load Strong Dictionary data from CSV or ZIP
+		$strong_dictionary_table = $wpdb->prefix . 'bible_here_strong_dictionary';
+		$strong_dictionary_zip = $data_dir . 'wp_bible_here_strong_dictionary.zip';
+		$strong_dictionary_csv = $data_dir . 'wp_bible_here_strong_dictionary.csv';
+		
+		$csv_file_to_process = null;
+		$temp_dir = null;
+		
+		// Check if ZIP file exists
+		if (file_exists($strong_dictionary_zip)) {
+			// Create temporary directory for extraction
+			$temp_dir = $data_dir . 'temp_strong_' . time() . '/';
+			if (!wp_mkdir_p($temp_dir)) {
+				$success = false;
+			} else {
+				// Extract ZIP file
+				$zip = new ZipArchive();
+				$zip_result = $zip->open($strong_dictionary_zip);
+				if ($zip_result === TRUE) {
+					$zip->extractTo($temp_dir);
+					$zip->close();
+					
+					// Look for CSV file in extracted contents
+					$extracted_files = glob($temp_dir . '*.csv');
+					if (!empty($extracted_files)) {
+						$csv_file_to_process = $extracted_files[0]; // Use first CSV file found
+					} else {
+						error_log('[Bible Here] ERROR: No CSV files found in extracted ZIP');
+					}
+				} else {
+					error_log('[Bible Here] ERROR: Failed to open ZIP file. Error code: ' . $zip_result);
+					$success = false;
+				}
+			}
+		} elseif (file_exists($strong_dictionary_csv)) {
+			// Use CSV file directly
+			$csv_file_to_process = $strong_dictionary_csv;
+		}
+		
+		// Process CSV file if found
+		if ($csv_file_to_process && file_exists($csv_file_to_process)) {
+			$strong_dictionary_data = self::parse_csv($csv_file_to_process);
+			if (!empty($strong_dictionary_data)) {
+				// Check if Strong Dictionary data already exists
+				$existing_strong_dictionary = $wpdb->get_var("SELECT COUNT(*) FROM $strong_dictionary_table");
+				if ($existing_strong_dictionary == 0 || $force_reload) {
+					if ($force_reload) {
+						$wpdb->query("TRUNCATE TABLE $strong_dictionary_table");
+					}
+					
+					// Use batch insert for better performance
+				$batch_size = 1000;
+				$total_entries = count($strong_dictionary_data);
+				$inserted_count = 0;
+				$batch_count = 0;
+				
+				// Process data in batches
+				for ($i = 0; $i < $total_entries; $i += $batch_size) {
+					$batch_count++;
+					$batch_data = array_slice($strong_dictionary_data, $i, $batch_size);
+					
+					$values_array = [];
+					$sql_values = [];
+					
+					foreach ($batch_data as $entry) {
+						// Skip entries without strong_number (primary key)
+						$strong_number = $entry['strong_number'] ?? '';
+						if (empty($strong_number) || trim($strong_number) === '') {
+							continue;
+						}
+
+						// Process each field to handle NULL values properly
+						$en_value = isset($entry['en']) && trim($entry['en']) !== '' ? trim($entry['en']) : null;
+						$zh_tw_value = isset($entry['zh-TW']) && trim($entry['zh-TW']) !== '' ? trim($entry['zh-TW']) : null;
+						$zh_cn_value = isset($entry['zh-CN']) && trim($entry['zh-CN']) !== '' ? trim($entry['zh-CN']) : null;
+						$original_value = isset($entry['original']) && trim($entry['original']) !== '' ? trim($entry['original']) : null;
+
+						// Add strong_number first (matches SQL column order)
+						$sql_values[] = $strong_number;
+
+						// Build SQL with proper NULL handling
+						if ($en_value === null) {
+							$en_placeholder = 'NULL';
+						} else {
+							$en_placeholder = '%s';
+							$sql_values[] = $en_value;
+						}
+
+						if ($zh_tw_value === null) {
+							$zh_tw_placeholder = 'NULL';
+						} else {
+							$zh_tw_placeholder = '%s';
+							$sql_values[] = $zh_tw_value;
+						}
+
+						if ($zh_cn_value === null) {
+							$zh_cn_placeholder = 'NULL';
+						} else {
+							$zh_cn_placeholder = '%s';
+							$sql_values[] = $zh_cn_value;
+						}
+
+						if ($original_value === null) {
+							$original_placeholder = 'NULL';
+						} else {
+							$original_placeholder = '%s';
+							$sql_values[] = $original_value;
+						}
+
+						$values_array[] = "(%s, $en_placeholder, $zh_tw_placeholder, $zh_cn_placeholder, $original_placeholder)";
+					}
+
+					if (!empty($values_array)) {
+						$values_string = implode(', ', $values_array);
+						
+						$sql = "INSERT INTO $strong_dictionary_table (strong_number, en, `zh-TW`, `zh-CN`, original) 
+								VALUES $values_string 
+								ON DUPLICATE KEY UPDATE 
+								  en = VALUES(en), 
+								  `zh-TW` = VALUES(`zh-TW`), 
+								  `zh-CN` = VALUES(`zh-CN`), 
+								  original = VALUES(original)";
+						
+						// Only use prepare if we have values to prepare
+						if (!empty($sql_values)) {
+							$sql = $wpdb->prepare($sql, $sql_values);
+						}
+						$result = $wpdb->query($sql);
+						if ($result === false) {
+							error_log('[Bible Here] ERROR: Failed to insert Strong Dictionary batch ' . $batch_count . ': ' . $wpdb->last_error);
+							$success = false;
+							break;
+						} else {
+							$batch_inserted = count($batch_data);
+							$inserted_count += $batch_inserted;
+						}
+					}
+				}
+				}
+			}
+		} else {
+			// Strong Dictionary file not found, but this is not a critical error
+			// since it's optional data
+		}
+
+		// Clean up temporary directory if created
+		if ($temp_dir && is_dir($temp_dir)) {
+			self::recursive_rmdir($temp_dir);
+		}
+		$total_time = microtime(true) - $start_time;
+		error_log('[Bible Here] CSV data loading completed in ' . round($total_time, 3) . ' seconds ' . ($force_reload ? ' (force reload)' : '') . ' - Success: ' . ($success ? 'true' : 'false'));
+
 		return $success;
+	}
+
+	/**
+	 * Recursively remove directory and all its contents
+	 *
+	 * @param string $dir Directory path to remove
+	 * @return bool True on success, false on failure
+	 */
+	private static function recursive_rmdir($dir) {
+		if (!is_dir($dir)) {
+			return false;
+		}
+
+		$files = array_diff(scandir($dir), array('.', '..'));
+		foreach ($files as $file) {
+			$path = $dir . DIRECTORY_SEPARATOR . $file;
+			if (is_dir($path)) {
+				self::recursive_rmdir($path);
+			} else {
+				unlink($path);
+			}
+		}
+
+		return rmdir($dir);
 	}
 
 	/**
