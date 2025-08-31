@@ -52,10 +52,10 @@ class Bible_Here_Activator {
 		$table_name = $wpdb->prefix . 'bible_here_books';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
-			language VARCHAR(10) NOT NULL,
 			genre_number TINYINT(1) unsigned NOT NULL,
 			chapters TINYINT(1) unsigned NOT NULL,
 			book_number TINYINT(2) unsigned NOT NULL,
+			language VARCHAR(10) NOT NULL,
 			title_short VARCHAR(20) NOT NULL,
 			title_full VARCHAR(100) NOT NULL,
 			UNIQUE KEY unique_book (language, book_number),
@@ -67,9 +67,9 @@ class Bible_Here_Activator {
 		$table_name = $wpdb->prefix . 'bible_here_genres';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
-			language VARCHAR(10) NOT NULL,
-			type VARCHAR(2) NOT NULL COMMENT 'ot/nt',
 			genre_number TINYINT(1) unsigned NOT NULL,
+			type VARCHAR(2) NOT NULL COMMENT 'ot/nt',
+			language VARCHAR(10) NOT NULL,
 			name VARCHAR(50) NOT NULL,
 			UNIQUE KEY unique_genre_for_language (language, genre_number)
 		) $charset_collate;";
@@ -85,14 +85,14 @@ class Bible_Here_Activator {
 			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			info_text TEXT,
 			rank TINYINT(1) unsigned NULL,
-			type VARCHAR(10) NOT NULL DEFAULT 'Bible' COMMENT 'Bible/Commentary',
-			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(10) NOT NULL COMMENT 'ascii English only for database table names',
+			type VARCHAR(20) NOT NULL DEFAULT 'Bible' COMMENT 'Bible/Bible+Strong/Commentary',
+			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			name VARCHAR(100) NOT NULL,
-			info_url VARCHAR(255),
 			publisher VARCHAR(100),
 			copyright VARCHAR(100),
+			info_url VARCHAR(255),
 			download_url VARCHAR(512),
 			UNIQUE KEY uniq_table_name (table_name),
 			UNIQUE KEY uniq_language_abbreviation (language, abbreviation)
@@ -113,12 +113,24 @@ class Bible_Here_Activator {
 		$table_name = $wpdb->prefix . 'bible_here_abbreviations';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
+			is_primary BOOLEAN DEFAULT FALSE,
+			book_number TINYINT(1) unsigned NOT NULL,
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL,
-			book_number TINYINT(1) unsigned NOT NULL,
-			is_primary BOOLEAN DEFAULT FALSE,
 			UNIQUE KEY unique_abbr (language, abbreviation)
 		) $charset_collate COMMENT='store all possible abbreviations for scripture';";
+		dbDelta( $sql );
+
+		// Strong Dictionary table
+		$table_name = $wpdb->prefix . 'bible_here_strong_dictionary';
+		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
+			`strong_number` VARCHAR(6) NOT NULL,
+			`en` TEXT COMMENT 'Müller from https://christthetruth.net/2013/07/15/strongs-goes-excel',
+			`zh-TW` TEXT COMMENT 'FHL from https://www.theword.net/index.php?downloads.modules&group_id=5',
+			`zh-CN` TEXT COMMENT 'FHL from https://www.theword.net/index.php?downloads.modules&group_id=5',
+			`original` VARCHAR(150) DEFAULT NULL,
+			PRIMARY KEY (`strong_number`)
+		) $charset_collate COMMENT='dictionaries of Strong number';";
 		dbDelta( $sql );
 	}
 
@@ -144,7 +156,6 @@ class Bible_Here_Activator {
 			chapter_number tinyint(1) unsigned NOT NULL,
 			verse_number tinyint(1) unsigned NOT NULL,
 			verse_text text COMMENT 'some verse are empty due to translation syntax',
-			verse_strong text COMMENT 'verse with strong number',
 			label VARCHAR(50) COMMENT 'label before the verse',
 			PRIMARY KEY (verse_id),
 			UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)

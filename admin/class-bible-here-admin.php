@@ -345,6 +345,7 @@ class Bible_Here_Admin {
 		echo '<select id="type" name="type" required>';
 		echo '<option value="Bible">Bible</option>';
 		echo '<option value="Commentary">Commentary</option>';
+		echo '<option value="Bible+Strong">Bible+Strong</option>';
 		echo '</select>';
 		echo '</div>';
 		echo '<div>';
@@ -421,16 +422,16 @@ class Bible_Here_Admin {
 		echo '<div class="modal-body">';
 		echo '<p>Please select a CSV file to upload. The quoted CSV should have headers in the following format:</p>';
 		echo '<p><strong>Required fields:</strong> book_number, chapter_number, verse_number, verse_text</p>';
-		echo '<p><strong>Optional fields:</strong> verse_strong, label</p>';
+		echo '<p><strong>Optional fields:</strong> label</p>';
 		echo '<table class="csv-format">';
-		echo '    <caption><em>Note: verse_strong and label columns are optional and can be omitted</em></caption>';
+		echo '    <caption><em>Note: label column is optional and can be omitted</em></caption>';
 		echo '    <thead>';
 		echo '        <tr>';
 		echo '            <th>book_number,</th>';
 		echo '            <th>chapter_number,</th>';
 		echo '            <th>verse_number,</th>';
 		echo '            <th>verse_text,</th>';
-		echo '            <th>verse_strong,</th>';
+		
 		echo '            <th>label</th>';
 		echo '        </tr>';
 		echo '    </thead>';
@@ -440,7 +441,7 @@ class Bible_Here_Admin {
 		echo '            <td>1,</td>';
 		echo '            <td>1,</td>';
 		echo '            <td>"In the beginning God created the heaven and the earth.",</td>';
-		echo '            <td>"In the beginning{H7225} God{H430} created{H1254}{(H8804)}{H853} the heaven{H8064} and{H853} the earth{H776}.",</td>';
+		
 		echo '            <td>"Creation"</td>';
 		echo '        </tr>';
 		echo '    </tbody>';
@@ -838,7 +839,10 @@ class Bible_Here_Admin {
 			// Log the full error for debugging
 			error_log('Bible_Here_Admin: Database error in save_version: ' . $error_message);
 			
-			wp_send_json_error($error_message ?: 'Failed to update version');
+			// Send error with proper message format for frontend
+			wp_send_json_error(array(
+				'message' => $error_message ?: 'Failed to update version'
+			));
 		}
 	}
 	
@@ -919,7 +923,10 @@ class Bible_Here_Admin {
 			// Log the full error for debugging
 			error_log('Bible_Here_Admin: Database error in add_version: ' . $error_message);
 			
-			wp_send_json_error($error_message ?: 'Failed to add version');
+			// Send error with proper message format for frontend
+			wp_send_json_error(array(
+				'message' => $error_message ?: 'Failed to add version'
+			));
 		}
 	}
 	
@@ -1200,8 +1207,7 @@ class Bible_Here_Admin {
 				$chapter_number = intval($row[1]);
 				$verse_number = intval($row[2]);
 				$verse_text = !empty($row[3]) ? sanitize_text_field($row[3]) : null;
-				$verse_strong = (count($row) > 4 && !empty($row[4])) ? sanitize_text_field($row[4]) : null;
-				$label = (count($row) > 5 && !empty($row[5])) ? sanitize_text_field($row[5]) : null;
+				$label = (count($row) > 4 && !empty($row[4])) ? sanitize_text_field($row[4]) : null;
 			} else {
 				// Object format (current frontend format)
 				if (!isset($row['book_number']) || !isset($row['chapter_number']) || !isset($row['verse_number'])) {
@@ -1213,7 +1219,6 @@ class Bible_Here_Admin {
 				$chapter_number = intval($row['chapter_number']);
 				$verse_number = intval($row['verse_number']);
 				$verse_text = !empty($row['verse_text']) ? sanitize_text_field($row['verse_text']) : null;
-				$verse_strong = !empty($row['verse_strong']) ? sanitize_text_field($row['verse_strong']) : null;
 				$label = !empty($row['label']) ? sanitize_text_field($row['label']) : null;
 			}
 			
@@ -1228,7 +1233,6 @@ class Bible_Here_Admin {
 				'chapter_number' => $chapter_number,
 				'verse_number' => $verse_number,
 				'verse_text' => $verse_text,
-				'verse_strong' => $verse_strong,
 				'label' => $label
 			);
 		}
@@ -1248,13 +1252,12 @@ class Bible_Here_Admin {
 					$values[] = $row['book_number'];
 					$values[] = $row['chapter_number'];
 					$values[] = $row['verse_number'];
-					$values[] = $row['verse_strong'];
 					$values[] = $row['verse_text'];
 					$values[] = $row['label'];
-					$placeholders[] = '(%s, %d, %d, %d, %s, %s, %s)';
+					$placeholders[] = '(%s, %d, %d, %d, %s, %s)';
 				}
 				
-				$sql = "REPLACE INTO `{$content_table}` (verse_id, book_number, chapter_number, verse_number, verse_strong, verse_text, label) VALUES " . implode(', ', $placeholders);
+				$sql = "REPLACE INTO `{$content_table}` (verse_id, book_number, chapter_number, verse_number, verse_text, label) VALUES " . implode(', ', $placeholders);
 				$prepared_sql = $wpdb->prepare($sql, $values);
 				
 				$batch_result = $wpdb->query($prepared_sql);

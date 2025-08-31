@@ -197,19 +197,20 @@
 			
 		} else {
 			// Update progress bar to show error
-			updateProgress(0, 'Download and Import failed: ' + (response.message || 'Unknown error'));
-			addLogMessage('Download and Import failed: ' + (response.message || 'Unknown error'));
+			let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
+				updateProgress(0, 'Download and Import failed: ' + errorMessage);
+			addLogMessage('Download and Import failed: ' + errorMessage);
 			addLogMessage('Duration: ' + duration + ' seconds');
 			
 			// Also update the progress text directly to ensure visibility
 			const progressText = document.getElementById('progress-text');
 			if (progressText) {
-				progressText.textContent = 'Error: ' + (response.message || 'Unknown error');
+				progressText.textContent = 'Error: ' + errorMessage;
 				progressText.style.color = '#d63638'; // Red color for error
 			}
 			
 			// Show error message
-			showNotice('Download and Import failed: ' + (response.message || 'Unknown error'), 'error');
+			showNotice('Download and Import failed: ' + errorMessage, 'error');
 			
 			// Don't reset UI on error - keep error messages visible
 			// Only reset buttons to allow retry
@@ -297,7 +298,8 @@
 					location.reload();
 				}, 2000);
 			} else {
-				showNotice('Failed to delete ' + version.toUpperCase() + ' Bible data: ' + (response.message || 'Unknown error'), 'error');
+				let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
+				showNotice('Failed to delete ' + version.toUpperCase() + ' Bible data: ' + errorMessage, 'error');
 				// Re-enable button on error
 				if (deleteBtn) {
 					deleteBtn.disabled = false;
@@ -526,7 +528,8 @@
 					location.reload();
 				}, 2000);
 			} else {
-				showNotice('Failed to reload default seed data: ' + (response.message || 'Unknown error'), 'error');
+				let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
+				showNotice('Failed to reload default seed data: ' + errorMessage, 'error');
 				// Re-enable button on error
 				if (reloadBtn) {
 					reloadBtn.disabled = false;
@@ -1052,7 +1055,7 @@
 				setTimeout(() => location.reload(), 1000);
 			} else {
 				// Extract more detailed error message
-				let errorMessage = response.message || 'Unknown error';
+				let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
 				// Check for database duplicate entry error
 				if (errorMessage.includes('Duplicate entry')) {
 					const match = errorMessage.match(/Duplicate entry '([^']+)' for key '([^']+)'/);
@@ -1062,7 +1065,16 @@
 						errorMessage = 'This entry already exists. Please use different values.';
 					}
 				}
+				
+				// Show error in both page notice and modal warning area
 				showNotice('Failed to save version: ' + errorMessage, 'error');
+				
+				// Also display error in modal's duplicate-warning area
+				const warningDiv = document.getElementById('duplicate-warning');
+				if (warningDiv) {
+					warningDiv.innerHTML = `<strong>Error:</strong> ${errorMessage}`;
+					warningDiv.style.display = 'block';
+				}
 			}
 		})
 		.catch(error => {
@@ -1141,7 +1153,8 @@
 				// Reload page to show changes
 				setTimeout(() => location.reload(), 1000);
 			} else {
-				showNotice('Failed to delete version: ' + (response.message || 'Unknown error'), 'error');
+				let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
+				showNotice('Failed to delete version: ' + errorMessage, 'error');
 			}
 		})
 		.catch(error => {
@@ -1337,7 +1350,7 @@
 			const firstLine = lines[0].trim().toLowerCase();
 			// Skip header if it contains the required column names
 			// Required: book_number, chapter_number, verse_number, verse_text
-			// Optional: verse_strong, label
+			// Optional: label
 			if (firstLine.includes('book_number') && 
 				firstLine.includes('chapter_number') && 
 				firstLine.includes('verse_number') && 
@@ -1353,17 +1366,16 @@
 			// Parse CSV line (handle quotes)
 			const columns = parseCSVLine(line);
 
-			// Support 4-6 columns: book_number, chapter_number, verse_number, verse_text, [verse_strong], [label]
-			if (columns.length < 4 || columns.length > 6) {
-				throw new Error(`Line ${i - startIndex + 1} format error: should have 4-6 columns (book_number,chapter_number,verse_number,verse_text,[verse_strong],[label]). Problematic line: '${line}'`);
+			// Support 4-5 columns: book_number, chapter_number, verse_number, verse_text, [label]
+			if (columns.length < 4 || columns.length > 5) {
+				throw new Error(`Line ${i - startIndex + 1} format error: should have 4-5 columns (book_number,chapter_number,verse_number,verse_text,[label]). Problematic line: '${line}'`);
 			}
 
 			const bookNumber = parseInt(columns[0]);
 			const chapterNumber = parseInt(columns[1]);
 			const verseNumber = parseInt(columns[2]);
 			const verseText = columns[3];
-			const verseStrong = columns.length > 4 ? columns[4] : null;
-			const label = columns.length > 5 ? columns[5] : null;
+			const label = columns.length > 4 ? columns[4] : null;
 
 			if (isNaN(bookNumber) || isNaN(chapterNumber) || isNaN(verseNumber)) {
 				throw new Error(`Line ${i - startIndex + 1} format error: book_number, chapter_number, verse_number must be numbers. Problematic line: '${line}'`);
@@ -1371,7 +1383,6 @@
 
 			// Allow empty fields and set them to null
 			const finalVerseText = verseText && verseText.trim() !== '' ? verseText : null;
-			const finalVerseStrong = verseStrong && verseStrong.trim() !== '' ? verseStrong : null;
 			const finalLabel = label && label.trim() !== '' ? label : null;
 
 			const rowData = {
@@ -1382,9 +1393,6 @@
 			};
 
 			// Add optional fields only if they exist
-			if (finalVerseStrong !== null) {
-				rowData.verse_strong = finalVerseStrong;
-			}
 			if (finalLabel !== null) {
 				rowData.label = finalLabel;
 			}
@@ -1482,7 +1490,8 @@
 					location.reload();
 				}, 2000);
 			} else {
-				showCSVResult('Upload failed: ' + (response.message || 'Unknown error'), 'error');
+				let errorMessage = (response.data && response.data.message) || response.message || 'Unknown error';
+				showCSVResult('Upload failed: ' + errorMessage, 'error');
 			}
 
 			resetUploadButton();
