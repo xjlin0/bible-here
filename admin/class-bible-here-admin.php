@@ -320,23 +320,23 @@ class Bible_Here_Admin {
 		
 		// Required fields in specified order: language/abbreviation/name/table_name
 		echo '<div>';
-		echo '<label for="language">Language: <span class="bible-here-required">*</span></label>';
-		echo '<input type="text" id="language" name="language" required>';
+		echo '<label for="language">Language code: <span class="bible-here-required">*</span></label>';
+		echo '<input type="text" id="language" name="language" placeholder="e.g. en, fr, it, etc" required>';
 		echo '</div>';
 		
 		echo '<div>';
 		echo '<label for="abbreviation">Abbreviation: <span class="bible-here-required">*</span></label>';
-		echo '<input type="text" id="abbreviation" name="abbreviation" required>';
+		echo '<input type="text" id="abbreviation" name="abbreviation" placeholder="The abbreviation of the version. (lower case)" required>';
 		echo '</div>';
 		
 		echo '<div>';
 		echo '<label for="name">Name: <span class="bible-here-required">*</span></label>';
-		echo '<input type="text" id="name" name="name" required>';
+		echo '<input type="text" id="name" name="name" placeholder="The name of the version" required>';
 		echo '</div>';
 		
 		echo '<div>';
 		echo '<label for="table-name">Table Name: <span class="bible-here-required">*</span></label>';
-		echo '<input type="text" id="table-name" name="table_name" required>';
+		echo '<input type="text" id="table-name" name="table_name" placeholder="The database table name of the version, unique and only alphabets and underscores in lower cases" required>';
 		echo '</div>';
 		
 		echo '<div class="type-for-login-row">';
@@ -349,10 +349,10 @@ class Bible_Here_Admin {
 		echo '</select>';
 		echo '</div>';
 		echo '<div>';
-		echo '<label for="for-login">For Login:</label>';
+		echo '<label for="for-login">Only viewable for logged-in users:</label>';
 		echo '<select id="for-login" name="for_login">';
-		echo '<option value="0">No</option>';
-		echo '<option value="1">Yes</option>';
+		echo '<option value="0">False</option>';
+		echo '<option value="1">True</option>';
 		echo '</select>';
 		echo '</div>';
 		echo '</div>';
@@ -374,21 +374,21 @@ class Bible_Here_Admin {
 		
 		echo '<div>';
 		echo '<label for="copyright">Copyright:</label>';
-		echo '<input type="text" id="copyright" name="copyright" required>';
+		echo '<input type="text" id="copyright" name="copyright" placeholder="Optional">';
 		echo '</div>';
 		
 		echo '<div class="full-width">';
 		echo '<label for="download-url">Download URL:</label>';
-		echo '<textarea id="download-url" name="download_url" rows="5" required></textarea>';
+		echo '<textarea id="download-url" name="download_url" rows="5" placeholder="Leave blank will activate CSV upload function after save" required></textarea>';
 		echo '</div>';
 		
 		echo '<div>';
-		echo '<label for="rank">Rank:</label>';
+		echo '<label for="rank">Display order:</label>';
 		echo '<input type="number" id="rank" name="rank" min="0" placeholder="Optional">';
 		echo '</div>';
 		
 		echo '<div>';
-		echo '<label for="trim">Trim:</label>';
+		echo '<label for="trim">Trim extra spaces between words:</label>';
 		echo '<select id="trim" name="trim">';
 		echo '<option value="0">No</option>';
 		echo '<option value="1">Yes</option>';
