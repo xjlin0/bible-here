@@ -353,12 +353,13 @@ class Bible_Here_Activator {
 					foreach ($versions_data as $version) {
 						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs and rank
 						$rank = !empty($version['rank']) ? intval($version['rank']) : null;
-						$info_text = !empty($version['info_text']) ? $version['info_text'] : null;
-						$info_url = !empty($version['info_url']) ? $version['info_url'] : null;
-						$publisher = !empty($version['publisher']) ? $version['publisher'] : null;
-						$trim = isset($version['trim']) ? ($version['trim'] === 'true' ? 1 : 0) : 0;
-						$for_login = isset($version['for_login']) ? ($version['for_login'] === 'true' ? 1 : 0) : 0;
-						$seed = isset($version['seed']) ? ($version['seed'] === 'true' ? 1 : 0) : 0;
+						$info_text = isset($version['info_text']) && trim($version['info_text']) !== '' ? trim($version['info_text']) : null;
+						$info_url = isset($version['info_url']) && trim($version['info_url']) !== '' ? trim($version['info_url']) : null;
+						$publisher = isset($version['publisher']) && trim($version['publisher']) !== '' ? trim($version['publisher']) : null;
+						// Convert boolean values: support 'true'/'false', 1/0, '1'/'0'
+						$trim = isset($version['trim']) ? self::convert_to_boolean($version['trim']) : 0;
+						$for_login = isset($version['for_login']) ? self::convert_to_boolean($version['for_login']) : 0;
+						$seed = isset($version['seed']) ? self::convert_to_boolean($version['seed']) : 0;
 						
 						// Build SQL dynamically to handle NULL values properly
 						$sql_parts = [];
@@ -399,9 +400,16 @@ class Bible_Here_Activator {
 							$sql_values[] = $publisher;
 						}
 						
+						// Copyright field (can be null)
+						$copyright = isset($version['copyright']) && trim($version['copyright']) !== '' ? trim($version['copyright']) : null;
+						if ($copyright === null) {
+							$sql_parts[] = 'NULL';
+						} else {
+							$sql_parts[] = '%s';
+							$sql_values[] = $copyright;
+						}
+						
 						// Required fields (never null)
-						$sql_parts[] = '%s'; // copyright
-						$sql_values[] = $version['copyright'] ?? '';
 						$sql_parts[] = '%s'; // download_url
 						$sql_values[] = $version['download_url'] ?? '';
 						
@@ -702,6 +710,34 @@ class Bible_Here_Activator {
 		}
 
 		return rmdir($dir);
+	}
+
+	/**
+	 * Convert various boolean representations to integer (1 or 0)
+	 *
+	 * @since    1.0.0
+	 * @param    mixed    $value    Value to convert (supports 'true'/'false', 1/0, '1'/'0')
+	 * @return   int                1 for true values, 0 for false values
+	 */
+	private static function convert_to_boolean($value) {
+		// Handle string representations
+		if (is_string($value)) {
+			$value = trim(strtolower($value));
+			return ($value === 'true' || $value === '1') ? 1 : 0;
+		}
+		
+		// Handle numeric values
+		if (is_numeric($value)) {
+			return (int)$value ? 1 : 0;
+		}
+		
+		// Handle boolean values
+		if (is_bool($value)) {
+			return $value ? 1 : 0;
+		}
+		
+		// Default to false for any other type
+		return 0;
 	}
 
 	/**
