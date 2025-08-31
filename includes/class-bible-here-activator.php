@@ -231,7 +231,7 @@ class Bible_Here_Activator {
 							$success = false;
 						}
 					}
-				}
+			}
 			}
 		} else {
 			$success = false;
@@ -278,6 +278,21 @@ class Bible_Here_Activator {
 			if (!empty($versions_data)) {
 				// Check if versions data already exists
 				$existing_versions = $wpdb->get_var("SELECT COUNT(*) FROM $versions_table");
+				
+				// Save existing rank values before force reload to preserve installed Bible content status
+				$saved_ranks = array();
+				if ($force_reload && $existing_versions > 0) {
+					$existing_rank_data = $wpdb->get_results(
+						"SELECT table_name, rank FROM $versions_table WHERE rank IS NOT NULL",
+						ARRAY_A
+					);
+					if (!empty($existing_rank_data)) {
+						foreach ($existing_rank_data as $row) {
+							$saved_ranks[$row['table_name']] = $row['rank'];
+						}
+					}
+				}
+				
 				if ($existing_versions == 0 || $force_reload) {
 					foreach ($versions_data as $version) {
 						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs and rank
@@ -303,6 +318,8 @@ class Bible_Here_Activator {
 						$sql_values[] = $version['abbreviation'] ?? '';
 						$sql_parts[] = '%s'; // name
 						$sql_values[] = $version['name'] ?? '';
+						$sql_parts[] = '%s'; // type
+						$sql_values[] = $version['type'] ?? 'Bible';
 						
 						// Optional fields (can be null)
 						if ($info_text === null) {
@@ -354,11 +371,12 @@ class Bible_Here_Activator {
 						
 						$sql_placeholders = implode(', ', $sql_parts);
 						
-						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, info_text, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
+						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, type, info_text, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
 								VALUES ($sql_placeholders) 
 								ON DUPLICATE KEY UPDATE 
 									table_name = VALUES(table_name), 
 									name = VALUES(name), 
+									type = VALUES(type), 
 									info_text = VALUES(info_text), 
 									info_url = VALUES(info_url), 
 									publisher = VALUES(publisher), 
@@ -376,6 +394,18 @@ class Bible_Here_Activator {
 						if ($result === false) {
 							$success = false;
 						}
+					}
+				}
+
+				// Restore saved rank values after force reload to preserve installed Bible content status
+				if ($force_reload && !empty($saved_ranks)) {
+					foreach ($saved_ranks as $table_name => $rank_value) {
+						$restore_sql = $wpdb->prepare(
+							"UPDATE $versions_table SET rank = %d WHERE table_name = %s",
+							$rank_value,
+							$table_name
+						);
+						$wpdb->query($restore_sql);
 					}
 				}
 			}
