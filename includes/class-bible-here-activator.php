@@ -135,6 +135,16 @@ class Bible_Here_Activator {
 			PRIMARY KEY (`strong_number`)
 		) $charset_collate COMMENT='dictionaries of Strong number';";
 		dbDelta( $sql );
+
+		// Languages table
+		$table_name = $wpdb->prefix . 'bible_here_languages';
+		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
+			`code` varchar(7) NOT NULL,
+			`name` varchar(70) DEFAULT NULL COMMENT 'in English',
+			`original` varchar(70) DEFAULT NULL COMMENT 'in native language',
+			PRIMARY KEY (`code`)
+		) $charset_collate COMMENT='Language codes and names for Bible versions';";
+		dbDelta( $sql );
 	}
 
 	/**
@@ -682,6 +692,93 @@ class Bible_Here_Activator {
 		if ($temp_dir && is_dir($temp_dir)) {
 			self::recursive_rmdir($temp_dir);
 		}
+
+		// Load languages data from CSV
+		$languages_table = $wpdb->prefix . 'bible_here_languages';
+		$languages_csv = $data_dir . 'languages.csv';
+		if (file_exists($languages_csv)) {
+			$languages_data = self::parse_csv($languages_csv);
+			if (!empty($languages_data)) {
+				// Check if languages data already exists
+				$existing_languages = $wpdb->get_var("SELECT COUNT(*) FROM $languages_table");
+				if ($existing_languages == 0 || $force_reload) {
+					// Use batch insert for better performance
+					$batch_size = 1000;
+					$total_entries = count($languages_data);
+					$inserted_count = 0;
+					$batch_count = 0;
+					
+					// Process data in batches
+					for ($i = 0; $i < $total_entries; $i += $batch_size) {
+						$batch_count++;
+						$batch_data = array_slice($languages_data, $i, $batch_size);
+						
+						$values_array = [];
+						$sql_values = [];
+						
+						foreach ($batch_data as $language) {
+							// Skip entries without code (primary key)
+							$code = $language['code'] ?? '';
+							if (empty($code) || trim($code) === '') {
+								continue;
+							}
+
+							// Process each field to handle NULL values properly
+							$name_value = isset($language['name']) && trim($language['name']) !== '' ? trim($language['name']) : null;
+							$original_value = isset($language['original']) && trim($language['original']) !== '' ? trim($language['original']) : null;
+
+							// Add code first (matches SQL column order)
+							$sql_values[] = $code;
+
+							// Build SQL with proper NULL handling
+							if ($name_value === null) {
+								$name_placeholder = 'NULL';
+							} else {
+								$name_placeholder = '%s';
+								$sql_values[] = $name_value;
+							}
+
+							if ($original_value === null) {
+								$original_placeholder = 'NULL';
+							} else {
+								$original_placeholder = '%s';
+								$sql_values[] = $original_value;
+							}
+
+							$values_array[] = "(%s, $name_placeholder, $original_placeholder)";
+						}
+
+						if (!empty($values_array)) {
+							$values_string = implode(', ', $values_array);
+							
+							$sql = "INSERT INTO $languages_table (code, name, original) 
+									VALUES $values_string 
+									ON DUPLICATE KEY UPDATE 
+									  name = VALUES(name), 
+									  original = VALUES(original)";
+							
+							// Only use prepare if we have values to prepare
+							if (!empty($sql_values)) {
+								$sql = $wpdb->prepare($sql, $sql_values);
+							}
+							$result = $wpdb->query($sql);
+							if ($result === false) {
+								error_log('[Bible Here] ERROR: Failed to insert languages batch ' . $batch_count . ': ' . $wpdb->last_error);
+								$success = false;
+								break;
+							} else {
+								$batch_inserted = count($batch_data);
+								$inserted_count += $batch_inserted;
+							}
+						}
+					}
+				}
+			}
+		} else {
+			// Languages file not found, but this is not a critical error
+			// since it's optional data
+		}
+
 		$total_time = microtime(true) - $start_time;
 		error_log('[Bible Here] CSV data loading completed in ' . round($total_time, 3) . ' seconds ' . ($force_reload ? ' (force reload)' : '') . ' - Success: ' . ($success ? 'true' : 'false'));
 

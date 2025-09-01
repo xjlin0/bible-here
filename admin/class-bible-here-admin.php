@@ -205,6 +205,16 @@ class Bible_Here_Admin {
 		
 		global $wpdb;
 
+		// Get all language mappings for efficient lookup
+		$language_mappings = [];
+		$languages = $wpdb->get_results("SELECT code, name, original FROM {$wpdb->prefix}bible_here_languages");
+		foreach ($languages as $lang) {
+			$language_mappings[$lang->code] = [
+				'name' => $lang->name,
+				'original' => $lang->original
+			];
+		}
+
 		// Get all Bible versions
 		$versions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bible_here_versions ORDER BY language, name");
 
@@ -257,7 +267,18 @@ class Bible_Here_Admin {
 				echo '<tr data-id="' . esc_attr($version->id) . '">';
 				// Hide ID column
 				echo '<td class="bible-here-hidden">' . esc_html($version->id) . '</td>';
-				echo '<td>' . esc_html($version->language) . '</td>';
+				// Display language with intelligent lookup
+				$language_display = $version->language; // Default fallback
+				if (isset($language_mappings[$version->language])) {
+					$lang_data = $language_mappings[$version->language];
+					// Priority: original > name > language code
+					if (!empty($lang_data['original'])) {
+						$language_display = $lang_data['original'];
+					} elseif (!empty($lang_data['name'])) {
+						$language_display = $lang_data['name'];
+					}
+				}
+				echo '<td>' . esc_html($language_display) . '</td>';
 				echo '<td>' . esc_html($version->abbreviation) . '</td>';
 				echo '<td><div class="truncate">' . esc_html($version->name) . '</div></td>';
 				echo '<td>' . esc_html($version->type ?? 'Bible') . '</td>';
