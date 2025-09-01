@@ -105,11 +105,11 @@ class Bible_Here_Activator {
 		// Cross references table
 		$table_name = $wpdb->prefix . 'bible_here_cross_references';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			verse_id INT(8) unsigned zerofill NOT NULL PRIMARY KEY AUTO_INCREMENT,
+			verse_id INT(8) unsigned zerofill NOT NULL,
 			rank TINYINT(1) unsigned NOT NULL DEFAULT 0,
 			start INT(8) unsigned zerofill NOT NULL,
-			finish INT(8) unsigned zerofill NOT NULL DEFAULT 0
-		) $charset_collate;";
+			finish INT(8) unsigned zerofill
+		) $charset_collate COMMENT='from https://github.com/scrollmapper/bible_databases';";
 		dbDelta( $sql );
 
 		// Abbreviations table
