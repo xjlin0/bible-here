@@ -1,9 +1,81 @@
 id,language,type,genre_number,name
-1,en,ot,1,Law
-2,en,ot,2,History
-3,en,ot,3,Wisdom
-4,en,ot,4,Prophets
-5,en,nt,5,Gospels
-6,en,nt,6,Acts
-7,en,nt,7,Epistles
-8,en,nt,8,Apocalyptic
+1,en,Old Testament,1,Law
+2,en,Old Testament,2,History
+3,en,Old Testament,3,Wisdom
+4,en,Old Testament,4,Prophets
+5,en,New Testament,5,Gospels
+6,en,New Testament,6,Acts
+7,en,New Testament,7,Epistles
+8,en,New Testament,8,Apocalyptic
+9,zh-TW,舊約全書,1,律法書
+10,zh-TW,舊約全書,2,歷史書
+11,zh-TW,舊約全書,3,智慧書
+12,zh-TW,舊約全書,4,先知書
+13,zh-TW,新約全書,5,福音書
+14,zh-TW,新約全書,6,使徒行傳
+15,zh-TW,新約全書,7,使徒書信
+16,zh-TW,新約全書,8,啟示錄
+17,zh-CN,旧约全书,1,律法书
+18,zh-CN,旧约全书,2,历史书
+19,zh-CN,旧约全书,3,智慧书
+20,zh-CN,旧约全书,4,先知书
+21,zh-CN,新约全书,5,福音书
+22,zh-CN,新约全书,6,使徒行传
+23,zh-CN,新约全书,7,使徒书信
+24,zh-CN,新约全书,8,启示录
+25,fr,Ancien Testament,1,La Loi
+26,fr,Ancien Testament,2,Histoire
+27,fr,Ancien Testament,3,Sagesse
+28,fr,Ancien Testament,4,Prophètes
+29,fr,Nouveau Testament,5,Évangiles
+30,fr,Nouveau Testament,6,Actes
+31,fr,Nouveau Testament,7,Épîtres
+32,fr,Nouveau Testament,8,Apocalyptique
+33,es,Antiguo Testamento,1,Ley
+34,es,Antiguo Testamento,2,Historia
+35,es,Antiguo Testamento,3,Sabiduría
+36,es,Antiguo Testamento,4,Profetas
+37,es,Nuevo Testamento,5,Evangelios
+38,es,Nuevo Testamento,6,Hechos
+39,es,Nuevo Testamento,7,Epístolas
+40,es,Nuevo Testamento,8,Apocalíptico
+41,ru,Ветхий Завет,1,Закон
+42,ru,Ветхий Завет,2,История
+43,ru,Ветхий Завет,3,Мудрость
+44,ru,Ветхий Завет,4,Пророки
+45,ru,Новый Завет,5,Евангелия
+46,ru,Новый Завет,6,Деяния
+47,ru,Новый Завет,7,Послания
+48,ru,Новый Завет,8,Апокалипсис
+49,hi,पुराना नियम,1,व्यवस्था
+50,hi,पुराना नियम,2,इतिहास
+51,hi,पुराना नियम,3,ज्ञान
+52,hi,पुराना नियम,4,भविष्यद्वक्ता
+53,hi,नया नियम,5,सुसमाचार
+54,hi,नया नियम,6,प्रेरितों के काम
+55,hi,नया नियम,7,पत्रियाँ
+56,hi,नया नियम,8,प्रकाशितवाक्य
+57,ar,العهد القديم,1,الشريعة
+58,ar,العهد القديم,2,التاريخ
+59,ar,العهد القديم,3,الحكمة
+60,ar,العهد القديم,4,الأنبياء
+61,ar,العهد الجديد,5,الأناجيل
+62,ar,العهد الجديد,6,أعمال الرسل
+63,ar,العهد الجديد,7,الرسائل
+64,ar,العهد الجديد,8,الرؤيا
+65,id,Perjanjian Lama,1,Taurat
+66,id,Perjanjian Lama,2,Sejarah
+67,id,Perjanjian Lama,3,Hikmat
+68,id,Perjanjian Lama,4,Nabi
+69,id,Perjanjian Baru,5,Injil
+70,id,Perjanjian Baru,6,Kisah Para Rasul
+71,id,Perjanjian Baru,7,Surat
+72,id,Perjanjian Baru,8,Wahyu
+73,de,Altes Testament,1,Gesetz
+74,de,Altes Testament,2,Geschichte
+75,de,Altes Testament,3,Weisheit
+76,de,Altes Testament,4,Propheten
+77,de,Neues Testament,5,Evangelien
+78,de,Neues Testament,6,Apostelgeschichte
+79,de,Neues Testament,7,Briefe
+80,de,Neues Testament,8,Offenbarung

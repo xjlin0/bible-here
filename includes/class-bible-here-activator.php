@@ -51,6 +51,18 @@ class Bible_Here_Activator {
 		// Set charset and collation
 		$charset_collate = $wpdb->get_charset_collate();
 
+		// Genres table
+		$table_name = $wpdb->prefix . 'bible_here_genres';
+		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			genre_number TINYINT(1) unsigned NOT NULL,
+			type VARCHAR(20) NOT NULL COMMENT 'new/old',
+			language VARCHAR(10) NOT NULL,
+			name VARCHAR(50) NOT NULL,
+			UNIQUE KEY unique_genre_for_language (language, genre_number),
+		) $charset_collate;";
+		dbDelta( $sql );
+
 		// Books table
 		$table_name = $wpdb->prefix . 'bible_here_books';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
@@ -63,18 +75,6 @@ class Bible_Here_Activator {
 			title_full VARCHAR(100) NOT NULL,
 			UNIQUE KEY unique_book (language, book_number),
 			INDEX idx_book_number (book_number)
-		) $charset_collate;";
-		dbDelta( $sql );
-
-		// Genres table
-		$table_name = $wpdb->prefix . 'bible_here_genres';
-		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			genre_number TINYINT(1) unsigned NOT NULL,
-			type VARCHAR(2) NOT NULL COMMENT 'ot/nt',
-			language VARCHAR(10) NOT NULL,
-			name VARCHAR(50) NOT NULL,
-			UNIQUE KEY unique_genre_for_language (language, genre_number)
 		) $charset_collate;";
 		dbDelta( $sql );
 
