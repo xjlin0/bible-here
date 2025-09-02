@@ -250,9 +250,9 @@ class Bible_Here_Public {
 		global $wpdb;
 		
 		// Verify nonce
-		// if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
-		// 	wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
-		// }
+		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
+		}
 
 		// Get parameters from GET request
 		$version1_bible_raw = sanitize_text_field( $_GET['version1_bible'] ?? '' );
@@ -330,17 +330,23 @@ class Bible_Here_Public {
 
 		// Get version info
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
+
+		// Remove wp_ prefix from $bible_table to query versions table
+		$table_name_for_query = str_replace($wpdb->prefix, '', $bible_table);		
 		$version_info = $wpdb->get_row( $wpdb->prepare(
 			"SELECT name, language FROM $versions_table WHERE table_name = %s",
-			$bible_table
+			$table_name_for_query
 		), ARRAY_A );
-
+		
+		if ( $version_info === null ) {
+			error_log("WARNING: No version found for table_name: " . $table_name_for_query);
+		}
 		// Get book info
 		$books_table = $wpdb->prefix . 'bible_here_books';
 		$book_info = $wpdb->get_row( $wpdb->prepare(
-			"SELECT title_full FROM $books_table WHERE book_number = %d AND language = %s",
-			$book_number_start,
-			$version_info['language'] ?? 'en'
+			"SELECT title_full FROM $books_table WHERE language = %s AND book_number = %d",
+			$version_info['language'] ?? 'en',
+			$book_number_start
 		), ARRAY_A );
 
 		// Build WHERE conditions
@@ -383,7 +389,7 @@ class Bible_Here_Public {
 
 		// Build main query
 		$sql = "SELECT 
-				verse_number as verse,
+				CAST(verse_number AS UNSIGNED) as verse,
 				verse_text as text,
 				verse_id
 			FROM $bible_table
