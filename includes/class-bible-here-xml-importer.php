@@ -948,6 +948,399 @@ class Bible_Here_XML_Importer {
 	}
 
 	/**
+	 * Import cross references data from CSV file
+	 *
+	 * @since    1.0.0
+	 * @return   array    Result array with success status and message
+	 */
+	public function import_cross_references() {
+		error_log('Bible_Here_XML_Importer: Starting cross references import');
+		
+		$start_time = microtime(true);
+		
+		try {
+			// Step 1: Check if cross_references.csv exists in data directory
+			$plugin_dir = plugin_dir_path(dirname(__FILE__));
+			$csv_file_path = $plugin_dir . 'data/cross_references.csv';
+			
+			if (!file_exists($csv_file_path)) {
+				// Try to extract from ZIP if CSV doesn't exist
+				$zip_file_path = $plugin_dir . 'data/cross_references.zip';
+				
+				if (!file_exists($zip_file_path)) {
+					$error_msg = 'Cross references ZIP file not found: ' . $zip_file_path;
+					error_log('Bible_Here_XML_Importer: ' . $error_msg);
+					return array('success' => false, 'message' => $error_msg);
+				}
+				
+				// Extract CSV from ZIP
+				$csv_file_path = $this->extract_csv_from_zip($zip_file_path);
+				if (!$csv_file_path) {
+					$error_msg = 'Failed to extract CSV from cross references ZIP';
+					error_log('Bible_Here_XML_Importer: ' . $error_msg);
+					return array('success' => false, 'message' => $error_msg);
+				}
+			}
+			
+			// Step 2: Import data directly from CSV to database (streaming approach)
+			$import_result = $this->import_cross_references_streaming($csv_file_path);
+			if (!$import_result['success']) {
+				error_log('Bible_Here_XML_Importer: Cross references data import failed: ' . $import_result['message']);
+				return $import_result;
+			}
+			
+			$end_time = microtime(true);
+			$execution_time = round($end_time - $start_time, 2);
+			
+			$success_msg = 'Successfully imported cross references - ' . $import_result['imported_count'] . ' records in ' . $execution_time . ' seconds';
+			error_log('Bible_Here_XML_Importer: ' . $success_msg);
+			
+			return array(
+				'success' => true,
+				'message' => $success_msg,
+				'imported_count' => $import_result['imported_count'],
+				'execution_time' => $execution_time
+			);
+			
+		} catch (Exception $e) {
+			$error_msg = 'Exception during cross references import: ' . $e->getMessage();
+			error_log('Bible_Here_XML_Importer: ' . $error_msg);
+			return array('success' => false, 'message' => $error_msg);
+		}
+	}
+
+	/**
+	 * Extract CSV file from cross references ZIP
+	 *
+	 * @since    1.0.0
+	 * @param    string    $zip_file_path    Path to ZIP file
+	 * @return   string|false    Path to extracted CSV file or false on failure
+	 */
+	private function extract_csv_from_zip($zip_file_path) {
+		error_log('Bible_Here_XML_Importer: Extracting CSV from ZIP: ' . $zip_file_path);
+		
+		if (!class_exists('ZipArchive')) {
+			error_log('Bible_Here_XML_Importer: ZipArchive class not available');
+			return false;
+		}
+		
+		$zip = new ZipArchive();
+		$result = $zip->open($zip_file_path);
+		
+		if ($result !== TRUE) {
+			error_log('Bible_Here_XML_Importer: Failed to open ZIP file, error code: ' . $result);
+			return false;
+		}
+		
+		// Look for CSV file in ZIP
+		$csv_filename = null;
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$filename = $zip->getNameIndex($i);
+			if (pathinfo($filename, PATHINFO_EXTENSION) === 'csv') {
+				$csv_filename = $filename;
+				break;
+			}
+		}
+		
+		if (!$csv_filename) {
+			error_log('Bible_Here_XML_Importer: No CSV file found in ZIP');
+			$zip->close();
+			return false;
+		}
+		
+		// Extract to data directory
+		$plugin_dir = plugin_dir_path(dirname(__FILE__));
+		$extract_path = $plugin_dir . 'data/';
+		
+		if (!$zip->extractTo($extract_path, $csv_filename)) {
+			error_log('Bible_Here_XML_Importer: Failed to extract CSV file');
+			$zip->close();
+			return false;
+		}
+		
+		$zip->close();
+		$extracted_csv_path = $extract_path . $csv_filename;
+		
+		error_log('Bible_Here_XML_Importer: Successfully extracted CSV to: ' . $extracted_csv_path);
+		return $extracted_csv_path;
+	}
+
+	/**
+	 * Parse cross references CSV file
+	 *
+	 * @since    1.0.0
+	 * @param    string    $csv_file_path    Path to CSV file
+	 * @return   array|false    Array of cross references data or false on failure
+	 */
+	private function parse_cross_references_csv($csv_file_path) {
+		error_log('Bible_Here_XML_Importer: Parsing cross references CSV: ' . $csv_file_path);
+		
+		if (!file_exists($csv_file_path)) {
+			error_log('Bible_Here_XML_Importer: CSV file does not exist: ' . $csv_file_path);
+			return false;
+		}
+		
+		$cross_references = array();
+		$row_count = 0;
+		
+		if (($handle = fopen($csv_file_path, 'r')) !== FALSE) {
+			// Skip header row
+			$header = fgetcsv($handle, 0, ',', '"', '\\');
+			error_log('Bible_Here_XML_Importer: CSV header: ' . implode(', ', $header));
+			
+			while (($data = fgetcsv($handle, 0, ',', '"', '\\')) !== FALSE) {
+				$row_count++;
+				
+				// Validate data format
+				if (count($data) < 4) {
+					error_log('Bible_Here_XML_Importer: Invalid CSV row at line ' . ($row_count + 1) . ': ' . implode(', ', $data));
+					continue;
+				}
+				
+				$verse_id = trim($data[0], '"');
+				$rank = intval(trim($data[1], '"'));
+				$start = trim($data[2], '"');
+				$finish = trim($data[3], '"');
+				
+				// Skip empty or invalid records
+				if (empty($verse_id) || empty($start)) {
+					continue;
+				}
+				
+				$cross_references[] = array(
+					'verse_id' => $verse_id,
+					'rank' => $rank,
+					'start' => $start,
+					'finish' => $finish
+				);
+				
+				// Log progress every 10000 records
+				if ($row_count % 10000 === 0) {
+					error_log('Bible_Here_XML_Importer: Parsed ' . $row_count . ' cross reference records');
+				}
+			}
+			
+			fclose($handle);
+		} else {
+			error_log('Bible_Here_XML_Importer: Failed to open CSV file for reading');
+			return false;
+		}
+		
+		error_log('Bible_Here_XML_Importer: Successfully parsed ' . count($cross_references) . ' cross reference records from ' . $row_count . ' CSV rows');
+		return $cross_references;
+	}
+
+	/**
+	 * Import cross references data to database using streaming approach
+	 *
+	 * @since    1.0.0
+	 * @param    string    $csv_file_path    Path to CSV file
+	 * @return   array    Result array with success status and message
+	 */
+	private function import_cross_references_streaming($csv_file_path) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'bible_here_cross_references';
+		$batch_size = 1000; // Process 1000 records per batch as requested
+		$imported_count = 0;
+		$row_count = 0;
+		$batch_data = array();
+		
+		error_log('Bible_Here_XML_Importer: Starting streaming import of cross references from: ' . $csv_file_path);
+		
+		// Clear existing data
+		error_log('Bible_Here_XML_Importer: Clearing existing cross references data');
+		$wpdb->query("TRUNCATE TABLE {$table_name}");
+		
+		if ($wpdb->last_error) {
+			error_log('Bible_Here_XML_Importer: Failed to clear cross references table: ' . $wpdb->last_error);
+			return array('success' => false, 'message' => 'Failed to clear cross references table');
+		}
+		
+		if (($handle = fopen($csv_file_path, 'r')) !== FALSE) {
+			// Skip header row
+			$header = fgetcsv($handle, 0, ',', '"', '\\');
+			error_log('Bible_Here_XML_Importer: CSV header: ' . implode(', ', $header));
+			
+			while (($data = fgetcsv($handle, 0, ',', '"', '\\')) !== FALSE) {
+				$row_count++;
+				
+				// Validate data format
+				if (count($data) < 4) {
+					error_log('Bible_Here_XML_Importer: Invalid CSV row at line ' . ($row_count + 1) . ': ' . implode(', ', $data));
+					continue;
+				}
+				
+				$verse_id = trim($data[0], '"');
+				$rank = intval(trim($data[1], '"'));
+				$start = trim($data[2], '"');
+				$finish = trim($data[3], '"');
+				
+				// Skip empty or invalid records
+				if (empty($verse_id) || empty($start)) {
+					continue;
+				}
+				
+				$batch_data[] = array(
+					'verse_id' => $verse_id,
+					'rank' => $rank,
+					'start' => $start,
+					'finish' => $finish
+				);
+				
+				// Process batch when it reaches the batch size
+				if (count($batch_data) >= $batch_size) {
+					$batch_result = $this->process_cross_references_batch($batch_data, $table_name);
+					if (!$batch_result['success']) {
+						fclose($handle);
+						return $batch_result;
+					}
+					$imported_count += $batch_result['imported_count'];
+					$batch_data = array(); // Clear batch
+					
+					// Log progress every batch
+					error_log('Bible_Here_XML_Importer: Processed ' . $imported_count . ' cross reference records');
+				}
+			}
+			
+			// Process remaining data in the last batch
+			if (!empty($batch_data)) {
+				$batch_result = $this->process_cross_references_batch($batch_data, $table_name);
+				if (!$batch_result['success']) {
+					fclose($handle);
+					return $batch_result;
+				}
+				$imported_count += $batch_result['imported_count'];
+			}
+			
+			fclose($handle);
+		} else {
+			error_log('Bible_Here_XML_Importer: Failed to open CSV file for reading');
+			return array('success' => false, 'message' => 'Failed to open CSV file for reading');
+		}
+		
+		error_log('Bible_Here_XML_Importer: Cross references streaming import completed successfully, total imported: ' . $imported_count . ' records from ' . $row_count . ' CSV rows');
+		
+		return array(
+			'success' => true,
+			'message' => 'Cross references import completed',
+			'imported_count' => $imported_count
+		);
+	}
+	
+	/**
+	 * Process a batch of cross references data
+	 *
+	 * @since    1.0.0
+	 * @param    array    $batch_data    Array of cross references for this batch
+	 * @param    string   $table_name   Database table name
+	 * @return   array    Result array with success status and imported count
+	 */
+	private function process_cross_references_batch($batch_data, $table_name) {
+		global $wpdb;
+		
+		// Build batch insert query
+		$values = array();
+		$placeholders = array();
+		
+		foreach ($batch_data as $record) {
+			$values[] = $record['verse_id'];
+			$values[] = $record['rank'];
+			$values[] = $record['start'];
+			$values[] = $record['finish'];
+			$placeholders[] = '(%s, %d, %s, %s)';
+		}
+		
+		$sql = "INSERT INTO {$table_name} (verse_id, rank, start, finish) VALUES " . implode(', ', $placeholders);
+		$prepared_sql = $wpdb->prepare($sql, $values);
+		
+		$result = $wpdb->query($prepared_sql);
+		
+		if ($result === false) {
+			error_log('Bible_Here_XML_Importer: Cross references batch import failed: ' . $wpdb->last_error);
+			return array('success' => false, 'message' => 'Cross references batch import failed: ' . $wpdb->last_error);
+		}
+		
+		return array(
+			'success' => true,
+			'imported_count' => $result
+		);
+	}
+	
+	/**
+	 * Import cross references data to database in batches (legacy method)
+	 *
+	 * @since    1.0.0
+	 * @param    array    $cross_references_data    Array of cross references
+	 * @return   array    Result array with success status and message
+	 */
+	private function import_cross_references_data($cross_references_data) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'bible_here_cross_references';
+		$total_records = count($cross_references_data);
+		$batch_size = 1000; // Process 1000 records per batch as requested
+		$imported_count = 0;
+		
+		error_log('Bible_Here_XML_Importer: Starting to import cross references data, total ' . $total_records . ' records, batch size: ' . $batch_size);
+		
+		// Clear existing data
+		error_log('Bible_Here_XML_Importer: Clearing existing cross references data');
+		$wpdb->query("TRUNCATE TABLE {$table_name}");
+		
+		if ($wpdb->last_error) {
+			error_log('Bible_Here_XML_Importer: Failed to clear cross references table: ' . $wpdb->last_error);
+			return array('success' => false, 'message' => 'Failed to clear cross references table');
+		}
+		
+		// Process data in batches of 1000
+		for ($i = 0; $i < $total_records; $i += $batch_size) {
+			$batch = array_slice($cross_references_data, $i, $batch_size);
+			$batch_number = floor($i / $batch_size) + 1;
+			$total_batches = ceil($total_records / $batch_size);
+			
+			error_log('Bible_Here_XML_Importer: Processing cross references batch ' . $batch_number . '/' . $total_batches . ', containing ' . count($batch) . ' records');
+			
+			// Build batch insert query
+			$values = array();
+			$placeholders = array();
+			
+			foreach ($batch as $record) {
+				$values[] = $record['verse_id'];
+				$values[] = $record['rank'];
+				$values[] = $record['start'];
+				$values[] = $record['finish'];
+				$placeholders[] = '(%s, %d, %s, %s)';
+			}
+			
+			$sql = "INSERT INTO {$table_name} (verse_id, rank, start, finish) VALUES " . implode(', ', $placeholders);
+			$prepared_sql = $wpdb->prepare($sql, $values);
+			
+			$result = $wpdb->query($prepared_sql);
+			
+			if ($result === false) {
+				error_log('Bible_Here_XML_Importer: Cross references batch ' . $batch_number . ' import failed: ' . $wpdb->last_error);
+				return array('success' => false, 'message' => 'Cross references data import failed: ' . $wpdb->last_error);
+			}
+			
+			$imported_count += $result;
+			error_log('Bible_Here_XML_Importer: Cross references batch ' . $batch_number . ' import successful, imported ' . $result . ' records in this batch, total imported ' . $imported_count . ' records');
+			
+			// Log progress percentage
+			$progress_percentage = round(($imported_count / $total_records) * 100, 1);
+			error_log('Bible_Here_XML_Importer: Cross references import progress: ' . $progress_percentage . '% (' . $imported_count . '/' . $total_records . ')');
+		}
+		
+		error_log('Bible_Here_XML_Importer: Cross references data import completed successfully, total imported: ' . $imported_count . ' records');
+		
+		return array(
+			'success' => true,
+			'message' => 'Cross references import completed',
+			'imported_count' => $imported_count
+		);
+	}
+
+	/**
 	 * Get CUV download URL (backward compatibility wrapper)
 	 *
 	 * @since    1.0.0

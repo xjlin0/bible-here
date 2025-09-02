@@ -137,46 +137,369 @@ class Bible_Here_Public {
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_get_versions() {
+		global $wpdb;
+		
 		// Verify nonce
 		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
 			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
 		}
 
 		// Get parameters from GET request
-		$language = sanitize_text_field( $_GET['language'] ?? 'en' );
-		$types = isset( $_GET['types'] ) ? array_map( 'sanitize_text_field', (array) $_GET['types'] ) : [];
+		$language = sanitize_text_field( $_GET['language'] ?? '' );
+		$types = $_GET['types'] ?? array();
+		
+		// Handle types parameter - can be array or single string
+		if ( ! is_array( $types ) ) {
+			$types = ! empty( $types ) ? array( sanitize_text_field( $types ) ) : array();
+		} else {
+			$types = array_map( 'sanitize_text_field', $types );
+		}
+		
+		// Check if user is logged in
+		$is_logged_in = is_user_logged_in();
+		
+		// Get versions from database
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
+		
+		// Build WHERE conditions
+		$where_conditions = array();
+		$query_params = array();
+		
+		// Add language filter if provided
+		if ( ! empty( $language ) ) {
+			$where_conditions[] = 'language = %s';
+			$query_params[] = $language;
+		}
+		
+		// Add types filter if provided
+		if ( ! empty( $types ) ) {
+			$type_placeholders = implode( ',', array_fill( 0, count( $types ), '%s' ) );
+			$where_conditions[] = "type IN ($type_placeholders)";
+			$query_params = array_merge( $query_params, $types );
+		}
+		
+		// Always filter out records with null rank
+		$where_conditions[] = 'rank IS NOT NULL';
+		
+		// Handle for_login restriction
+		if ( ! $is_logged_in ) {
+			// Only show versions that don't require login
+			$where_conditions[] = '(for_login = 0 OR for_login IS NULL)';
+		}
+		
+		$where_clause = '';
+		if ( ! empty( $where_conditions ) ) {
+			$where_clause = 'WHERE ' . implode( ' AND ', $where_conditions );
+		}
+		
+		$sql = "SELECT 
+				table_name,
+				language,
+				type,
+				name,
+				publisher,
+				info_url,
+				rank,
+				for_login
+			FROM $versions_table
+			$where_clause
+			ORDER BY rank ASC, name ASC";
+		
+		if ( ! empty( $query_params ) ) {
+			$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );
+		} else {
+			$results = $wpdb->get_results( $sql, ARRAY_A );
+		}
+		
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
+		}
+		
+		// Transform results to match expected format
+		$versions = array();
+		if ( $results ) {
+			foreach ( $results as $version ) {
+				$versions[] = array(
+					'table_name' => $version['table_name'],
+					'language' => $version['language'],
+					'type' => $version['type'],
+					'name' => $version['name'],
+					'publisher' => $version['publisher'] ?: null,
+					'info_url' => $version['info_url'] ?: null,
+					'rank' => intval( $version['rank'] ),
+					'for_login' => intval( $version['for_login'] ?? 0 ) === 1
+				);
+			}
+		}
+		
+		$response_data = array(
+			'versions' => $versions,
+			'is_logged_in' => $is_logged_in
+		);
+		
+		wp_send_json_success( $response_data );
+	}
 
-		// Mock response for phase 1 - this will be replaced with actual database queries in phase 2
-		$mock_versions = array(
-			array(
-				'table_name' => 'kjv',
-				'version_name' => 'King James Version',
-				'language' => 'en',
-				'type' => 'Bible',
-				'rank' => 1
-			),
-			array(
-				'table_name' => 'niv',
-				'version_name' => 'New International Version',
-				'language' => 'en',
-				'type' => 'Bible',
-				'rank' => 2
-			),
-			array(
-				'table_name' => 'cunp',
-				'version_name' => 'Chinese Union Version (Traditional)',
-				'language' => 'zh-TW',
-				'type' => 'Bible',
-				'rank' => 1
-			)
+	/**
+	 * Handle AJAX request for getting Bible verses.
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_verses() {
+		global $wpdb;
+		
+		// Verify nonce
+		// if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+		// 	wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
+		// }
+
+		// Get parameters from GET request
+		$version1_bible_raw = sanitize_text_field( $_GET['version1_bible'] ?? '' );
+		$version1_commentary_raw = sanitize_text_field( $_GET['version1_commentary'] ?? '' );
+		$version2_bible_raw = sanitize_text_field( $_GET['version2_bible'] ?? '' );
+		$version2_commentary_raw = sanitize_text_field( $_GET['version2_commentary'] ?? '' );
+		$book_number_start = intval( $_GET['book_number_start'] ?? 1 );
+		$book_number_end = intval( $_GET['book_number_end'] ?? $book_number_start );
+		$chapter_number_start = intval( $_GET['chapter_number_start'] ?? 1 );
+		$chapter_number_end = intval( $_GET['chapter_number_end'] ?? $chapter_number_start );
+		$verse_number_start = intval( $_GET['verse_number_start'] ?? 0 );
+		$verse_number_end = intval( $_GET['verse_number_end'] ?? 0 );
+
+		// Validate required parameters
+		if ( empty( $version1_bible_raw ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: version1_bible' ), 400 );
+		}
+
+		// Add wp_prefix to table names
+		$version1_bible = $wpdb->prefix . $version1_bible_raw;
+		$version1_commentary = ! empty( $version1_commentary_raw ) ? $wpdb->prefix . $version1_commentary_raw : '';
+		$version2_bible = ! empty( $version2_bible_raw ) ? $wpdb->prefix . $version2_bible_raw : '';
+		$version2_commentary = ! empty( $version2_commentary_raw ) ? $wpdb->prefix . $version2_commentary_raw : '';
+
+		$response_data = array();
+
+		// Process version1
+		$version1_data = $this->get_version_verses( $version1_bible, $version1_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end );
+		if ( is_wp_error( $version1_data ) ) {
+			wp_send_json_error( array( 'message' => $version1_data->get_error_message() ) );
+		}
+		$response_data['version1'] = $version1_data;
+
+		// Process version2 if provided
+		if ( ! empty( $version2_bible ) ) {
+			$version2_data = $this->get_version_verses( $version2_bible, $version2_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end );
+			if ( is_wp_error( $version2_data ) ) {
+				wp_send_json_error( array( 'message' => $version2_data->get_error_message() ) );
+			}
+			$response_data['version2'] = $version2_data;
+		} else {
+			$response_data['version2'] = null;
+		}
+
+		// Get language from version1_bible for navigation
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
+		$version1_language = $wpdb->get_var( $wpdb->prepare(
+			"SELECT language FROM $versions_table WHERE table_name = %s",
+			$version1_bible
+		) );
+		
+		// Add navigation
+		$response_data['navigation'] = $this->get_chapter_navigation( $book_number_start, $chapter_number_start, $version1_language ?: 'en' );
+
+		wp_send_json_success( $response_data );
+	}
+
+	/**
+	 * Get verses for a specific version
+	 *
+	 * @since    1.0.0
+	 */
+	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end ) {
+		global $wpdb;
+
+		// Check if bible table exists
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 
+			"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s",
+			$bible_table
+		) );
+		
+		if ( ! $table_exists ) {
+			return new WP_Error( 'table_not_found', 'Bible table not found: ' . $bible_table );
+		}
+
+		// Get version info
+		$versions_table = $wpdb->prefix . 'bible_here_versions';
+		$version_info = $wpdb->get_row( $wpdb->prepare(
+			"SELECT name, language FROM $versions_table WHERE table_name = %s",
+			$bible_table
+		), ARRAY_A );
+
+		// Get book info
+		$books_table = $wpdb->prefix . 'bible_here_books';
+		$book_info = $wpdb->get_row( $wpdb->prepare(
+			"SELECT title_full FROM $books_table WHERE book_number = %d AND language = %s",
+			$book_number_start,
+			$version_info['language'] ?? 'en'
+		), ARRAY_A );
+
+		// Build WHERE conditions
+		$where_conditions = array();
+		$query_params = array();
+
+		// Book range
+		if ( $book_number_start === $book_number_end ) {
+			$where_conditions[] = 'book_number = %d';
+			$query_params[] = $book_number_start;
+		} else {
+			$where_conditions[] = 'book_number BETWEEN %d AND %d';
+			$query_params[] = $book_number_start;
+			$query_params[] = $book_number_end;
+		}
+
+		// Chapter range
+		if ( $chapter_number_start === $chapter_number_end ) {
+			$where_conditions[] = 'chapter_number = %d';
+			$query_params[] = $chapter_number_start;
+		} else {
+			$where_conditions[] = 'chapter_number BETWEEN %d AND %d';
+			$query_params[] = $chapter_number_start;
+			$query_params[] = $chapter_number_end;
+		}
+
+		// Verse range (optional)
+		if ( $verse_number_start > 0 && $verse_number_end > 0 ) {
+			if ( $verse_number_start === $verse_number_end ) {
+				$where_conditions[] = 'verse_number = %d';
+				$query_params[] = $verse_number_start;
+			} else {
+				$where_conditions[] = 'verse_number BETWEEN %d AND %d';
+				$query_params[] = $verse_number_start;
+				$query_params[] = $verse_number_end;
+			}
+		}
+
+		$where_clause = implode( ' AND ', $where_conditions );
+
+		// Build main query
+		$sql = "SELECT 
+				verse_number as verse,
+				verse_text as text,
+				verse_id
+			FROM $bible_table
+			WHERE $where_clause
+			ORDER BY book_number, chapter_number, verse_number";
+
+		$prepared_sql = $wpdb->prepare( $sql, $query_params );
+		$verses = $wpdb->get_results( $prepared_sql, ARRAY_A );
+
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			return new WP_Error( 'database_error', 'Database error: ' . $wpdb->last_error );
+		}
+
+		// Add commentary if provided
+		if ( ! empty( $commentary_table ) && $verses ) {
+			$commentary_exists = $wpdb->get_var( $wpdb->prepare( 
+				"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s",
+				$commentary_table
+			) );
+			
+			if ( $commentary_exists ) {
+				foreach ( $verses as &$verse ) {
+					$commentary = $wpdb->get_var( $wpdb->prepare(
+						"SELECT verse_text FROM $commentary_table WHERE verse_id = %s",
+						$verse['verse_id']
+					) );
+					$verse['commentary'] = $commentary ?: null;
+				}
+			}
+		}
+
+		return array(
+			'table_name' => $bible_table,
+			'book_number' => $book_number_start,
+			'book_name' => $book_info['title_full'] ?? 'Unknown',
+			'chapter' => $chapter_number_start,
+			'version_name' => $version_info['name'] ?? 'Unknown Version',
+			'verses' => $verses ?: array()
+		);
+	}
+
+	/**
+	 * Get chapter navigation
+	 *
+	 * @since    1.0.0
+	 */
+	private function get_chapter_navigation( $book_number, $chapter_number, $language = 'en' ) {
+		global $wpdb;
+
+		$books_table = $wpdb->prefix . 'bible_here_books';
+		
+		// Get current book info
+		$current_book = $wpdb->get_row( $wpdb->prepare(
+			"SELECT book_number, chapters FROM $books_table WHERE book_number = %d AND language = %s LIMIT 1",
+			$book_number,
+			$language
+		), ARRAY_A );
+
+		if ( ! $current_book ) {
+			return array(
+				'prev_chapter' => null,
+				'next_chapter' => null
+			);
+		}
+
+		$navigation = array(
+			'prev_chapter' => null,
+			'next_chapter' => null
 		);
 
-		// Filter by language
-		$filtered_versions = array_filter( $mock_versions, function( $version ) use ( $language ) {
-			return $version['language'] === $language;
-		});
+		// Previous chapter
+		if ( $chapter_number > 1 ) {
+			$navigation['prev_chapter'] = array(
+				'book_number' => $book_number,
+				'chapter' => $chapter_number - 1
+			);
+		} else {
+			// Previous book's last chapter
+			$prev_book = $wpdb->get_row( $wpdb->prepare(
+				"SELECT book_number, chapters FROM $books_table WHERE book_number = %d AND language = %s LIMIT 1",
+				$book_number - 1,
+				$language
+			), ARRAY_A );
+			
+			if ( $prev_book ) {
+				$navigation['prev_chapter'] = array(
+					'book_number' => $prev_book['book_number'],
+					'chapter' => intval( $prev_book['chapters'] )
+				);
+			}
+		}
 
-		wp_send_json_success( array_values( $filtered_versions ) );
+		// Next chapter
+		if ( $chapter_number < intval( $current_book['chapters'] ) ) {
+			$navigation['next_chapter'] = array(
+				'book_number' => $book_number,
+				'chapter' => $chapter_number + 1
+			);
+		} else {
+			// Next book's first chapter
+			$next_book = $wpdb->get_row( $wpdb->prepare(
+				"SELECT book_number FROM $books_table WHERE book_number = %d AND language = %s LIMIT 1",
+				$book_number + 1,
+				$language
+			), ARRAY_A );
+			
+			if ( $next_book ) {
+				$navigation['next_chapter'] = array(
+					'book_number' => $next_book['book_number'],
+					'chapter' => 1
+				);
+			}
+		}
+
+		return $navigation;
 	}
 
 	/**
@@ -185,43 +508,224 @@ class Bible_Here_Public {
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_get_books() {
+		global $wpdb;
+		
 		// Verify nonce
 		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
 			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
 		}
 
 		// Get parameters from GET request
-		$language = sanitize_text_field( $_GET['language'] ?? 'en' );
-
-		// Mock response for phase 1 - this will be replaced with actual database queries in phase 2
-		$mock_books = array(
-			array(
-				'book_name' => 'genesis',
-				'book_name_display' => $language === 'zh-TW' ? '創世記' : 'Genesis',
-				'book_number' => 1,
-				'testament' => 'OT'
-			),
-			array(
-				'book_name' => 'exodus',
-				'book_name_display' => $language === 'zh-TW' ? '出埃及記' : 'Exodus',
-				'book_number' => 2,
-				'testament' => 'OT'
-			),
-			array(
-				'book_name' => 'matthew',
-				'book_name_display' => $language === 'zh-TW' ? '馬太福音' : 'Matthew',
-				'book_number' => 40,
-				'testament' => 'NT'
-			),
-			array(
-				'book_name' => 'john',
-				'book_name_display' => $language === 'zh-TW' ? '約翰福音' : 'John',
-				'book_number' => 43,
-				'testament' => 'NT'
-			)
+		$language = sanitize_text_field( $_GET['language'] ?? 'en' );  // default to English
+		$genre_type = sanitize_text_field( $_GET['genre_type'] ?? '' );
+		
+		// Get books from database
+		$books_table = $wpdb->prefix . 'bible_here_books';
+		$genres_table = $wpdb->prefix . 'bible_here_genres';
+		// Build WHERE conditions
+		$where_conditions = array( 'b.language = %s' );
+		$query_params = array( $language );
+		
+		// Add genre_type filter if provided
+		if ( ! empty( $genre_type ) ) {
+			$where_conditions[] = 'b.genre_type = %s';
+			$query_params[] = $genre_type;
+		}
+		
+		$where_clause = implode( ' AND ', $where_conditions );
+		
+		$sql = "SELECT 
+				book_number,
+				title_full,
+				title_short,
+				g.name AS genre_name,
+				g.type AS genre_type,
+				chapters
+			FROM $books_table b
+			  JOIN $genres_table g
+			    ON g.language=b.language
+			      AND g.genre_number = b.genre_number
+			WHERE $where_clause
+			ORDER BY book_number ASC";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );
+		
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
+		}
+		
+		// Transform results to match expected format
+		$books = array();
+		if ( $results ) {
+			foreach ( $results as $book ) {
+				$books[] = array(
+					'book_number' => intval( $book['book_number'] ),
+					'title_full' => $book['title_full'],
+					'title_short' => $book['title_short'],
+					'genre_name' => $book['genre_name'],
+					'genre_type' => $book['genre_type'],
+					'chapters' =>  intval( $book['chapters'] )
+				);
+			}
+		}
+		
+		$response_data = array(
+			'books' => $books
 		);
+		
+		wp_send_json_success( $response_data );
+	}
 
-		wp_send_json_success( $mock_books );
+	/**
+	 * Handle AJAX request for getting Strong's Dictionary entries.
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_strong_dictionary() {
+		global $wpdb;
+		
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
+		}
+
+		// Get parameters from GET request
+		$strong_numbers = isset( $_GET['strong_numbers'] ) ? array_map( 'sanitize_text_field', (array) $_GET['strong_numbers'] ) : array();
+		$strong_number = sanitize_text_field( $_GET['strong_number'] ?? '' );
+		
+		// Handle single strong_number parameter for backward compatibility
+		if ( ! empty( $strong_number ) && empty( $strong_numbers ) ) {
+			$strong_numbers = array( $strong_number );
+		}
+		
+		// Validate required parameters
+		if ( empty( $strong_numbers ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: strong_numbers or strong_number' ) );
+		}
+		
+		// Get Strong's Dictionary data
+		$strong_table = $wpdb->prefix . 'bible_here_strong_dictionary';
+		
+		// Build IN clause for multiple strong numbers
+		$placeholders = implode( ',', array_fill( 0, count( $strong_numbers ), '%s' ) );
+		
+		$sql = "SELECT 
+				strong_number,
+				original,
+				en,
+				`zh-TW`,
+				`zh-CN`
+			FROM $strong_table
+			WHERE strong_number IN ($placeholders)
+			ORDER BY strong_number";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $strong_numbers ), ARRAY_A );
+		
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
+		}
+		
+		// Transform results to match expected format
+		$strong_dictionary = array();
+		if ( $results ) {
+			foreach ( $results as $entry ) {
+				$languages = array();
+				
+				// Add available language translations
+				if ( ! empty( $entry['en'] ) ) {
+					$languages['en'] = $entry['en'];
+				}
+				if ( ! empty( $entry['zh-TW'] ) ) {
+					$languages['zh-TW'] = $entry['zh-TW'];
+				}
+				if ( ! empty( $entry['zh-CN'] ) ) {
+					$languages['zh-CN'] = $entry['zh-CN'];
+				}
+				
+				$strong_dictionary[] = array(
+					'strong_number' => $entry['strong_number'],
+					'original' => $entry['original'],
+					'languages' => $languages
+				);
+			}
+		}
+		
+		$response_data = array(
+			'strong_dictionary' => $strong_dictionary
+		);
+		
+		wp_send_json_success( $response_data );
+	}
+
+	/**
+	 * Handle AJAX request for getting cross references.
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_cross_references() {
+		global $wpdb;
+		
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
+		}
+
+		// Get parameters from GET request
+		$verse_ids = isset( $_GET['verse_ids'] ) ? array_map( 'intval', (array) $_GET['verse_ids'] ) : array();
+		$verse_id = intval( $_GET['verse_id'] ?? 0 );
+		
+		// Handle single verse_id parameter for backward compatibility
+		if ( ! empty( $verse_id ) && empty( $verse_ids ) ) {
+			$verse_ids = array( $verse_id );
+		}
+		
+		// Validate required parameters
+		if ( empty( $verse_ids ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: verse_ids or verse_id' ) );
+		}
+		
+		// Get cross references data
+		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
+		
+		// Build IN clause for multiple verse IDs
+		$placeholders = implode( ',', array_fill( 0, count( $verse_ids ), '%d' ) );
+		
+		$sql = "SELECT 
+				verse_id,
+				rank,
+				start,
+				finish
+			FROM $cross_ref_table
+			WHERE verse_id IN ($placeholders)
+			ORDER BY rank ASC, start ASC";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $verse_ids ), ARRAY_A );
+		
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
+		}
+		
+		// Format the response
+		$cross_references = array();
+		if ( $results ) {
+			foreach ( $results as $result ) {
+				$cross_references[] = array(
+					'verse_id' => intval( $result['verse_id'] ),
+					'rank' => intval( $result['rank'] ),
+					'start' => intval( $result['start'] ),
+					'finish' => intval( $result['finish'] )
+				);
+			}
+		}
+		
+		$response_data = array(
+			'cross_references' => $cross_references
+		);
+		
+		wp_send_json_success( $response_data );
 	}
 
 	/**

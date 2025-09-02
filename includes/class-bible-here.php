@@ -184,6 +184,9 @@ class Bible_Here {
 		
 		// Register AJAX hook for deleting version row
 		$this->loader->add_action( 'wp_ajax_bible_here_delete_version_row', $plugin_admin, 'handle_ajax_delete_version_row' );
+		
+		// Auto-check and import cross references on admin init
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'auto_import_cross_references' );
 
 	}
 
@@ -207,6 +210,12 @@ class Bible_Here {
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_versions', $plugin_public, 'handle_ajax_get_versions' );
 		$this->loader->add_action( 'wp_ajax_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
+		$this->loader->add_action( 'wp_ajax_bible_here_get_verses', $plugin_public, 'handle_ajax_get_verses' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_verses', $plugin_public, 'handle_ajax_get_verses' );
+		$this->loader->add_action( 'wp_ajax_bible_here_get_strong_dictionary', $plugin_public, 'handle_ajax_get_strong_dictionary' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_strong_dictionary', $plugin_public, 'handle_ajax_get_strong_dictionary' );
+		$this->loader->add_action( 'wp_ajax_bible_here_get_cross_references', $plugin_public, 'handle_ajax_get_cross_references' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_cross_references', $plugin_public, 'handle_ajax_get_cross_references' );
 
 	}
 

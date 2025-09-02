@@ -150,6 +150,15 @@ class Bible_Here_Admin {
 			array($this, 'display_versions_page')
 		);
 
+		add_submenu_page(
+			'bible-here',
+			'Cross References',
+			'Cross References',
+			'manage_options',
+			'bible-here-cross-references',
+			array($this, 'display_cross_references_page')
+		);
+
 	
 	}
 
@@ -1327,6 +1336,165 @@ class Bible_Here_Admin {
 			wp_send_json_success($response);
 		} else {
 			wp_send_json_error('No data was imported. Please check your CSV format.');
+		}
+	}
+
+	/**
+	 * Display the cross references management page.
+	 *
+	 * @since    1.0.0
+	 */
+	public function display_cross_references_page() {
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have sufficient permissions to access this page.'));
+		}
+		
+		global $wpdb;
+		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
+		
+		// Handle import request
+		if (isset($_POST['import_cross_references']) && wp_verify_nonce($_POST['_wpnonce'], 'import_cross_references')) {
+			// Load the importer class
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-xml-importer.php';
+			
+			$importer = new Bible_Here_XML_Importer('bible-here', '1.0.0');
+			
+			// Set time and memory limits
+			set_time_limit(0);
+			ini_set('memory_limit', '512M');
+			
+			// Start output buffering for progress display
+			ob_start();
+			
+			echo '<div class="notice notice-info"><p>Starting cross references import...</p></div>';
+			ob_flush();
+			flush();
+			
+			try {
+				$result = $importer->import_cross_references_streaming();
+				
+				if ($result['success']) {
+					echo '<div class="notice notice-success"><p>Cross references imported successfully! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($result['time_taken'], 2) . ' seconds.</p></div>';
+				} else {
+					echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['error']) . '</p></div>';
+				}
+			} catch (Exception $e) {
+				echo '<div class="notice notice-error"><p>Import failed with exception: ' . esc_html($e->getMessage()) . '</p></div>';
+			}
+			
+			ob_end_flush();
+		}
+		
+		// Get current statistics
+		$cross_ref_count = $wpdb->get_var("SELECT COUNT(*) FROM {$cross_ref_table}");
+		$sample_records = $wpdb->get_results("SELECT verse_id, rank, start, finish FROM {$cross_ref_table} LIMIT 5");
+		
+		echo '<div class="wrap">';
+		echo '<h1>Cross References Management</h1>';
+		
+		echo '<div class="cross-references-stats">';
+		echo '<h2>Current Status</h2>';
+		echo '<p><strong>Total Cross References:</strong> ' . number_format($cross_ref_count) . '</p>';
+		
+		if ($cross_ref_count > 0) {
+			echo '<h3>Sample Records:</h3>';
+			echo '<table class="wp-list-table widefat fixed striped">';
+			echo '<thead><tr><th>Verse ID</th><th>Rank</th><th>Start</th><th>Finish</th></tr></thead>';
+			echo '<tbody>';
+			foreach ($sample_records as $record) {
+				echo '<tr>';
+				echo '<td>' . esc_html($record->verse_id) . '</td>';
+				echo '<td>' . esc_html($record->rank) . '</td>';
+				echo '<td>' . esc_html($record->start) . '</td>';
+				echo '<td>' . esc_html($record->finish) . '</td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table>';
+		}
+		echo '</div>';
+		
+		echo '<div class="cross-references-import">';
+		echo '<h2>Import Cross References</h2>';
+		echo '<p>Import cross reference data from the data/cross_references.zip file.</p>';
+		
+		// Check if zip file exists
+		$zip_path = plugin_dir_path(dirname(__FILE__)) . 'data/cross_references.zip';
+		if (file_exists($zip_path)) {
+			echo '<p><strong>Status:</strong> <span style="color: green;">✓ cross_references.zip file found</span></p>';
+			echo '<form method="post" action="">';
+			wp_nonce_field('import_cross_references');
+			echo '<p class="submit">';
+			echo '<input type="submit" name="import_cross_references" class="button-primary" value="Import Cross References" onclick="return confirm(\'This will replace all existing cross reference data. Are you sure?\');" />';
+			echo '</p>';
+			echo '</form>';
+		} else {
+			echo '<p><strong>Status:</strong> <span style="color: red;">✗ cross_references.zip file not found</span></p>';
+			echo '<p>Please ensure the cross_references.zip file is placed in the plugin\'s data/ directory.</p>';
+		}
+		echo '</div>';
+		
+		echo '</div>';
+	}
+
+	/**
+	 * Auto-check and import cross references on admin init
+	 *
+	 * @since    1.0.0
+	 */
+	public function auto_import_cross_references() {
+		// Only run this check once per session to avoid repeated checks
+		if (get_transient('bible_here_cross_ref_check_done')) {
+			return;
+		}
+		
+		// Set transient to prevent repeated checks (expires in 1 hour)
+		set_transient('bible_here_cross_ref_check_done', true, HOUR_IN_SECONDS);
+		
+		global $wpdb;
+		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
+		
+		// Check if cross references table exists and has data
+		$table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$cross_ref_table}'") === $cross_ref_table;
+		
+		if (!$table_exists) {
+			// Table doesn't exist, let the normal activation process handle it
+			return;
+		}
+		
+		$cross_ref_count = $wpdb->get_var("SELECT COUNT(*) FROM {$cross_ref_table}");
+		
+		// If no cross references exist, check if zip file is available and import
+		if ($cross_ref_count == 0) {
+			$zip_path = plugin_dir_path(dirname(__FILE__)) . 'data/cross_references.zip';
+			
+			if (file_exists($zip_path)) {
+				// Load the importer class
+				require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-xml-importer.php';
+				
+				try {
+					$importer = new Bible_Here_XML_Importer('bible-here', '1.0.0');
+					$result = $importer->import_cross_references();
+					
+					if ($result['success']) {
+						// Log successful auto-import
+						error_log('Bible Here: Auto-imported ' . number_format($result['imported_count']) . ' cross references successfully.');
+						
+						// Show admin notice for successful import
+						add_action('admin_notices', function() use ($result) {
+							echo '<div class="notice notice-success is-dismissible">';
+							echo '<p><strong>Bible Here:</strong> Cross references data has been automatically imported (' . number_format($result['imported_count']) . ' records).</p>';
+							echo '</div>';
+						});
+					} else {
+						// Log import failure
+						error_log('Bible Here: Auto-import of cross references failed: ' . $result['error']);
+					}
+				} catch (Exception $e) {
+					// Log exception
+					error_log('Bible Here: Auto-import of cross references failed with exception: ' . $e->getMessage());
+				}
+			}
 		}
 	}
 
