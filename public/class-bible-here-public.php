@@ -177,21 +177,21 @@ class Bible_Here_Public {
 			$where_conditions[] = "type IN ($type_placeholders)";
 			$query_params = array_merge( $query_params, $types );
 		}
-		
+
 		// Always filter out records with null rank
 		$where_conditions[] = 'rank IS NOT NULL';
-		
+
 		// Handle for_login restriction
 		if ( ! $is_logged_in ) {
 			// Only show versions that don't require login
 			$where_conditions[] = '(for_login = 0 OR for_login IS NULL)';
 		}
-		
+
 		$where_clause = '';
 		if ( ! empty( $where_conditions ) ) {
 			$where_clause = 'WHERE ' . implode( ' AND ', $where_conditions );
 		}
-		
+
 		$sql = "SELECT 
 				table_name,
 				language,

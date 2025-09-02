@@ -904,6 +904,11 @@
 	display: none;
 }
 
+/* Higher specificity selector for visible state */
+.bible-here-reader .bible-reader-nav .theme-menu.theme-menu-visible {
+	display: block !important;
+}
+
 .bible-here-reader.theme-dark .theme-menu {
 	background: #2d2d2d;
 	border-color: #555;

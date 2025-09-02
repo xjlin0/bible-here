@@ -137,11 +137,12 @@ class BibleHereReader {
 			}
 
 			// Settings button
-			if (this.elements.settingsButton) {
-				this.elements.settingsButton.addEventListener('click', () => {
-					this.toggleThemeMenu();
-				});
-			}
+		if (this.elements.settingsButton) {
+			this.elements.settingsButton.addEventListener('click', (e) => {
+				e.stopPropagation(); // 阻止事件冒泡到 document 層級
+				this.toggleThemeMenu();
+			});
+		}
 
 			// Theme preference change
 			this.container.addEventListener('change', (e) => {
@@ -770,38 +771,46 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Toggle theme menu visibility
-		 */
-		toggleThemeMenu() {
-			console.log('⚙️ Settings button clicked - toggleThemeMenu called');
-			console.log('🔍 Theme menu element:', this.elements.themeMenu);
+	 * Toggle theme menu visibility
+	 */
+	toggleThemeMenu(event) {
+		console.log('⚙️ Settings button clicked - toggleThemeMenu called');
+		console.log('🔍 Theme menu element:', this.elements.themeMenu);
+		
+		// 阻止事件冒泡（如果事件對象存在）
+		if (event) {
+			event.stopPropagation();
+		}
+		
+		if (this.elements.themeMenu) {
+			const isVisible = this.elements.themeMenu.classList.contains('theme-menu-visible');
+			console.log('👁️ Theme menu currently visible:', isVisible);
 			
-			if (this.elements.themeMenu) {
-				const isVisible = this.elements.themeMenu.style.display !== 'none';
-				console.log('👁️ Theme menu currently visible:', isVisible);
-				
-				this.elements.themeMenu.style.display = isVisible ? 'none' : 'block';
-				console.log('🔄 Theme menu display set to:', isVisible ? 'none' : 'block');
+			if (isVisible) {
+				this.elements.themeMenu.classList.remove('theme-menu-visible');
+				console.log('🔄 Theme menu hidden using classList');
+			} else {
+				this.elements.themeMenu.classList.add('theme-menu-visible');
+				console.log('🔄 Theme menu shown using classList');
 				
 				// Update radio button selection
-				if (!isVisible) {
-					const radioButton = this.elements.themeMenu.querySelector(`input[value="${this.themePreference}"]`);
-					if (radioButton) {
-						radioButton.checked = true;
-						console.log('✅ Radio button updated for theme:', this.themePreference);
-					}
+				const radioButton = this.elements.themeMenu.querySelector(`input[value="${this.themePreference}"]`);
+				if (radioButton) {
+					radioButton.checked = true;
+					console.log('✅ Radio button updated for theme:', this.themePreference);
 				}
-			} else {
-				console.error('❌ Theme menu element not found!');
 			}
+		} else {
+			console.error('❌ Theme menu element not found!');
 		}
+	}
 
 		/**
 		 * Hide theme menu
 		 */
 		hideThemeMenu() {
 			if (this.elements.themeMenu) {
-				this.elements.themeMenu.style.display = 'none';
+				this.elements.themeMenu.classList.remove('theme-menu-visible');
 			}
 		}
 
@@ -812,7 +821,6 @@ class BibleHereReader {
 			this.themePreference = preference;
 			localStorage.setItem('bible-here-theme', preference);
 			this.applyTheme(preference);
-			this.hideThemeMenu();
 		}
 
 		/**
