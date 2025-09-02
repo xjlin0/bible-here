@@ -170,12 +170,7 @@ class BibleHereReader {
 				}
 			});
 
-			// Close theme menu when clicking outside
-			document.addEventListener('click', (e) => {
-				if (!e.target.closest('.settings-group')) {
-					this.hideThemeMenu();
-				}
-			});
+
 
 			// Retry button
 			this.container.addEventListener('click', (e) => {
@@ -351,8 +346,15 @@ class BibleHereReader {
 		 * Display chapter content for single version mode
 		 */
 		displayChapterContent(chapterData, versionKey) {
-			const container = this.container.querySelector('.chapter-content');
-			if (!container) return;
+			const versionContainer = this.elements.singleMode.querySelector('.bible-version');
+			let container = versionContainer.querySelector('.chapter-content');
+			
+			// Create .chapter-content if it doesn't exist
+			if (!container) {
+				container = document.createElement('div');
+				container.className = 'chapter-content';
+				versionContainer.appendChild(container);
+			}
 
 			if (!chapterData || !chapterData.verses || chapterData.verses.length === 0) {
 				container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
@@ -444,7 +446,7 @@ class BibleHereReader {
 					versesHtml += `
 						<div class="verse" data-verse-id="${this.formatVerseId(this.currentBook, this.currentChapter, i)}">
 							<span class="verse-number">${i}</span>
-							<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}${versionSuffix}. This content will be replaced with actual Bible text in phase 2 when the API is implemented.</span>
+							<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}${versionSuffix}. This content will be replaced with actual Bible text in phase 2 when the API is implemented. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span>
 						</div>
 					`;
 				}
@@ -458,7 +460,14 @@ class BibleHereReader {
 		displayMockChapter() {
 			const versionContainer = this.elements.singleMode.querySelector('.bible-version');
 			const titleElement = versionContainer.querySelector('.version-title');
-			const versesContainer = versionContainer.querySelector('.verses-container');
+			let chapterContent = versionContainer.querySelector('.chapter-content');
+
+			// Create .chapter-content if it doesn't exist
+			if (!chapterContent) {
+				chapterContent = document.createElement('div');
+				chapterContent.className = 'chapter-content';
+				versionContainer.appendChild(chapterContent);
+			}
 
 			// Update header
 			titleElement.textContent = this.currentVersion.toUpperCase();
@@ -469,12 +478,12 @@ class BibleHereReader {
 			versesHtml += `
 				<div class="verse" data-verse-id="${this.formatVerseId(this.currentBook, this.currentChapter, i)}">
 					<span class="verse-number">${i}</span>
-					<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}. This content will be replaced with actual Bible text in phase 2 when the API is implemented.</span>
+					<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}. This content will be replaced with actual Bible text in phase 2 when the API is implemented. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </span>
 				</div>
 			`;
 		}
 			// console.log("hi 318 here is versionContainer: ", versionContainer); debugger;
-			versionContainer.innerHTML = versesHtml;
+			chapterContent.innerHTML = versesHtml;
 			
 			// Show add version button
 			// this.elements.versionsButton.show();
