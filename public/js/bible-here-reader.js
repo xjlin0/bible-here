@@ -41,6 +41,7 @@ class BibleHereReader {
 				chapterSelect: this.container.querySelector('.chapter-select'),
 				bookChapterButton: this.container.querySelector('.btn-book-chapter'),
 				bookChapterText: this.container.querySelector('.book-chapter-text'),
+				bookChapterMenu: this.container.querySelector('.book-chapter-menu'),
 				prevButton: this.container.querySelector('.btn-prev'),
 				nextButton: this.container.querySelector('.btn-next'),
 				searchButton: this.container.querySelector('.btn-search'),
@@ -86,12 +87,14 @@ class BibleHereReader {
 		 */
 		bindEvents() {
 			// Book and Chapter button click
-			if (this.elements.bookChapterButton) {
-				this.elements.bookChapterButton.addEventListener('click', () => {
-					// TODO: Implement book and chapter selection interface
-					console.log('Book and chapter selection to be implemented');
-				});
-			}
+		if (this.elements.bookChapterButton) {
+			this.elements.bookChapterButton.addEventListener('click', () => {
+				this.toggleBookChapterMenu();
+			});
+		}
+
+		// Book Chapter Menu events
+		this.bindBookChapterMenuEvents();
 
 			// Book selection change (hidden)
 			if (this.elements.bookSelect) {
@@ -140,12 +143,29 @@ class BibleHereReader {
 			}
 
 			// Settings button
-		if (this.elements.settingsButton) {
+	if (this.elements.settingsButton) {
 			this.elements.settingsButton.addEventListener('click', (e) => {
 				e.stopPropagation(); // 阻止事件冒泡到 document 層級
 				this.toggleThemeMenu();
 			});
 		}
+
+		// Close menus when clicking outside
+		document.addEventListener('click', (e) => {
+			// Close theme menu
+			if (this.elements.themeMenu && 
+				!this.elements.themeMenu.contains(e.target) && 
+				!this.elements.settingsButton.contains(e.target)) {
+				this.hideThemeMenu();
+			}
+			
+			// Close book chapter menu
+			if (this.elements.bookChapterMenu && 
+				!this.elements.bookChapterMenu.contains(e.target) && 
+				!this.elements.bookChapterButton.contains(e.target)) {
+				this.hideBookChapterMenu();
+			}
+		});
 
 			// Theme preference change
 			this.container.addEventListener('change', (e) => {
@@ -398,21 +418,96 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Update book chapter button text
+		 * Book name mapping for display
 		 */
-		updateBookChapterButton() {
-			if (this.elements.bookChapterText) {
-				// Get display name for current book
-				let bookDisplayName = this.currentBook;
-				if (this.elements.bookSelect) {
-					const selectedOption = this.elements.bookSelect.querySelector(`option[value="${this.currentBook}"]`);
-					if (selectedOption) {
-						bookDisplayName = selectedOption.textContent;
-					}
-				}
-				this.elements.bookChapterText.textContent = `${bookDisplayName} ${this.currentChapter}`;
-			}
+		getBookNameMapping() {
+			return {
+				'Genesis': '創世記',
+				'Exodus': '出埃及記',
+				'Leviticus': '利未記',
+				'Numbers': '民數記',
+				'Deuteronomy': '申命記',
+				'Joshua': '約書亞記',
+				'Judges': '士師記',
+				'Ruth': '路得記',
+				'1Samuel': '撒母耳記上',
+				'2Samuel': '撒母耳記下',
+				'1Kings': '列王紀上',
+				'2Kings': '列王紀下',
+				'1Chronicles': '歷代志上',
+				'2Chronicles': '歷代志下',
+				'Ezra': '以斯拉記',
+				'Nehemiah': '尼希米記',
+				'Esther': '以斯帖記',
+				'Job': '約伯記',
+				'Psalms': '詩篇',
+				'Proverbs': '箴言',
+				'Ecclesiastes': '傳道書',
+				'SongofSongs': '雅歌',
+				'Isaiah': '以賽亞書',
+				'Jeremiah': '耶利米書',
+				'Lamentations': '耶利米哀歌',
+				'Ezekiel': '以西結書',
+				'Daniel': '但以理書',
+				'Hosea': '何西阿書',
+				'Joel': '約珥書',
+				'Amos': '阿摩司書',
+				'Obadiah': '俄巴底亞書',
+				'Jonah': '約拿書',
+				'Micah': '彌迦書',
+				'Nahum': '那鴻書',
+				'Habakkuk': '哈巴谷書',
+				'Zephaniah': '西番雅書',
+				'Haggai': '哈該書',
+				'Zechariah': '撒迦利亞書',
+				'Malachi': '瑪拉基書',
+				'Matthew': '馬太福音',
+				'Mark': '馬可福音',
+				'Luke': '路加福音',
+				'John': '約翰福音',
+				'Acts': '使徒行傳',
+				'Romans': '羅馬書',
+				'1Corinthians': '哥林多前書',
+				'2Corinthians': '哥林多後書',
+				'Galatians': '加拉太書',
+				'Ephesians': '以弗所書',
+				'Philippians': '腓立比書',
+				'Colossians': '歌羅西書',
+				'1Thessalonians': '帖撒羅尼迦前書',
+				'2Thessalonians': '帖撒羅尼迦後書',
+				'1Timothy': '提摩太前書',
+				'2Timothy': '提摩太後書',
+				'Titus': '提多書',
+				'Philemon': '腓利門書',
+				'Hebrews': '希伯來書',
+				'James': '雅各書',
+				'1Peter': '彼得前書',
+				'2Peter': '彼得後書',
+				'1John': '約翰一書',
+				'2John': '約翰二書',
+				'3John': '約翰三書',
+				'Jude': '猶大書',
+				'Revelation': '啟示錄'
+			};
 		}
+
+		/**
+	 * Update book chapter button text
+	 */
+	updateBookChapterButton() {
+		if (this.elements.bookChapterText) {
+			// Get display name for current book
+			let bookDisplayName = this.currentBook;
+			
+			// Use book key mapping to get Chinese name
+			const bookKeyMapping = this.getBookKeyMapping();
+			if (bookKeyMapping[this.currentBook]) {
+				bookDisplayName = bookKeyMapping[this.currentBook];
+			}
+			
+			this.elements.bookChapterText.textContent = `${bookDisplayName} ${this.currentChapter}`;
+		}
+	}
 
 		/**
 		 * Display dual versions content (for testing)
@@ -1203,6 +1298,341 @@ class BibleHereReader {
 			this.dragContainer = null;
 			this.dragVersion1 = null;
 			this.dragVersion2 = null;
+		}
+
+		/**
+		 * Bind book chapter menu events
+		 */
+		bindBookChapterMenuEvents() {
+			if (!this.elements.bookChapterMenu) return;
+
+			// Tab switching
+			const tabs = this.elements.bookChapterMenu.querySelectorAll('.menu-tab');
+			tabs.forEach(tab => {
+				tab.addEventListener('click', (e) => {
+					e.preventDefault();
+					this.switchBookChapterTab(tab.dataset.tab);
+				});
+			});
+
+			// Version selection
+			const versionItems = this.elements.bookChapterMenu.querySelectorAll('.version-item');
+			versionItems.forEach(item => {
+				item.addEventListener('click', () => {
+					this.selectVersion(item.dataset.version);
+				});
+			});
+
+			// Book selection
+			const bookItems = this.elements.bookChapterMenu.querySelectorAll('.book-item');
+			bookItems.forEach(item => {
+				item.addEventListener('click', () => {
+					this.selectBook(item.dataset.book, item.textContent);
+				});
+			});
+
+			// Chapter selection will be dynamically bound when chapters are populated
+		}
+
+		/**
+		 * Toggle book chapter menu
+		 */
+		toggleBookChapterMenu() {
+			if (!this.elements.bookChapterMenu) return;
+
+			if (this.elements.bookChapterMenu.classList.contains('book-chapter-menu-visible')) {
+				this.hideBookChapterMenu();
+			} else {
+				this.showBookChapterMenu();
+			}
+		}
+
+		/**
+		 * Show book chapter menu
+		 */
+		showBookChapterMenu() {
+			if (!this.elements.bookChapterMenu) return;
+
+			// Hide theme menu if open
+			this.hideThemeMenu();
+
+			// Show menu
+			this.elements.bookChapterMenu.classList.add('book-chapter-menu-visible');
+
+			// Initialize with books tab if not already set
+			const activeTab = this.elements.bookChapterMenu.querySelector('.menu-tab.active');
+			if (!activeTab) {
+				this.switchBookChapterTab('books');
+			}
+		}
+
+		/**
+		 * Hide book chapter menu
+		 */
+		hideBookChapterMenu() {
+			if (this.elements.bookChapterMenu) {
+				this.elements.bookChapterMenu.classList.remove('book-chapter-menu-visible');
+			}
+		}
+
+		/**
+		 * Switch book chapter menu tab
+		 */
+		switchBookChapterTab(tabName) {
+			if (!this.elements.bookChapterMenu) return;
+
+			// Update tab buttons
+			const tabs = this.elements.bookChapterMenu.querySelectorAll('.menu-tab');
+			tabs.forEach(tab => {
+				tab.classList.toggle('active', tab.dataset.tab === tabName);
+			});
+
+			// Update content
+			const contents = this.elements.bookChapterMenu.querySelectorAll('.tab-content');
+			contents.forEach(content => {
+				content.classList.toggle('active', content.dataset.tab === tabName);
+			});
+
+			// Load content based on tab
+			switch (tabName) {
+				case 'versions':
+					this.loadVersionsTab();
+					break;
+				case 'books':
+					this.loadBooksTab();
+					break;
+				case 'chapters':
+					this.loadChaptersTab();
+					break;
+			}
+		}
+
+		/**
+		 * Load versions tab content
+		 */
+		loadVersionsTab() {
+			const versionsContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="versions"] .versions-list');
+			if (!versionsContent) return;
+
+			// Mock versions data - replace with actual API call
+			const versions = [
+				{ key: 'bible_here_en_kjv', name: '和合本', abbr: '和合本' },
+				{ key: 'bible_here_en_niv', name: 'New International Version', abbr: 'NIV' },
+				{ key: 'bible_here_en_esv', name: 'English Standard Version', abbr: 'ESV' }
+			];
+
+			let html = '';
+			versions.forEach(version => {
+				const isActive = version.key === this.currentVersion;
+				html += `<div class="version-item ${isActive ? 'active' : ''}" data-version="${version.key}">`;
+				html += `<span class="version-abbr">${version.abbr}</span>`;
+				html += `<span class="version-name">${version.name}</span>`;
+				html += `</div>`;
+			});
+
+			versionsContent.innerHTML = html;
+
+			// Bind events for new version items
+			const versionItems = versionsContent.querySelectorAll('.version-item');
+			versionItems.forEach(item => {
+				item.addEventListener('click', () => {
+					this.selectVersion(item.dataset.version);
+				});
+			});
+		}
+
+		/**
+		 * Load books tab content
+		 */
+		loadBooksTab() {
+			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="books"] .books-grid');
+			if (!booksContent) return;
+
+			// Bible books data
+			const oldTestament = [
+				{ key: 'genesis', name: '創', fullName: '創世記' },
+				{ key: 'exodus', name: '出', fullName: '出埃及記' },
+				{ key: 'leviticus', name: '利', fullName: '利未記' },
+				{ key: 'numbers', name: '民', fullName: '民數記' },
+				{ key: 'deuteronomy', name: '申', fullName: '申命記' },
+				{ key: 'joshua', name: '書', fullName: '約書亞記' },
+				{ key: 'judges', name: '士', fullName: '士師記' },
+				{ key: 'ruth', name: '得', fullName: '路得記' },
+				{ key: '1samuel', name: '撒上', fullName: '撒母耳記上' },
+				{ key: '2samuel', name: '撒下', fullName: '撒母耳記下' },
+				{ key: '1kings', name: '王上', fullName: '列王紀上' },
+				{ key: '2kings', name: '王下', fullName: '列王紀下' },
+				{ key: '1chronicles', name: '代上', fullName: '歷代志上' },
+				{ key: '2chronicles', name: '代下', fullName: '歷代志下' },
+				{ key: 'ezra', name: '拉', fullName: '以斯拉記' },
+				{ key: 'nehemiah', name: '尼', fullName: '尼希米記' },
+				{ key: 'esther', name: '斯', fullName: '以斯帖記' },
+				{ key: 'job', name: '伯', fullName: '約伯記' },
+				{ key: 'psalms', name: '詩', fullName: '詩篇' },
+				{ key: 'proverbs', name: '箴', fullName: '箴言' },
+				{ key: 'ecclesiastes', name: '傳', fullName: '傳道書' },
+				{ key: 'songofsolomon', name: '歌', fullName: '雅歌' },
+				{ key: 'isaiah', name: '賽', fullName: '以賽亞書' },
+				{ key: 'jeremiah', name: '耶', fullName: '耶利米書' },
+				{ key: 'lamentations', name: '哀', fullName: '耶利米哀歌' },
+				{ key: 'ezekiel', name: '結', fullName: '以西結書' },
+				{ key: 'daniel', name: '但', fullName: '但以理書' },
+				{ key: 'hosea', name: '何', fullName: '何西阿書' },
+				{ key: 'joel', name: '珥', fullName: '約珥書' },
+				{ key: 'amos', name: '摩', fullName: '阿摩司書' },
+				{ key: 'obadiah', name: '俄', fullName: '俄巴底亞書' },
+				{ key: 'jonah', name: '拿', fullName: '約拿書' },
+				{ key: 'micah', name: '彌', fullName: '彌迦書' },
+				{ key: 'nahum', name: '鴻', fullName: '那鴻書' },
+				{ key: 'habakkuk', name: '哈', fullName: '哈巴谷書' },
+				{ key: 'zephaniah', name: '番', fullName: '西番雅書' },
+				{ key: 'haggai', name: '該', fullName: '哈該書' },
+				{ key: 'zechariah', name: '亞', fullName: '撒迦利亞書' },
+				{ key: 'malachi', name: '瑪', fullName: '瑪拉基書' }
+			];
+
+			const newTestament = [
+				{ key: 'matthew', name: '太', fullName: '馬太福音' },
+				{ key: 'mark', name: '可', fullName: '馬可福音' },
+				{ key: 'luke', name: '路', fullName: '路加福音' },
+				{ key: 'john', name: '約', fullName: '約翰福音' },
+				{ key: 'acts', name: '徒', fullName: '使徒行傳' },
+				{ key: 'romans', name: '羅', fullName: '羅馬書' },
+				{ key: '1corinthians', name: '林前', fullName: '哥林多前書' },
+				{ key: '2corinthians', name: '林後', fullName: '哥林多後書' },
+				{ key: 'galatians', name: '加', fullName: '加拉太書' },
+				{ key: 'ephesians', name: '弗', fullName: '以弗所書' },
+				{ key: 'philippians', name: '腓', fullName: '腓立比書' },
+				{ key: 'colossians', name: '西', fullName: '歌羅西書' },
+				{ key: '1thessalonians', name: '帖前', fullName: '帖撒羅尼迦前書' },
+				{ key: '2thessalonians', name: '帖後', fullName: '帖撒羅尼迦後書' },
+				{ key: '1timothy', name: '提前', fullName: '提摩太前書' },
+				{ key: '2timothy', name: '提後', fullName: '提摩太後書' },
+				{ key: 'titus', name: '多', fullName: '提多書' },
+				{ key: 'philemon', name: '門', fullName: '腓利門書' },
+				{ key: 'hebrews', name: '來', fullName: '希伯來書' },
+				{ key: 'james', name: '雅', fullName: '雅各書' },
+				{ key: '1peter', name: '彼前', fullName: '彼得前書' },
+				{ key: '2peter', name: '彼後', fullName: '彼得後書' },
+				{ key: '1john', name: '約一', fullName: '約翰一書' },
+				{ key: '2john', name: '約二', fullName: '約翰二書' },
+				{ key: '3john', name: '約三', fullName: '約翰三書' },
+				{ key: 'jude', name: '猶', fullName: '猶大書' },
+				{ key: 'revelation', name: '啟', fullName: '啟示錄' }
+			];
+
+			let html = '<div class="testament-section">';
+			html += '<h4 class="testament-title">舊約</h4>';
+			html += '<div class="books-row">';
+			oldTestament.forEach(book => {
+				const isActive = book.key === this.currentBook;
+				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
+				html += `<span class="book-name">${book.name}</span>`;
+				html += `<span class="book-full-name">${book.fullName}</span>`;
+				html += `</div>`;
+			});
+			html += '</div></div>';
+
+			html += '<div class="testament-section">';
+			html += '<h4 class="testament-title">新約</h4>';
+			html += '<div class="books-row">';
+			newTestament.forEach(book => {
+				const isActive = book.key === this.currentBook;
+				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
+				html += `<span class="book-name">${book.name}</span>`;
+				html += `<span class="book-full-name">${book.fullName}</span>`;
+				html += `</div>`;
+			});
+			html += '</div></div>';
+
+			booksContent.innerHTML = html;
+
+			// Bind events for new book items
+			const bookItems = booksContent.querySelectorAll('.book-item');
+			bookItems.forEach(item => {
+				item.addEventListener('click', () => {
+					const bookName = item.querySelector('.book-full-name').textContent;
+					this.selectBook(item.dataset.book, bookName);
+				});
+			});
+		}
+
+		/**
+		 * Load chapters tab content
+		 */
+		loadChaptersTab() {
+			const chaptersContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="chapters"] .chapters-grid');
+			if (!chaptersContent) return;
+
+			// Get chapter count for current book
+			const chapterCounts = {
+				'genesis': 50, 'exodus': 40, 'leviticus': 27, 'numbers': 36, 'deuteronomy': 34,
+				'joshua': 24, 'judges': 21, 'ruth': 4, '1samuel': 31, '2samuel': 24,
+				'1kings': 22, '2kings': 25, '1chronicles': 29, '2chronicles': 36, 'ezra': 10,
+				'nehemiah': 13, 'esther': 10, 'job': 42, 'psalms': 150, 'proverbs': 31,
+				'ecclesiastes': 12, 'songofsolomon': 8, 'isaiah': 66, 'jeremiah': 52, 'lamentations': 5,
+				'ezekiel': 48, 'daniel': 12, 'hosea': 14, 'joel': 3, 'amos': 9,
+				'obadiah': 1, 'jonah': 4, 'micah': 7, 'nahum': 3, 'habakkuk': 3,
+				'zephaniah': 3, 'haggai': 2, 'zechariah': 14, 'malachi': 4,
+				'matthew': 28, 'mark': 16, 'luke': 24, 'john': 21, 'acts': 28,
+				'romans': 16, '1corinthians': 16, '2corinthians': 13, 'galatians': 6, 'ephesians': 6,
+				'philippians': 4, 'colossians': 4, '1thessalonians': 5, '2thessalonians': 3, '1timothy': 6,
+				'2timothy': 4, 'titus': 3, 'philemon': 1, 'hebrews': 13, 'james': 5,
+				'1peter': 5, '2peter': 3, '1john': 5, '2john': 1, '3john': 1,
+				'jude': 1, 'revelation': 22
+			};
+
+			const chapterCount = chapterCounts[this.currentBook] || 1;
+
+			let html = '';
+			for (let i = 1; i <= chapterCount; i++) {
+				const isActive = i === this.currentChapter;
+				html += `<div class="chapter-item ${isActive ? 'active' : ''}" data-chapter="${i}">${i}</div>`;
+			}
+
+			chaptersContent.innerHTML = html;
+
+			// Bind events for new chapter items
+			const chapterItems = chaptersContent.querySelectorAll('.chapter-item');
+			chapterItems.forEach(item => {
+				item.addEventListener('click', () => {
+					this.selectChapter(parseInt(item.dataset.chapter));
+				});
+			});
+		}
+
+		/**
+		 * Select version
+		 */
+		selectVersion(versionKey) {
+			this.currentVersion = versionKey;
+			this.updateBookChapterButton();
+			this.hideBookChapterMenu();
+			// Load chapter with new version
+			this.loadChapter();
+		}
+
+		/**
+		 * Select book
+		 */
+		selectBook(bookKey, bookName) {
+			this.currentBook = bookKey;
+			this.currentChapter = 1; // Reset to chapter 1
+			this.updateBookChapterButton();
+			this.hideBookChapterMenu();
+			// Load first chapter of selected book
+			this.loadChapter();
+		}
+
+		/**
+		 * Select chapter
+		 */
+		selectChapter(chapterNumber) {
+			this.currentChapter = chapterNumber;
+			this.updateBookChapterButton();
+			this.hideBookChapterMenu();
+			// Load selected chapter
+			this.loadChapter();
 		}
 	}
 
