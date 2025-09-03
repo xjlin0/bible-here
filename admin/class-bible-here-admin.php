@@ -740,14 +740,14 @@ class Bible_Here_Admin {
 			wp_send_json_error('Security check failed');
 			return;
 		}
-		
+
 		// Check user permissions
 		if (!current_user_can('manage_options')) {
 			error_log('Bible_Here_Admin: ❌ Insufficient user permissions');
 			wp_send_json_error('Insufficient permissions');
 			return;
 		}
-		
+
 		try {
 			// Load the activator class to use its CSV loading functionality
 			$activator_file = plugin_dir_path(dirname(__FILE__)) . 'includes/class-bible-here-activator.php';
@@ -756,13 +756,13 @@ class Bible_Here_Admin {
 				wp_send_json_error('Activator file not found');
 				return;
 			}
-			
+
 			require_once $activator_file;
-			
+
 			// Call the CSV loading method with force reload
 			error_log('Bible_Here_Admin: Starting to reload CSV data...');
 			$result = Bible_Here_Activator::load_csv_data(true);
-			
+
 			if ($result) {
 				error_log('Bible_Here_Admin: ✅ CSV data reload successful');
 				wp_send_json_success('CSV data reloaded successfully! Books, genres, and versions have been updated from CSV files.');
@@ -770,13 +770,13 @@ class Bible_Here_Admin {
 				error_log('Bible_Here_Admin: ❌ CSV data reload failed');
 				wp_send_json_error('Failed to reload CSV data');
 			}
-			
+
 		} catch (Exception $e) {
 			error_log('Bible_Here_Admin: ❌ Exception occurred during CSV reload: ' . $e->getMessage());
 			error_log('Bible_Here_Admin: Exception stack trace: ' . $e->getTraceAsString());
 			wp_send_json_error('CSV reload failed with exception: ' . $e->getMessage());
 		}
-		
+
 		error_log('Bible_Here_Admin: ========== AJAX Reload CSV Request Ended ==========');
 	}
 

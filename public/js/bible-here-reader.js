@@ -58,7 +58,7 @@ class BibleHereReader {
 			this.applyTheme(this.themePreference);
 			
 			// Initialize font size preference
-			this.fontSizePreference = localStorage.getItem('bible-here-font-size') || 'md';
+			this.fontSizePreference = localStorage.getItem('bible-here-font-size') || 'base';
 			this.applyFontSize(this.fontSizePreference);
 			this.initializeFontSizeSlider();
 			
@@ -69,6 +69,9 @@ class BibleHereReader {
 		 * Initialize the reader
 		 */
 		init() {
+			// Set initial data-mode attribute based on isDualMode
+			this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
+			
 			this.bindEvents();
 			this.initializeSelectors();
 			
@@ -182,6 +185,9 @@ class BibleHereReader {
 			
 			// Initialize synchronized scrolling for dual version mode
 			this.initializeSynchronizedScrolling();
+			
+			// Initialize resizable divider for dual version mode
+			this.initializeResizableDivider();
 		}
 
 		/**
@@ -431,12 +437,7 @@ class BibleHereReader {
 		 * Populate a version container with mock content
 		 */
 		populateVersionContainer(container, versionName, versionAbbr) {
-			const titleElement = container.querySelector('.version-title');
 			const versesContainer = container.querySelector('.verses-container');
-			
-			if (titleElement) {
-				titleElement.textContent = versionName;
-			}
 			
 			if (versesContainer) {
 				// Generate mock verses with slight variation for different versions
@@ -459,7 +460,6 @@ class BibleHereReader {
 		 */
 		displayMockChapter() {
 			const versionContainer = this.elements.singleMode.querySelector('.bible-version');
-			const titleElement = versionContainer.querySelector('.version-title');
 			let chapterContent = versionContainer.querySelector('.chapter-content');
 
 			// Create .chapter-content if it doesn't exist
@@ -468,9 +468,6 @@ class BibleHereReader {
 				chapterContent.className = 'chapter-content';
 				versionContainer.appendChild(chapterContent);
 			}
-
-			// Update header
-			titleElement.textContent = this.currentVersion.toUpperCase();
 
 			// Generate mock verses
 		let versesHtml = '';
@@ -681,6 +678,23 @@ class BibleHereReader {
 		// Update reader mode
 		this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
 		
+		// Clean up any existing flex styles when switching modes
+		if (!this.isDualMode) {
+			// Reset any flex styles that might have been applied during dragging
+			const dualVersions = this.elements.reader.querySelectorAll('.dual-version-mode .bible-version');
+			dualVersions.forEach(version => {
+				version.style.flex = '';
+				version.style.height = '';
+			});
+			
+			// Ensure single version containers are properly reset
+			const singleVersions = this.elements.reader.querySelectorAll('.single-version-mode .bible-version');
+			singleVersions.forEach(version => {
+				version.style.flex = '';
+				version.style.height = '';
+			});
+		}
+		
 		// Show/hide appropriate containers
 		if (this.elements.singleMode) {
 			this.elements.singleMode.style.display = this.isDualMode ? 'none' : 'block';
@@ -693,6 +707,10 @@ class BibleHereReader {
 		// Load content for the current mode
 		if (this.isDualMode) {
 			this.displayDualVersions();
+			// Initialize resizable divider for dual mode
+			setTimeout(() => {
+				this.initializeResizableDivider();
+			}, 100);
 		} else {
 			this.displayMockChapter();
 		}
@@ -866,8 +884,8 @@ class BibleHereReader {
 		setFontSize(sizeIndex) {
 			console.log('🔧 setFontSize called with index:', sizeIndex);
 			
-			const fontSizes = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
-			const fontSizePixels = ['12px', '14px', '16px', '18px', '20px', '24px'];
+			const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+			const fontSizePixels = ['8px', '12px', '16px', '20px', '24px', '28px', '30px', '32px'];
 			
 			// Validate index
 			const index = parseInt(sizeIndex);
@@ -910,8 +928,8 @@ class BibleHereReader {
 			console.log('🎨 Applying font size:', size);
 			console.log('🔍 Container element:', this.container);
 			
-			// Remove existing font size classes
-			const existingClasses = ['font-size-xs', 'font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl', 'font-size-xxl'];
+			// Remove existing font size classes - corrected class names to match CSS
+			const existingClasses = ['font-size-xs', 'font-size-sm', 'font-size-base', 'font-size-lg', 'font-size-xl', 'font-size-2xl', 'font-size-3xl', 'font-size-4xl'];
 			existingClasses.forEach(className => {
 				if (this.container.classList.contains(className)) {
 					console.log('🗑️ Removing existing class:', className);
@@ -961,17 +979,23 @@ class BibleHereReader {
 		 * Initialize font size slider
 		 */
 		initializeFontSizeSlider() {
-			const fontSizes = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
-			const fontSizePixels = ['12px', '14px', '16px', '18px', '20px', '24px'];
+			const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+			const fontSizePixels = ['8px', '12px', '16px', '20px', '24px', '28px', '30px', '32px'];
 			
 			const slider = this.container.querySelector('.font-size-slider');
 			const valueDisplay = this.container.querySelector('.font-size-value');
 			
 			if (slider && valueDisplay) {
 				// Set current value
-				const currentIndex = fontSizes.indexOf(this.fontSizePreference);
+				let currentIndex = fontSizes.indexOf(this.fontSizePreference);
+				// If preference not found, default to 'base' (index 2)
+				if (currentIndex === -1) {
+					currentIndex = 2;
+					this.fontSizePreference = 'base';
+				}
 				slider.value = currentIndex;
 				valueDisplay.textContent = fontSizePixels[currentIndex];
+				console.log('🎚️ Font size slider initialized with index:', currentIndex, 'size:', this.fontSizePreference);
 			}
 		}
 		
@@ -1017,6 +1041,168 @@ class BibleHereReader {
 					this.isScrollSyncing = false;
 				}, 10);
 			});
+		}
+		
+		/**
+		 * Initialize resizable divider for dual version mode
+		 */
+		initializeResizableDivider() {
+			// Get dual version mode container
+			const dualMode = this.container.querySelector('.dual-version-mode');
+			if (!dualMode) return;
+			
+			// Get divider and version containers
+			const divider = dualMode.querySelector('.resizable-divider');
+			const version1 = dualMode.querySelector('.bible-version.version-1');
+			const version2 = dualMode.querySelector('.bible-version.version-2');
+			
+			if (!divider || !version1 || !version2) {
+				console.log('Divider initialization failed - missing elements:', {
+					divider: !!divider,
+					version1: !!version1,
+					version2: !!version2
+				});
+				return;
+			}
+			
+			console.log('Initializing resizable divider');
+			
+			// Remove any existing event listeners to prevent duplicates
+			if (this.dividerMouseDown) {
+				divider.removeEventListener('mousedown', this.dividerMouseDown);
+			}
+			if (this.dividerTouchStart) {
+				divider.removeEventListener('touchstart', this.dividerTouchStart);
+			}
+			
+			// Create bound event handlers
+			this.dividerMouseDown = (e) => {
+				e.preventDefault();
+				console.log('Mouse down on divider');
+				this.startDrag(e.clientY, dualMode, version1, version2);
+			};
+			
+			this.dividerTouchStart = (e) => {
+				e.preventDefault();
+				console.log('Touch start on divider');
+				const touch = e.touches[0];
+				this.startDrag(touch.clientY, dualMode, version1, version2);
+			};
+			
+			// Add event listeners
+			divider.addEventListener('mousedown', this.dividerMouseDown);
+			divider.addEventListener('touchstart', this.dividerTouchStart, { passive: false });
+			
+			// Ensure global event listeners are set up only once
+			if (!this.globalDragListenersAdded) {
+				this.globalDragListenersAdded = true;
+				
+				// Global mouse move and up events
+				document.addEventListener('mousemove', (e) => {
+					if (this.isDragging) {
+						e.preventDefault();
+						this.handleDrag(e.clientY);
+					}
+				});
+				
+				document.addEventListener('mouseup', () => {
+					if (this.isDragging) {
+						this.endDrag();
+					}
+				});
+				
+				// Global touch move and end events
+				document.addEventListener('touchmove', (e) => {
+					if (this.isDragging) {
+						e.preventDefault();
+						const touch = e.touches[0];
+						this.handleDrag(touch.clientY);
+					}
+				}, { passive: false });
+				
+				document.addEventListener('touchend', () => {
+					if (this.isDragging) {
+						this.endDrag();
+					}
+				});
+			}
+		}
+		
+		/**
+		 * Start dragging the divider
+		 */
+		startDrag(clientY, container, version1, version2) {
+			this.isDragging = true;
+			this.startY = clientY;
+			this.containerHeight = container.clientHeight;
+			
+			// Get current flex values
+			const version1Style = window.getComputedStyle(version1);
+			const version2Style = window.getComputedStyle(version2);
+			
+			this.startVersion1Flex = parseFloat(version1Style.flexGrow) || 1;
+			this.startVersion2Flex = parseFloat(version2Style.flexGrow) || 1;
+			
+			// Store references for dragging
+			this.dragContainer = container;
+			this.dragVersion1 = version1;
+			this.dragVersion2 = version2;
+			
+			// Add dragging class for visual feedback
+			container.classList.add('divider-dragging');
+			document.body.style.cursor = 'ns-resize';
+			document.body.style.userSelect = 'none';
+		}
+		
+		/**
+		 * Handle drag movement
+		 */
+		handleDrag(clientY) {
+			if (!this.isDragging) return;
+			
+			const deltaY = clientY - this.startY;
+			// Use a more sensitive ratio calculation - divide by half the container height
+			// This makes the drag movement more responsive and 1:1 with mouse movement
+			const deltaRatio = (deltaY * 2) / this.containerHeight;
+			
+			// Calculate new flex values (intuitive dragging - down increases version1, up increases version2)
+			let newVersion1Flex = this.startVersion1Flex + deltaRatio;
+			let newVersion2Flex = this.startVersion2Flex - deltaRatio;
+			
+			// Constrain flex values (minimum 0.2, maximum 1.8)
+			newVersion1Flex = Math.max(0.2, Math.min(1.8, newVersion1Flex));
+			newVersion2Flex = Math.max(0.2, Math.min(1.8, newVersion2Flex));
+			
+			// Ensure total flex is approximately 2
+			const totalFlex = newVersion1Flex + newVersion2Flex;
+			if (totalFlex !== 2) {
+				const adjustment = (2 - totalFlex) / 2;
+				newVersion1Flex += adjustment;
+				newVersion2Flex += adjustment;
+			}
+			
+			// Apply new flex values
+			this.dragVersion1.style.flex = newVersion1Flex;
+			this.dragVersion2.style.flex = newVersion2Flex;
+		}
+		
+		/**
+		 * End dragging
+		 */
+		endDrag() {
+			this.isDragging = false;
+			
+			// Remove dragging class and reset cursor
+			if (this.dragContainer) {
+				this.dragContainer.classList.remove('divider-dragging');
+			}
+			document.body.style.cursor = '';
+			document.body.style.userSelect = '';
+			
+			// Clear references
+			this.dragContainer = null;
+			this.dragVersion1 = null;
+			this.dragVersion2 = null;
 		}
 	}
 

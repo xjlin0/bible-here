@@ -35,7 +35,12 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 
 	<!-- Navigation Bar (All buttons in single row) -->
 	<div class="bible-reader-nav">
-		<!-- Navigation Group: Previous, Book+Chapter, Next (grouped together) -->
+		<!-- Search Button (moved to leftmost position) -->
+		<button type="button" class="btn-nav btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
+			<span class="search-icon">🔍</span>
+		</button>
+
+		<!-- Navigation Group: Previous, Book+Chapter, Version, Next (grouped together) -->
 		<div class="nav-group navigation-controls">
 			<button type="button" class="btn-nav btn-prev" title="<?php _e( 'Previous Chapter', 'bible-here' ); ?>">
 				<span class="nav-arrow">‹</span>
@@ -54,21 +59,21 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 					<option value="1" <?php selected( $default_chapter, 1 ); ?>>1</option>
 				</select>
 			</div>
+
+			<!-- Swap/Toggle Button -->
+			<button type="button" class="btn-nav btn-swap" title="<?php _e( 'Swap Versions', 'bible-here' ); ?>">
+				<span class="swap-icon">⇄</span>
+			</button>
+
+			<!-- More Versions / Version Toggle Button (moved to middle of navigation group) -->
+			<button type="button" class="btn-nav btn-versions" title="<?php _e( 'More Versions', 'bible-here' ); ?>">
+				<span class="versions-text"><?php _e( '+ version', 'bible-here' ); ?></span>
+			</button>
 			
 			<button type="button" class="btn-nav btn-next" title="<?php _e( 'Next Chapter', 'bible-here' ); ?>">
 				<span class="nav-arrow">›</span>
 			</button>
 		</div>
-
-		<!-- Search Button -->
-		<button type="button" class="btn-nav btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
-			<span class="search-icon">🔍</span>
-		</button>
-
-		<!-- More Versions / Version Toggle Button -->
-		<button type="button" class="btn-nav btn-versions" title="<?php _e( 'More Versions', 'bible-here' ); ?>">
-			<span class="versions-text"><?php _e( '+ version', 'bible-here' ); ?></span>
-		</button>
 
 		<!-- Settings Button -->
 		<button type="button" class="btn-nav btn-settings" title="<?php _e( 'Settings', 'bible-here' ); ?>">
@@ -92,7 +97,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 						</label>
 						<label class="theme-option">
 							<input type="radio" name="theme-preference" value="system">
-							<span><?php _e( 'System Preference', 'bible-here' ); ?></span>
+							<span><?php _e( 'By system preferences', 'bible-here' ); ?></span>
 						</label>
 					</div>
 				</div>
@@ -102,7 +107,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 					<h4><?php _e( 'Font Size', 'bible-here' ); ?></h4>
 					<div class="font-size-control">
 						<label for="font-size-slider"><?php _e( 'Size:', 'bible-here' ); ?></label>
-						<input type="range" id="font-size-slider" class="font-size-slider" min="0" max="5" value="2" step="1">
+						<input type="range" id="font-size-slider" class="font-size-slider" min="0" max="7" value="2" step="1">
 						<span class="font-size-value">16px</span>
 					</div>
 				</div>
@@ -115,9 +120,6 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 		<!-- Single Version Mode (Default) -->
 		<div class="single-version-mode">
 			<div class="bible-version version-1">
-				<div class="version-header">
-					<h4 class="version-title">King James Version</h4>
-				</div>
 				<div class="chapter-content">
 					<!-- Verses will be loaded here -->
 				</div>
@@ -127,18 +129,18 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 		<!-- Dual Version Mode -->
 		<div class="dual-version-mode" style="display: none;">
 			<div class="versions-container">
-				<div class="bible-version version-1">
-					<div class="version-header">
-						<h4 class="version-title"></h4>
-					</div>
+				<div class="bible-version version-1" style="order: 0;">
 					<div class="verses-container">
 						<!-- Verses will be loaded here -->
 					</div>
 				</div>
-				<div class="bible-version version-2">
-					<div class="version-header">
-						<h4 class="version-title"></h4>
+				<!-- Resizable Divider -->
+				<div class="resizable-divider" title="<?php _e( 'Drag to resize', 'bible-here' ); ?>">
+					<div class="divider-handle">
+						<div class="divider-grip"></div>
 					</div>
+				</div>
+				<div class="bible-version version-2" style="order: 2;">
 					<div class="verses-container">
 						<!-- Verses will be loaded here -->
 					</div>
