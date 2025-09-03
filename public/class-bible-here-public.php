@@ -160,7 +160,7 @@ class Bible_Here_Public {
 		
 		// Get versions from database
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
-		
+		$languages_table = $wpdb->prefix . 'bible_here_languages';
 		// Build WHERE conditions
 		$where_conditions = array();
 		$query_params = array();
@@ -194,14 +194,16 @@ class Bible_Here_Public {
 
 		$sql = "SELECT 
 				table_name,
-				language,
+				l.code AS language_code,
+				l.name AS language_name,
+				l.original AS language_original,
 				type,
-				name,
+				v.name AS name,
 				publisher,
 				info_url,
-				rank,
-				for_login
-			FROM $versions_table
+				rank
+			FROM $versions_table v
+			  JOIN $languages_table l ON v.language = l.code
 			$where_clause
 			ORDER BY rank ASC, name ASC";
 		
@@ -222,20 +224,20 @@ class Bible_Here_Public {
 			foreach ( $results as $version ) {
 				$versions[] = array(
 					'table_name' => $version['table_name'],
-					'language' => $version['language'],
+					'language_code' => $version['language_code'],
+					'language_name' => $version['language_name'],
+					'language_original' => $version['language_original'],
 					'type' => $version['type'],
 					'name' => $version['name'],
 					'publisher' => $version['publisher'] ?: null,
 					'info_url' => $version['info_url'] ?: null,
-					'rank' => intval( $version['rank'] ),
-					'for_login' => intval( $version['for_login'] ?? 0 ) === 1
+					'rank' => intval( $version['rank'] )
 				);
 			}
 		}
 		
 		$response_data = array(
-			'versions' => $versions,
-			'is_logged_in' => $is_logged_in
+			'versions' => $versions
 		);
 		
 		wp_send_json_success( $response_data );
