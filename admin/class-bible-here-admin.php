@@ -528,7 +528,7 @@ class Bible_Here_Admin {
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
 			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
 			error_log('Bible_Here_Admin: Provided nonce: ' . $_POST['nonce']);
-			wp_die('Security check failed');
+			wp_die('Security check failed in Bible_Here_Admin::handle_ajax_import()');
 		}
 		error_log('Bible_Here_Admin: ✅ Nonce verification successful');
 		
@@ -632,7 +632,7 @@ class Bible_Here_Admin {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
 			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
-			wp_send_json(array('success' => false, 'message' => 'Security check failed'));
+			wp_send_json(array('success' => false, 'message' => 'Security check failed in Bible_Here_Admin::handle_ajax_delete_version()'));
 			return;
 		}
 		
@@ -737,14 +737,14 @@ class Bible_Here_Admin {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
 			error_log('Bible_Here_Admin: ❌ Nonce verification failed');
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_reload_csv()');
 			return;
 		}
 
 		// Check user permissions
 		if (!current_user_can('manage_options')) {
 			error_log('Bible_Here_Admin: ❌ Insufficient user permissions');
-			wp_send_json_error('Insufficient permissions');
+			wp_send_json_error('Insufficient permissions for the user');
 			return;
 		}
 
@@ -788,7 +788,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_save_version() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_save_version()');
 			return;
 		}
 		
@@ -890,7 +890,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_add_version() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_add_version()');
 			return;
 		}
 		
@@ -980,7 +980,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_delete_version_row() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_delete_version_row()');
 			return;
 		}
 		
@@ -1034,7 +1034,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_get_versions() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_get_versions()');
 			return;
 		}
 		
@@ -1098,7 +1098,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_get_version_data() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_get_version_data()');
 			return;
 		}
 		
@@ -1157,7 +1157,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_upload_csv() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed');
+			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_upload_csv()');
 			return;
 		}
 		
@@ -1428,7 +1428,7 @@ class Bible_Here_Admin {
 				echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['message']) . '</p></div>';
 			}
 		} catch (Exception $e) {
-			echo '<div class="notice notice-error"><p>Import failed with exception: ' . esc_html($e->getMessage()) . '</p></div>';
+			echo '<div class="notice notice-error"><p>Import failed in Bible_Here_Admin::display_cross_references_page() with exception: ' . esc_html($e->getMessage()) . '</p></div>';
 		}
 			
 			ob_end_flush();

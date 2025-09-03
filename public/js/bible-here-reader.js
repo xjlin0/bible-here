@@ -82,15 +82,26 @@ class BibleHereReader {
 			}
 		}
 
+		openingVerses = {
+			en: {
+				
+			},
+			zh: '1:1',
+		};
+
 		/**
 		 * Bind event handlers
 		 */
 		bindEvents() {
 			// Book and Chapter button click
 		if (this.elements.bookChapterButton) {
+			console.log('綁定書卷章節按鈕點擊事件');
 			this.elements.bookChapterButton.addEventListener('click', () => {
+				console.log('書卷章節按鈕被點擊');
 				this.toggleBookChapterMenu();
 			});
+		} else {
+			console.log('找不到書卷章節按鈕元素');
 		}
 
 		// Book Chapter Menu events
@@ -292,10 +303,10 @@ class BibleHereReader {
 		 */
 		loadBooks() {
 			const params = new URLSearchParams({
-				action: 'bible_here_get_books',
-				language: this.currentLanguage,
-				_wpnonce: bibleHereAjax.nonce
-			});
+			action: 'bible_here_public_get_books',
+			language: this.currentLanguage,
+			_wpnonce: bibleHereAjax.nonce
+		});
 
 			fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 				method: 'GET'
@@ -1335,33 +1346,51 @@ class BibleHereReader {
 		 * Toggle book chapter menu
 		 */
 		toggleBookChapterMenu() {
-			if (!this.elements.bookChapterMenu) return;
-
-			if (this.elements.bookChapterMenu.classList.contains('book-chapter-menu-visible')) {
-				this.hideBookChapterMenu();
-			} else {
-				this.showBookChapterMenu();
-			}
+		console.log('toggleBookChapterMenu() 被調用');
+		console.log('bookChapterMenu 元素:', this.elements.bookChapterMenu);
+		if (!this.elements.bookChapterMenu) {
+			console.log('找不到 bookChapterMenu 元素');
+			return;
 		}
+
+		if (this.elements.bookChapterMenu.classList.contains('book-chapter-menu-visible')) {
+			console.log('隱藏 book chapter menu');
+			this.hideBookChapterMenu();
+		} else {
+			console.log('顯示 book chapter menu');
+			this.showBookChapterMenu();
+		}
+	}
 
 		/**
 		 * Show book chapter menu
 		 */
 		showBookChapterMenu() {
-			if (!this.elements.bookChapterMenu) return;
-
-			// Hide theme menu if open
-			this.hideThemeMenu();
-
-			// Show menu
-			this.elements.bookChapterMenu.classList.add('book-chapter-menu-visible');
-
-			// Initialize with books tab if not already set
-			const activeTab = this.elements.bookChapterMenu.querySelector('.menu-tab.active');
-			if (!activeTab) {
-				this.switchBookChapterTab('books');
-			}
+		console.log('showBookChapterMenu() 被調用');
+		if (!this.elements.bookChapterMenu) {
+			console.log('找不到 bookChapterMenu 元素');
+			return;
 		}
+
+		// Hide theme menu if open
+		this.hideThemeMenu();
+
+		// Show menu
+		this.elements.bookChapterMenu.classList.add('book-chapter-menu-visible');
+		console.log('已添加 book-chapter-menu-visible class');
+
+		// Initialize with books tab if not already set
+		const activeTab = this.elements.bookChapterMenu.querySelector('.menu-tab.active');
+		console.log('當前 active tab:', activeTab);
+		if (!activeTab) {
+			console.log('沒有 active tab，切換到 books tab');
+			this.switchBookChapterTab('books');
+		} else {
+			console.log('已有 active tab:', activeTab.dataset.tab);
+			// 調用 switchBookChapterTab 來確保對應的 load 函數被執行
+			this.switchBookChapterTab(activeTab.dataset.tab);
+		}
+	}
 
 		/**
 		 * Hide book chapter menu
@@ -1376,8 +1405,12 @@ class BibleHereReader {
 		 * Switch book chapter menu tab
 		 */
 		switchBookChapterTab(tabName) {
-			console.log('Switching to tab:', tabName);
-			if (!this.elements.bookChapterMenu) return;
+		console.log('switchBookChapterTab 被調用，tabName:', tabName);
+		console.log('bookChapterMenu 元素:', this.elements.bookChapterMenu);
+		if (!this.elements.bookChapterMenu) {
+			console.log('找不到 bookChapterMenu 元素');
+			return;
+		}
 
 			// Update tab buttons
 			const tabs = this.elements.bookChapterMenu.querySelectorAll('.menu-tab');
@@ -1392,16 +1425,22 @@ class BibleHereReader {
 			});
 
 			// Load content based on tab
+			console.log('準備載入 tab 內容，tabName:', tabName);
 			switch (tabName) {
 				case 'versions':
+					console.log('載入 versions tab');
 					this.loadVersionsTab();
 					break;
 				case 'books':
+					console.log('載入 books tab');
 					this.loadBooksTab();
 					break;
 				case 'chapters':
+					console.log('載入 chapters tab');
 					this.loadChaptersTab();
 					break;
+				default:
+					console.log('未知的 tab 名稱:', tabName);
 			}
 		}
 
@@ -1447,12 +1486,12 @@ class BibleHereReader {
 					this.renderVersionsList(data.data.versions, versionsContent);
 				} else {
 					console.log('API response error:', data);
-					throw new Error(data.data?.message || '無法載入版本列表');
+					throw new Error(data.data?.message || 'Cannot load versions');
 				}
 			})
 			.catch(error => {
 				console.error('Error loading versions:', error);
-				versionsContent.innerHTML = `<div class="error-message">載入版本失敗: ${error.message}</div>`;
+				versionsContent.innerHTML = `<div class="error-message">Loading versions failed: ${error.message}</div>`;
 			});
 		}
 
@@ -1511,125 +1550,116 @@ class BibleHereReader {
 		/**
 		 * Load books tab content
 		 */
-		loadBooksTab() {
-			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
-			if (!booksContent) return;
+		async loadBooksTab() {
+		console.log('loadBooksTab() 函數被調用');
+		const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
+		if (!booksContent) {
+			console.log('找不到 books content 元素');
+			return;
+		}
 
-			// Check if content already exists (has books sections)
-			const existingSections = booksContent.querySelectorAll('.books-section');
-			if (existingSections.length > 0) {
-				// Content already exists, just update active states
-				this.updateBookActiveStates();
+		// Check if content already exists (has books sections)
+		const existingSections = booksContent.querySelectorAll('.books-section');
+		if (existingSections.length > 0) {
+			console.log('書卷內容已存在，只更新 active 狀態');
+			// Content already exists, just update active states
+			this.updateBookActiveStates();
+			return;
+		}
+
+			console.log('開始發送 AJAX 請求獲取書卷資料');
+		try {
+			// 調用 API 獲取書卷列表
+			const params = new URLSearchParams({
+				action: 'bible_here_public_get_books',
+				_wpnonce: bibleHereAjax.nonce
+			});
+
+			console.log('發送 AJAX 請求，URL:', `${bibleHereAjax.ajaxurl}?${params}`);
+			console.log('請求參數:', { action: 'bible_here_public_get_books', _wpnonce: bibleHereAjax.nonce });
+
+			const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+				method: 'GET'
+			});
+
+				const data = await response.json();
+			console.log('AJAX 請求成功，回應:', data);
+			
+			if (!data.success) {
+				console.error('API 回應錯誤:', data.data);
 				return;
 			}
 
-			// Bible books data
-			const oldTestament = [
-				{ key: 'genesis', name: '創', fullName: '創世記' },
-				{ key: 'exodus', name: '出', fullName: '出埃及記' },
-				{ key: 'leviticus', name: '利', fullName: '利未記' },
-				{ key: 'numbers', name: '民', fullName: '民數記' },
-				{ key: 'deuteronomy', name: '申', fullName: '申命記' },
-				{ key: 'joshua', name: '書', fullName: '約書亞記' },
-				{ key: 'judges', name: '士', fullName: '士師記' },
-				{ key: 'ruth', name: '得', fullName: '路得記' },
-				{ key: '1samuel', name: '撒上', fullName: '撒母耳記上' },
-				{ key: '2samuel', name: '撒下', fullName: '撒母耳記下' },
-				{ key: '1kings', name: '王上', fullName: '列王紀上' },
-				{ key: '2kings', name: '王下', fullName: '列王紀下' },
-				{ key: '1chronicles', name: '代上', fullName: '歷代志上' },
-				{ key: '2chronicles', name: '代下', fullName: '歷代志下' },
-				{ key: 'ezra', name: '拉', fullName: '以斯拉記' },
-				{ key: 'nehemiah', name: '尼', fullName: '尼希米記' },
-				{ key: 'esther', name: '斯', fullName: '以斯帖記' },
-				{ key: 'job', name: '伯', fullName: '約伯記' },
-				{ key: 'psalms', name: '詩', fullName: '詩篇' },
-				{ key: 'proverbs', name: '箴', fullName: '箴言' },
-				{ key: 'ecclesiastes', name: '傳', fullName: '傳道書' },
-				{ key: 'songofsolomon', name: '歌', fullName: '雅歌' },
-				{ key: 'isaiah', name: '賽', fullName: '以賽亞書' },
-				{ key: 'jeremiah', name: '耶', fullName: '耶利米書' },
-				{ key: 'lamentations', name: '哀', fullName: '耶利米哀歌' },
-				{ key: 'ezekiel', name: '結', fullName: '以西結書' },
-				{ key: 'daniel', name: '但', fullName: '但以理書' },
-				{ key: 'hosea', name: '何', fullName: '何西阿書' },
-				{ key: 'joel', name: '珥', fullName: '約珥書' },
-				{ key: 'amos', name: '摩', fullName: '阿摩司書' },
-				{ key: 'obadiah', name: '俄', fullName: '俄巴底亞書' },
-				{ key: 'jonah', name: '拿', fullName: '約拿書' },
-				{ key: 'micah', name: '彌', fullName: '彌迦書' },
-				{ key: 'nahum', name: '鴻', fullName: '那鴻書' },
-				{ key: 'habakkuk', name: '哈', fullName: '哈巴谷書' },
-				{ key: 'zephaniah', name: '番', fullName: '西番雅書' },
-				{ key: 'haggai', name: '該', fullName: '哈該書' },
-				{ key: 'zechariah', name: '亞', fullName: '撒迦利亞書' },
-				{ key: 'malachi', name: '瑪', fullName: '瑪拉基書' }
-			];
-
-			const newTestament = [
-				{ key: 'matthew', name: '太', fullName: '馬太福音' },
-				{ key: 'mark', name: '可', fullName: '馬可福音' },
-				{ key: 'luke', name: '路', fullName: '路加福音' },
-				{ key: 'john', name: '約', fullName: '約翰福音' },
-				{ key: 'acts', name: '徒', fullName: '使徒行傳' },
-				{ key: 'romans', name: '羅', fullName: '羅馬書' },
-				{ key: '1corinthians', name: '林前', fullName: '哥林多前書' },
-				{ key: '2corinthians', name: '林後', fullName: '哥林多後書' },
-				{ key: 'galatians', name: '加', fullName: '加拉太書' },
-				{ key: 'ephesians', name: '弗', fullName: '以弗所書' },
-				{ key: 'philippians', name: '腓', fullName: '腓立比書' },
-				{ key: 'colossians', name: '西', fullName: '歌羅西書' },
-				{ key: '1thessalonians', name: '帖前', fullName: '帖撒羅尼迦前書' },
-				{ key: '2thessalonians', name: '帖後', fullName: '帖撒羅尼迦後書' },
-				{ key: '1timothy', name: '提前', fullName: '提摩太前書' },
-				{ key: '2timothy', name: '提後', fullName: '提摩太後書' },
-				{ key: 'titus', name: '多', fullName: '提多書' },
-				{ key: 'philemon', name: '門', fullName: '腓利門書' },
-				{ key: 'hebrews', name: '來', fullName: '希伯來書' },
-				{ key: 'james', name: '雅', fullName: '雅各書' },
-				{ key: '1peter', name: '彼前', fullName: '彼得前書' },
-				{ key: '2peter', name: '彼後', fullName: '彼得後書' },
-				{ key: '1john', name: '約一', fullName: '約翰一書' },
-				{ key: '2john', name: '約二', fullName: '約翰二書' },
-				{ key: '3john', name: '約三', fullName: '約翰三書' },
-				{ key: 'jude', name: '猶', fullName: '猶大書' },
-				{ key: 'revelation', name: '啟', fullName: '啟示錄' }
-			];
-
-			let html = '<div class="books-section">';
-			html += '<h5 class="testament-title">舊約</h5>';
-			html += '<div class="books-grid old-testament">';
-			oldTestament.forEach(book => {
-				const isActive = book.key === this.currentBook;
-				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
-				html += `<span class="book-name">${book.name}</span>`;
-				html += `<span class="book-full-name">${book.fullName}</span>`;
-				html += `</div>`;
-			});
-			html += '</div></div>';
-
-			html += '<div class="books-section">';
-			html += '<h5 class="testament-title">新約</h5>';
-			html += '<div class="books-grid new-testament">';
-			newTestament.forEach(book => {
-				const isActive = book.key === this.currentBook;
-				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
-				html += `<span class="book-name">${book.name}</span>`;
-				html += `<span class="book-full-name">${book.fullName}</span>`;
-				html += `</div>`;
-			});
-			html += '</div></div>';
-
-			booksContent.innerHTML = html;
-
-			// Bind events for new book items
-			const bookItems = booksContent.querySelectorAll('.book-item');
-			bookItems.forEach(item => {
-				item.addEventListener('click', () => {
-					const bookName = item.querySelector('.book-full-name').textContent;
-					this.selectBook(item.dataset.book, bookName);
+				const books = data.data;
+				
+				// 分離舊約和新約書卷 (假設 API 返回的書卷有 testament 字段或根據 book_number 判斷)
+				const oldTestament = books.filter(book => {
+					// 如果有 testament 字段，使用它；否則根據 book_number 判斷
+					if (book.testament) {
+						return book.testament === 'old' || book.testament === 'OT';
+					}
+					// 假設舊約書卷編號 1-39
+					return book.book_number && book.book_number <= 39;
 				});
-			});
+				
+				const newTestament = books.filter(book => {
+					// 如果有 testament 字段，使用它；否則根據 book_number 判斷
+					if (book.testament) {
+						return book.testament === 'new' || book.testament === 'NT';
+					}
+					// 假設新約書卷編號 40-66
+					return book.book_number && book.book_number >= 40;
+				});
+
+				let html = '<div class="books-section">';
+				html += '<h5 class="testament-title">舊約</h5>';
+				html += '<div class="books-grid old-testament">';
+				oldTestament.forEach(book => {
+					// 使用 book_name 作為 key，如果沒有則使用 book_key
+					const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+					const isActive = bookKey === this.currentBook;
+					const bookDisplayName = book.book_abbreviation || book.book_name;
+					const bookFullName = book.book_name;
+					
+					html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+					html += `<span class="book-name">${bookDisplayName}</span>`;
+					html += `<span class="book-full-name">${bookFullName}</span>`;
+					html += `</div>`;
+				});
+				html += '</div></div>';
+
+				html += '<div class="books-section">';
+				html += '<h5 class="testament-title">新約</h5>';
+				html += '<div class="books-grid new-testament">';
+				newTestament.forEach(book => {
+					// 使用 book_name 作為 key，如果沒有則使用 book_key
+					const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+					const isActive = bookKey === this.currentBook;
+					const bookDisplayName = book.book_abbreviation || book.book_name;
+					const bookFullName = book.book_name;
+					
+					html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+					html += `<span class="book-name">${bookDisplayName}</span>`;
+					html += `<span class="book-full-name">${bookFullName}</span>`;
+					html += `</div>`;
+				});
+				html += '</div></div>';
+
+				booksContent.innerHTML = html;
+
+				// Bind events for new book items
+				const bookItems = booksContent.querySelectorAll('.book-item');
+				bookItems.forEach(item => {
+					item.addEventListener('click', () => {
+						const bookName = item.querySelector('.book-full-name').textContent;
+						this.selectBook(item.dataset.book, bookName);
+					});
+				});
+			} catch (error) {
+			console.error('AJAX 請求失敗:', error);
+			// 顯示錯誤訊息給用戶
+			booksContent.innerHTML = '<div class="error-message">載入書卷列表時發生錯誤，請稍後再試。</div>';
+		}
 		}
 
 		/**

@@ -208,10 +208,10 @@ class Bible_Here {
 		// Register public AJAX hooks for Bible Here Reader
 		$this->loader->add_action( 'wp_ajax_bible_here_public_get_versions', $plugin_public, 'handle_ajax_get_versions' );
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_versions', $plugin_public, 'handle_ajax_get_versions' );
-		$this->loader->add_action( 'wp_ajax_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
-		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
-		$this->loader->add_action( 'wp_ajax_bible_here_get_verses', $plugin_public, 'handle_ajax_get_verses' );
-		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_verses', $plugin_public, 'handle_ajax_get_verses' );
+		$this->loader->add_action( 'wp_ajax_bible_here_public_get_books', $plugin_public, 'handle_ajax_get_books' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_books', $plugin_public, 'handle_ajax_get_books' );
+		$this->loader->add_action( 'wp_ajax_bible_here_public_get_verses', $plugin_public, 'handle_ajax_get_verses' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_verses', $plugin_public, 'handle_ajax_get_verses' );
 		$this->loader->add_action( 'wp_ajax_bible_here_get_strong_dictionary', $plugin_public, 'handle_ajax_get_strong_dictionary' );
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_strong_dictionary', $plugin_public, 'handle_ajax_get_strong_dictionary' );
 		$this->loader->add_action( 'wp_ajax_bible_here_get_cross_references', $plugin_public, 'handle_ajax_get_cross_references' );
