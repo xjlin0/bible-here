@@ -73,6 +73,9 @@ function bible_here_activation_notice() {
  * This action is documented in includes/class-bible-here-deactivator.php
  */
 function deactivate_bible_here() {
+	// Log the exact time when deactivation request is received
+	error_log( '[Bible Here] Deactivation request received at: ' . date( 'Y-m-d H:i:s.u' ) . ' (microtime: ' . microtime( true ) . ')' );
+	
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-bible-here-deactivator.php';
 	Bible_Here_Deactivator::deactivate();
 }
@@ -93,19 +96,31 @@ add_action( 'wp_ajax_bible_here_set_deactivation_mode', 'bible_here_handle_deact
  * Handle AJAX request to set deactivation mode.
  */
 function bible_here_handle_deactivation_mode() {
+	// Log the exact time when AJAX request is received
+	$start_time = microtime( true );
+	error_log( '[Bible Here] AJAX bible_here_set_deactivation_mode request received at: ' . date( 'Y-m-d H:i:s.u' ) . ' (microtime: ' . $start_time . ')' );
+	
 	// Verify nonce
 	if ( ! wp_verify_nonce( $_POST['nonce'], 'bible_here_deactivate_nonce' ) ) {
+		error_log( '[Bible Here] AJAX request failed: Security check failed' );
 		wp_die( 'Security check failed' );
 	}
 	
 	// Check user permissions
 	if ( ! current_user_can( 'activate_plugins' ) ) {
+		error_log( '[Bible Here] AJAX request failed: Insufficient permissions' );
 		wp_die( 'Insufficient permissions' );
 	}
 	
 	// Store the deactivation mode in a transient
 	$delete_data = isset( $_POST['delete_data'] ) && $_POST['delete_data'] === 'true';
+	error_log( '[Bible Here] Setting deactivation mode to: ' . ( $delete_data ? 'delete' : 'preserve' ) );
 	set_transient( 'bible_here_deactivation_mode', $delete_data ? 'delete' : 'preserve', 60 );
+	
+	// Log completion time
+	$end_time = microtime( true );
+	$execution_time = round( ( $end_time - $start_time ) * 1000, 2 ); // Convert to milliseconds
+	error_log( '[Bible Here] AJAX bible_here_set_deactivation_mode completed at: ' . date( 'Y-m-d H:i:s.u' ) . ' (microtime: ' . $end_time . '), execution time: ' . $execution_time . ' ms' );
 	
 	wp_send_json_success();
 }

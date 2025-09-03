@@ -1137,7 +1137,7 @@ class Bible_Here_XML_Importer {
 	 * @param    string    $csv_file_path    Path to CSV file
 	 * @return   array    Result array with success status and message
 	 */
-	private function import_cross_references_streaming($csv_file_path) {
+	public function import_cross_references_streaming($csv_file_path) {
 		global $wpdb;
 		
 		$table_name = $wpdb->prefix . 'bible_here_cross_references';

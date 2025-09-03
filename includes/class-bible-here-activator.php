@@ -86,10 +86,10 @@ class Bible_Here_Activator {
 			for_login BOOLEAN DEFAULT FALSE COMMENT 'only for logged in users',
 			seed BOOLEAN DEFAULT FALSE COMMENT 'seed data cannot be deleted',
 			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-			info_text TEXT,
 			rank TINYINT(1) unsigned NULL,
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(10) NOT NULL COMMENT 'ascii English only for database table names',
+			name_short VARCHAR(12),
 			type VARCHAR(20) NOT NULL DEFAULT 'Bible' COMMENT 'Bible/Bible+Strong/Commentary',
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
 			name VARCHAR(100) NOT NULL,
@@ -363,7 +363,7 @@ class Bible_Here_Activator {
 					foreach ($versions_data as $version) {
 						// Use INSERT ... ON DUPLICATE KEY UPDATE to preserve primary IDs and rank
 						$rank = !empty($version['rank']) ? intval($version['rank']) : null;
-						$info_text = isset($version['info_text']) && trim($version['info_text']) !== '' ? trim($version['info_text']) : null;
+						$name_short = isset($version['name_short']) && trim($version['name_short']) !== '' ? trim($version['name_short']) : null;
 						$info_url = isset($version['info_url']) && trim($version['info_url']) !== '' ? trim($version['info_url']) : null;
 						$publisher = isset($version['publisher']) && trim($version['publisher']) !== '' ? trim($version['publisher']) : null;
 						// Convert boolean values: support 'true'/'false', 1/0, '1'/'0'
@@ -389,11 +389,11 @@ class Bible_Here_Activator {
 						$sql_values[] = $version['type'] ?? 'Bible';
 						
 						// Optional fields (can be null)
-						if ($info_text === null) {
+						if ($name_short === null) {
 							$sql_parts[] = 'NULL';
 						} else {
 							$sql_parts[] = '%s';
-							$sql_values[] = $info_text;
+							$sql_values[] = $name_short;
 						}
 						
 						if ($info_url === null) {
@@ -445,13 +445,13 @@ class Bible_Here_Activator {
 						
 						$sql_placeholders = implode(', ', $sql_parts);
 						
-						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, type, info_text, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
+						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, type, name_short, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
 								VALUES ($sql_placeholders) 
 								ON DUPLICATE KEY UPDATE 
 									table_name = VALUES(table_name), 
 									name = VALUES(name), 
 									type = VALUES(type), 
-									info_text = VALUES(info_text), 
+									name_short = VALUES(name_short), 
 									info_url = VALUES(info_url), 
 									publisher = VALUES(publisher), 
 									copyright = VALUES(copyright), 

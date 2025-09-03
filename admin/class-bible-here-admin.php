@@ -366,7 +366,7 @@ class Bible_Here_Admin {
 		
 		echo '<div>';
 		echo '<label for="table-name">Table Name: <span class="bible-here-required">*</span></label>';
-		echo '<input type="text" id="table-name" name="table_name" placeholder="The database table name of the version, unique and only alphabets and underscores in lower cases" required>';
+		echo '<input type="text" id="table-name" name="table_name" pattern="^bible_here.*" placeholder="uniq and start with bible_here..." required>';
 		echo '</div>';
 		
 		echo '<div class="type-for-login-row">';
@@ -388,8 +388,8 @@ class Bible_Here_Admin {
 		echo '</div>';
 		
 		echo '<div class="full-width">';
-		echo '<label for="info-text">Info Text:</label>';
-		echo '<textarea id="info-text" name="info_text" placeholder="Optional"></textarea>';
+		echo '<label for="name-short">Name Short:</label>';
+		echo '<textarea id="name-short" name="name_short" placeholder="Optional"></textarea>';
 		echo '</div>';
 		
 		echo '<div class="full-width">';
@@ -820,7 +820,7 @@ class Bible_Here_Admin {
 		$language = sanitize_text_field($_POST['language'] ?? $existing_data->language);
 		$abbreviation = sanitize_text_field($_POST['abbreviation'] ?? $existing_data->abbreviation);
 		$name = sanitize_text_field($_POST['name'] ?? $existing_data->name);
-		$info_text = sanitize_textarea_field($_POST['info_text'] ?? $existing_data->info_text);
+		$name_short = sanitize_textarea_field($_POST['name_short'] ?? $existing_data->name_short);
 		$info_url = esc_url_raw($_POST['info_url'] ?? $existing_data->info_url);
 		$publisher = sanitize_text_field($_POST['publisher'] ?? $existing_data->publisher);
 		$copyright = sanitize_text_field($_POST['copyright'] ?? $existing_data->copyright);
@@ -833,7 +833,13 @@ class Bible_Here_Admin {
 		
 		// Validate required fields
 		if (empty($table_name_value) || empty($language) || empty($abbreviation) || empty($name)) {
-			wp_send_json_error('Required fields are missing');
+			wp_send_json_error('Required fields are missing: table_name, language, abbreviation and name');
+			return;
+		}
+
+		// Validate table name security - must start with 'bible_here'
+		if (strpos($table_name_value, 'bible_here') !== 0) {
+			wp_send_json_error('Table name must start with "bible_here" for security reasons');
 			return;
 		}
 		
@@ -845,7 +851,7 @@ class Bible_Here_Admin {
 				'language' => $language,
 				'abbreviation' => $abbreviation,
 				'name' => $name,
-				'info_text' => $info_text,
+				'name_short' => $name_short,
 				'info_url' => $info_url,
 				'publisher' => $publisher,
 				'copyright' => $copyright,
@@ -902,7 +908,7 @@ class Bible_Here_Admin {
 		$language = sanitize_text_field($_POST['language'] ?? '');
 		$abbreviation = sanitize_text_field($_POST['abbreviation'] ?? '');
 		$name = sanitize_text_field($_POST['name'] ?? '');
-		$info_text = sanitize_textarea_field($_POST['info_text'] ?? '');
+		$name_short = sanitize_textarea_field($_POST['name_short'] ?? '');
 		$type = sanitize_text_field($_POST['type'] ?? '');
 		$info_url = esc_url_raw($_POST['info_url'] ?? '');
 		$publisher = sanitize_text_field($_POST['publisher'] ?? '');
@@ -917,7 +923,13 @@ class Bible_Here_Admin {
 			wp_send_json_error('Required fields are missing');
 			return;
 		}
-		
+
+		// Validate table name security - must start with 'bible_here'
+		if (strpos($table_name_value, 'bible_here') !== 0) {
+			wp_send_json_error('Table name must start with "bible_here" for security reasons');
+			return;
+		}
+
 		// Insert new version
 		$result = $wpdb->insert(
 			$table_name,
@@ -926,7 +938,7 @@ class Bible_Here_Admin {
 				'language' => $language,
 				'abbreviation' => $abbreviation,
 				'name' => $name,
-				'info_text' => $info_text,
+				'name_short' => $name_short,
 				'info_url' => $info_url,
 				'publisher' => $publisher,
 				'copyright' => $copyright,
@@ -1124,7 +1136,7 @@ class Bible_Here_Admin {
 			'language' => $version_data->language,
 			'abbreviation' => $version_data->abbreviation,
 			'name' => $version_data->name,
-			'info_text' => $version_data->info_text,
+			'name_short' => $version_data->name_short,
 			'info_url' => $version_data->info_url,
 			'publisher' => $version_data->publisher,
 			'copyright' => $version_data->copyright,
@@ -1372,16 +1384,52 @@ class Bible_Here_Admin {
 			flush();
 			
 			try {
-				$result = $importer->import_cross_references_streaming();
-				
-				if ($result['success']) {
-					echo '<div class="notice notice-success"><p>Cross references imported successfully! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($result['time_taken'], 2) . ' seconds.</p></div>';
-				} else {
-					echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['error']) . '</p></div>';
+			// First, check if CSV file exists, if not extract from ZIP
+			$plugin_dir = plugin_dir_path(dirname(__FILE__));
+			$csv_file_path = $plugin_dir . 'data/cross_references.csv';
+			$zip_file_path = $plugin_dir . 'data/cross_references.zip';
+			
+			if (!file_exists($csv_file_path)) {
+				if (!file_exists($zip_file_path)) {
+					echo '<div class="notice notice-error"><p>Import failed: cross_references.zip file not found in data directory.</p></div>';
+					ob_end_flush();
+					return;
 				}
-			} catch (Exception $e) {
-				echo '<div class="notice notice-error"><p>Import failed with exception: ' . esc_html($e->getMessage()) . '</p></div>';
+				
+				// Extract CSV from ZIP using reflection to access private method
+				$reflection = new ReflectionClass($importer);
+				$extract_method = $reflection->getMethod('extract_csv_from_zip');
+				$extract_method->setAccessible(true);
+				$csv_file_path = $extract_method->invoke($importer, $zip_file_path);
+				
+				if (!$csv_file_path) {
+					echo '<div class="notice notice-error"><p>Import failed: Could not extract CSV file from ZIP archive.</p></div>';
+					ob_end_flush();
+					return;
+				}
 			}
+			
+			$start_time = microtime(true);
+			$result = $importer->import_cross_references_streaming($csv_file_path);
+			$time_taken = microtime(true) - $start_time;
+			
+			if ($result['success']) {
+				echo '<div class="notice notice-success"><p>Cross references imported successfully! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($time_taken, 2) . ' seconds.</p></div>';
+				
+				// Clean up extracted CSV file after successful import
+				if (file_exists($csv_file_path) && strpos($csv_file_path, 'cross_references.csv') !== false) {
+					if (unlink($csv_file_path)) {
+						echo '<div class="notice notice-info"><p>Temporary CSV file cleaned up successfully.</p></div>';
+					} else {
+						echo '<div class="notice notice-warning"><p>Warning: Could not remove temporary CSV file. You may delete it manually: ' . esc_html($csv_file_path) . '</p></div>';
+					}
+				}
+			} else {
+				echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['message']) . '</p></div>';
+			}
+		} catch (Exception $e) {
+			echo '<div class="notice notice-error"><p>Import failed with exception: ' . esc_html($e->getMessage()) . '</p></div>';
+		}
 			
 			ob_end_flush();
 		}

@@ -185,8 +185,8 @@ class Bible_Here {
 		// Register AJAX hook for deleting version row
 		$this->loader->add_action( 'wp_ajax_bible_here_delete_version_row', $plugin_admin, 'handle_ajax_delete_version_row' );
 		
-		// Auto-check and import cross references on admin init
-		$this->loader->add_action( 'admin_init', $plugin_admin, 'auto_import_cross_references' );
+		// Auto-check and import cross references on admin init (DISABLED - manual import only)
+		// $this->loader->add_action( 'admin_init', $plugin_admin, 'auto_import_cross_references' );
 
 	}
 

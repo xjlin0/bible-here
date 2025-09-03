@@ -580,6 +580,7 @@
 		document.addEventListener('click', function(e) {
 			if (e.target.classList.contains('edit-version-btn')) {
 				const versionId = e.target.getAttribute('data-version-id');
+				console.log('Edit button clicked, versionId:', versionId);
 				openVersionModal(versionId);
 			}
 		});
@@ -665,6 +666,7 @@
 	 * Open version modal for editing or adding
 	 */
 	function openVersionModal(versionId = null) {
+		console.log('openVersionModal called with versionId:', versionId);
 		const modal = document.getElementById('version-modal');
 		const modalTitle = document.getElementById('modal-title');
 		const deleteBtn = document.getElementById('delete-version');
@@ -675,11 +677,13 @@
 
 		if (versionId) {
 			// Edit mode
+			console.log('Setting up edit mode for versionId:', versionId);
 			modalTitle.textContent = 'Edit Version';
 			deleteBtn.style.display = 'inline-block';
 			loadVersionData(versionId);
 		} else {
 			// Add mode
+			console.log('Setting up add mode');
 			modalTitle.textContent = 'Add New Version';
 			deleteBtn.style.display = 'none';
 			clearVersionForm();
@@ -717,8 +721,44 @@
 	 * Load version data into modal form
 	 */
 	function loadVersionData(versionId) {
+		console.log('loadVersionData called with versionId:', versionId);
+		
+		// Check if all required elements exist
+		const requiredElements = [
+			'version-id', 'table-name', 'language', 'abbreviation', 'name', 
+			'name-short', 'info-url', 'publisher', 'copyright', 'download-url', 
+			'rank', 'trim', 'for-login', 'type'
+		];
+		
+		const missingElements = [];
+		requiredElements.forEach(id => {
+			const element = document.getElementById(id);
+			if (!element) {
+				missingElements.push(id);
+			}
+		});
+		
+		if (missingElements.length > 0) {
+			console.error('Missing form elements:', missingElements);
+			return;
+		}
+		
+		// Check if bible_here_ajax object exists
+		if (typeof bible_here_ajax === 'undefined') {
+			console.error('bible_here_ajax object is not defined');
+			return;
+		}
+		
+		console.log('bible_here_ajax object:', bible_here_ajax);
+		
 		// Set version ID immediately
 		document.getElementById('version-id').value = versionId;
+
+		// Clear any previous warning messages
+		const warningDiv = document.getElementById('duplicate-warning');
+		if (warningDiv) {
+			warningDiv.style.display = 'none';
+		}
 
 		// Disable delete button during loading to prevent premature clicks
 		const deleteBtn = document.getElementById('delete-version');
@@ -732,22 +772,40 @@
 		formData.append('action', 'bible_here_get_version_data');
 		formData.append('version_id', versionId);
 		formData.append('nonce', bible_here_ajax.nonce);
+		
+		console.log('Sending AJAX request for version data:', {
+			action: 'bible_here_get_version_data',
+			version_id: versionId,
+			nonce: bible_here_ajax.nonce
+		});
 
 		fetch(bible_here_ajax.ajax_url, {
 			method: 'POST',
 			body: formData
 		})
-		.then(response => response.json())
 		.then(response => {
+			console.log('AJAX response received:', response);
+			return response.json();
+		})
+		.then(response => {
+			console.log('AJAX response parsed:', response);
+			console.log('Response type:', typeof response);
+			console.log('Response keys:', Object.keys(response));
+			console.log('Response.success:', response.success);
+			
 			if (response.success) {
 				const data = response.data;
+				console.log('Version data received:', data);
+				console.log('Data type:', typeof data);
+				console.log('Data keys:', Object.keys(data));
 				
 				// Populate all form fields with complete data
+				console.log('Populating form fields...');
 				document.getElementById('table-name').value = data.table_name || '';
 				document.getElementById('language').value = data.language || '';
 				document.getElementById('abbreviation').value = data.abbreviation || '';
 				document.getElementById('name').value = data.name || '';
-				document.getElementById('info-text').value = data.info_text || '';
+				document.getElementById('name-short').value = data.name_short || '';
 				document.getElementById('info-url').value = data.info_url || '';
 				document.getElementById('publisher').value = data.publisher || '';
 				document.getElementById('copyright').value = data.copyright || '';
@@ -756,6 +814,7 @@
 				document.getElementById('trim').value = data.trim || '0';
 				document.getElementById('for-login').value = data.for_login || '0';
 				document.getElementById('type').value = data.type || 'Bible';
+				console.log('Form fields populated successfully');
 				
 				// Reset form modified state after loading data
 				resetFormModified();
@@ -780,7 +839,7 @@
 				
 				if (seedValue == 1 || seedValue === true) {
 					// For seed=true records, only allow editing for_login and rank (if rank is not null)
-					const readonlyFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'trim', 'type'];
+					const readonlyFields = ['table-name', 'language', 'abbreviation', 'name', 'name-short', 'info-url', 'publisher', 'copyright', 'download-url', 'trim', 'type'];
 					readonlyFields.forEach(fieldId => {
 						const field = document.getElementById(fieldId);
 						if (field) {
@@ -795,7 +854,7 @@
 					});
 				} else {
 					// For seed=false records, allow editing all fields
-					const allFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
+					const allFields = ['table-name', 'language', 'abbreviation', 'name', 'name-short', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
 					allFields.forEach(fieldId => {
 						const field = document.getElementById(fieldId);
 						if (field) {
@@ -823,18 +882,8 @@
 					deleteBtn.textContent = 'Delete Record';
 				}
 			} else {
-				console.error('Failed to load version data:', response.message);
-				showNotice('Error: Failed to load version data', 'error');
-				
-				// Re-enable delete button even on error, but keep version ID
-				if (deleteBtn) {
-					deleteBtn.disabled = false;
-					deleteBtn.textContent = 'Delete Record';
-				}
-			}
-		})
-		.catch(error => {
-			console.error('Version data request failed:', error);
+			console.error('Failed to load version data:', response.message);
+			console.error('Full response:', response);
 			showNotice('Error: Failed to load version data', 'error');
 			
 			// Re-enable delete button even on error, but keep version ID
@@ -842,7 +891,19 @@
 				deleteBtn.disabled = false;
 				deleteBtn.textContent = 'Delete Record';
 			}
-		});
+		}
+	})
+	.catch(error => {
+		console.error('Version data request failed:', error);
+		console.error('Error details:', error.message, error.stack);
+		showNotice('Error: Failed to load version data', 'error');
+		
+		// Re-enable delete button even on error, but keep version ID
+		if (deleteBtn) {
+			deleteBtn.disabled = false;
+			deleteBtn.textContent = 'Delete Record';
+		}
+	});
 	}
 
 	/**
@@ -854,7 +915,7 @@
 		document.getElementById('language').value = '';
 		document.getElementById('abbreviation').value = '';
 		document.getElementById('name').value = '';
-		document.getElementById('info-text').value = '';
+		document.getElementById('name-short').value = '';
 		document.getElementById('info-url').value = '';
 		document.getElementById('publisher').value = '';
 		document.getElementById('copyright').value = '';
@@ -881,7 +942,7 @@
 		}
 		
 		// Reset all field states to editable for new version form
-		const allFields = ['table-name', 'language', 'abbreviation', 'name', 'info-text', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
+		const allFields = ['table-name', 'language', 'abbreviation', 'name', 'name-short', 'info-url', 'publisher', 'copyright', 'download-url', 'rank', 'trim', 'for-login', 'type'];
 		allFields.forEach(fieldId => {
 			const field = document.getElementById(fieldId);
 			if (field) {
@@ -1008,7 +1069,33 @@
 		const tableName = document.getElementById('table-name').value.trim();
 
 		if (!language || !abbreviation || !name || !tableName) {
-			showNotice('Error: Please fill in all required fields: Language, Abbreviation, Name, and Table Name.', 'error');
+			const errorMessage = 'Please fill in all required fields: Language, Abbreviation, Name, and Table Name.';
+			
+			// Show error in both page notice and modal warning area
+			showNotice('Error: ' + errorMessage, 'error');
+			
+			// Also display error in modal's duplicate-warning area
+			const warningDiv = document.getElementById('duplicate-warning');
+			if (warningDiv) {
+				warningDiv.innerHTML = `<strong>Error:</strong> ${errorMessage}`;
+				warningDiv.style.display = 'block';
+			}
+			return;
+		}
+
+		// Validate table name security - must start with 'bible_here'
+		if (!tableName.startsWith('bible_here')) {
+			const errorMessage = 'Table name must start with "bible_here" for security reasons.';
+			
+			// Show error in both page notice and modal warning area
+			showNotice('Error: ' + errorMessage, 'error');
+			
+			// Also display error in modal's duplicate-warning area
+			const warningDiv = document.getElementById('duplicate-warning');
+			if (warningDiv) {
+				warningDiv.innerHTML = `<strong>Error:</strong> ${errorMessage}`;
+				warningDiv.style.display = 'block';
+			}
 			return;
 		}
 		const form = document.getElementById('version-form');
