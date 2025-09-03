@@ -1512,8 +1512,16 @@ class BibleHereReader {
 		 * Load books tab content
 		 */
 		loadBooksTab() {
-			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"] .books-grid');
+			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
 			if (!booksContent) return;
+
+			// Check if content already exists (has books sections)
+			const existingSections = booksContent.querySelectorAll('.books-section');
+			if (existingSections.length > 0) {
+				// Content already exists, just update active states
+				this.updateBookActiveStates();
+				return;
+			}
 
 			// Bible books data
 			const oldTestament = [
@@ -1588,9 +1596,9 @@ class BibleHereReader {
 				{ key: 'revelation', name: '啟', fullName: '啟示錄' }
 			];
 
-			let html = '<div class="testament-section">';
-			html += '<h4 class="testament-title">舊約</h4>';
-			html += '<div class="books-row">';
+			let html = '<div class="books-section">';
+			html += '<h5 class="testament-title">舊約</h5>';
+			html += '<div class="books-grid old-testament">';
 			oldTestament.forEach(book => {
 				const isActive = book.key === this.currentBook;
 				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
@@ -1600,9 +1608,9 @@ class BibleHereReader {
 			});
 			html += '</div></div>';
 
-			html += '<div class="testament-section">';
-			html += '<h4 class="testament-title">新約</h4>';
-			html += '<div class="books-row">';
+			html += '<div class="books-section">';
+			html += '<h5 class="testament-title">新約</h5>';
+			html += '<div class="books-grid new-testament">';
 			newTestament.forEach(book => {
 				const isActive = book.key === this.currentBook;
 				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${book.key}" title="${book.fullName}">`;
@@ -1622,6 +1630,26 @@ class BibleHereReader {
 					this.selectBook(item.dataset.book, bookName);
 				});
 			});
+		}
+
+		/**
+		 * Update active states for existing book items
+		 */
+		updateBookActiveStates() {
+			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
+			if (!booksContent) return;
+
+			// Remove all active classes
+			const allBookItems = booksContent.querySelectorAll('.book-item');
+			allBookItems.forEach(item => {
+				item.classList.remove('active');
+			});
+
+			// Add active class to current book
+			const currentBookItem = booksContent.querySelector(`[data-book="${this.currentBook}"]`);
+			if (currentBookItem) {
+				currentBookItem.classList.add('active');
+			}
 		}
 
 		/**
