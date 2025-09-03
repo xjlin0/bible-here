@@ -1346,11 +1346,11 @@
 	overflow-y: auto;
 }
 
-.menu-content-section {
+.tab-content {
 	display: none;
 }
 
-.menu-content-section.active {
+.tab-content.active {
 	display: block;
 }
 
@@ -1361,6 +1361,34 @@
 	gap: 8px;
 }
 
+/* Language Group Styles */
+.language-group {
+	margin-bottom: 20px;
+}
+
+.language-group:last-child {
+	margin-bottom: 0;
+}
+
+.language-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: #495057;
+	margin: 0 0 8px 0;
+	padding: 8px 12px;
+	background: #f8f9fa;
+	border-left: 4px solid #007cba;
+	border-radius: 0 4px 4px 0;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bible-here-reader.theme-dark .language-title {
+	color: #ffffff;
+	background: #495057;
+	border-left-color: #007cba;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .version-item {
 	padding: 10px 12px;
 	border: 1px solid #e0e0e0;
@@ -1369,11 +1397,44 @@
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-size: 14px;
+	margin-bottom: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.version-item:last-child {
+	margin-bottom: 0;
+}
+
+.version-item.active {
+	background: #007cba;
+	color: #ffffff;
+	border-color: #007cba;
 }
 
 .version-item:hover {
 	background: #f8f9fa;
 	border-color: #007cba;
+}
+
+.version-item.active:hover {
+	background: #0056b3;
+}
+
+.version-name {
+	font-weight: 500;
+	color: inherit;
+}
+
+.version-publisher {
+	font-size: 12px;
+	color: #666666;
+	opacity: 0.8;
+}
+
+.version-item.active .version-publisher {
+	color: rgba(255, 255, 255, 0.8);
 }
 
 .bible-here-reader.theme-dark .version-item {
@@ -1385,6 +1446,53 @@
 .bible-here-reader.theme-dark .version-item:hover {
 	background: #404040;
 	border-color: #007cba;
+}
+
+.bible-here-reader.theme-dark .version-item.active {
+	background: #007cba;
+	color: #ffffff;
+	border-color: #007cba;
+}
+
+.bible-here-reader.theme-dark .version-item.active:hover {
+	background: #0056b3;
+}
+
+.bible-here-reader.theme-dark .version-publisher {
+	color: #cccccc;
+}
+
+/* Loading and Error Messages */
+.loading-message {
+	padding: 20px;
+	text-align: center;
+	color: #666666;
+	font-size: 14px;
+	background: #f8f9fa;
+	border-radius: 4px;
+	border: 1px solid #e0e0e0;
+}
+
+.bible-here-reader.theme-dark .loading-message {
+	color: #cccccc;
+	background: #333333;
+	border-color: #555;
+}
+
+.error-message {
+	padding: 15px;
+	text-align: center;
+	color: #dc3545;
+	font-size: 14px;
+	background: #f8d7da;
+	border: 1px solid #f5c6cb;
+	border-radius: 4px;
+}
+
+.bible-here-reader.theme-dark .error-message {
+	color: #f8d7da;
+	background: #2d1b1e;
+	border-color: #842029;
 }
 
 /* Book Grid */

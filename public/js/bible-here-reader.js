@@ -264,14 +264,12 @@ class BibleHereReader {
 			
 			const params = new URLSearchParams({
 				action: 'bible_here_get_versions',
-				language: this.currentLanguage
+				language: this.currentLanguage,
+				_wpnonce: bibleHereAjax.nonce
 			});
 
 			fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
-				method: 'GET',
-				headers: {
-					'X-WP-Nonce': bibleHereAjax.nonce
-				}
+				method: 'GET'
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -295,14 +293,12 @@ class BibleHereReader {
 		loadBooks() {
 			const params = new URLSearchParams({
 				action: 'bible_here_get_books',
-				language: this.currentLanguage
+				language: this.currentLanguage,
+				_wpnonce: bibleHereAjax.nonce
 			});
 
 			fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
-				method: 'GET',
-				headers: {
-					'X-WP-Nonce': bibleHereAjax.nonce
-				}
+				method: 'GET'
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -1311,6 +1307,7 @@ class BibleHereReader {
 			tabs.forEach(tab => {
 				tab.addEventListener('click', (e) => {
 					e.preventDefault();
+					console.log('1314 Tab clicked:', tab.dataset.tab);
 					this.switchBookChapterTab(tab.dataset.tab);
 				});
 			});
@@ -1379,6 +1376,7 @@ class BibleHereReader {
 		 * Switch book chapter menu tab
 		 */
 		switchBookChapterTab(tabName) {
+			console.log('Switching to tab:', tabName);
 			if (!this.elements.bookChapterMenu) return;
 
 			// Update tab buttons
@@ -1390,7 +1388,7 @@ class BibleHereReader {
 			// Update content
 			const contents = this.elements.bookChapterMenu.querySelectorAll('.tab-content');
 			contents.forEach(content => {
-				content.classList.toggle('active', content.dataset.tab === tabName);
+				content.classList.toggle('active', content.dataset.content === tabName);
 			});
 
 			// Load content based on tab
@@ -1411,29 +1409,98 @@ class BibleHereReader {
 		 * Load versions tab content
 		 */
 		loadVersionsTab() {
-			const versionsContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="versions"] .versions-list');
-			if (!versionsContent) return;
+			console.log('loadVersionsTab called');
+			const versionsContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="versions"] .versions-list');
+			if (!versionsContent) {
+				console.log('versionsContent not found');
+				return;
+			}
 
-			// Mock versions data - replace with actual API call
-			const versions = [
-				{ key: 'bible_here_en_kjv', name: '和合本', abbr: '和合本' },
-				{ key: 'bible_here_en_niv', name: 'New International Version', abbr: 'NIV' },
-				{ key: 'bible_here_en_esv', name: 'English Standard Version', abbr: 'ESV' }
-			];
+			// Show loading state
+			versionsContent.innerHTML = '<div class="loading-message">Loading versions...</div>';
 
-			let html = '';
+			// Call bible_here_public_get_versions API
+			const params = new URLSearchParams({
+				action: 'bible_here_public_get_versions',
+			});
+
+			const requestUrl = `${bibleHereAjax.ajaxurl}?${params}`;
+			console.log('Making AJAX (with nonce) request to:', requestUrl);
+
+			fetch(requestUrl, {
+				method: 'GET',
+				headers: {
+					"X-WP-Nonce": bibleHereAjax.nonce
+				}
+			})
+			.then(response => {
+				console.log('Response received:', response);
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(data => {
+				console.log('Response data:', data);
+				if (data.success && data.data && data.data.versions) {
+					console.log('Versions loaded successfully:', data.data.versions);
+					this.renderVersionsList(data.data.versions, versionsContent);
+				} else {
+					console.log('API response error:', data);
+					throw new Error(data.data?.message || '無法載入版本列表');
+				}
+			})
+			.catch(error => {
+				console.error('Error loading versions:', error);
+				versionsContent.innerHTML = `<div class="error-message">載入版本失敗: ${error.message}</div>`;
+			});
+		}
+
+		/**
+		 * Render versions list grouped by language
+		 */
+		renderVersionsList(versions, container) {
+			// Group versions by language
+			const languageGroups = {};
 			versions.forEach(version => {
-				const isActive = version.key === this.currentVersion;
-				html += `<div class="version-item ${isActive ? 'active' : ''}" data-version="${version.key}">`;
-				html += `<span class="version-abbr">${version.abbr}</span>`;
-				html += `<span class="version-name">${version.name}</span>`;
+				const langKey = version.language_code;
+				if (!languageGroups[langKey]) {
+					languageGroups[langKey] = {
+						name: version.language_name,
+						original: version.language_original,
+						versions: []
+					};
+				}
+				languageGroups[langKey].versions.push(version);
+			});
+
+			// Generate HTML
+			let html = '';
+			Object.keys(languageGroups).forEach(langKey => {
+				const group = languageGroups[langKey];
+				
+				// Language header
+				html += `<div class="language-group">`;
+				html += `<h4 class="language-title">${group.original || group.name}</h4>`;
+				
+				// Versions in this language
+				group.versions.forEach(version => {
+					const isActive = version.table_name === this.currentVersion;
+					html += `<div class="version-item ${isActive ? 'active' : ''}" data-version="${version.table_name}">`;
+					html += `<span class="version-name">${version.name}</span>`;
+					if (version.publisher) {
+						html += `<span class="version-publisher">${version.publisher}</span>`;
+					}
+					html += `</div>`;
+				});
+				
 				html += `</div>`;
 			});
 
-			versionsContent.innerHTML = html;
+			container.innerHTML = html;
 
 			// Bind events for new version items
-			const versionItems = versionsContent.querySelectorAll('.version-item');
+			const versionItems = container.querySelectorAll('.version-item');
 			versionItems.forEach(item => {
 				item.addEventListener('click', () => {
 					this.selectVersion(item.dataset.version);
@@ -1445,7 +1512,7 @@ class BibleHereReader {
 		 * Load books tab content
 		 */
 		loadBooksTab() {
-			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="books"] .books-grid');
+			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"] .books-grid');
 			if (!booksContent) return;
 
 			// Bible books data
@@ -1561,7 +1628,7 @@ class BibleHereReader {
 		 * Load chapters tab content
 		 */
 		loadChaptersTab() {
-			const chaptersContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-tab="chapters"] .chapters-grid');
+			const chaptersContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="chapters"] .chapters-grid');
 			if (!chaptersContent) return;
 
 			// Get chapter count for current book

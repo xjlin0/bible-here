@@ -206,8 +206,8 @@ class Bible_Here {
 		$this->loader->add_action( 'init', $plugin_public, 'register_shortcodes' );
 
 		// Register public AJAX hooks for Bible Here Reader
-		$this->loader->add_action( 'wp_ajax_bible_here_get_versions', $plugin_public, 'handle_ajax_get_versions' );
-		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_versions', $plugin_public, 'handle_ajax_get_versions' );
+		$this->loader->add_action( 'wp_ajax_bible_here_public_get_versions', $plugin_public, 'handle_ajax_get_versions' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_versions', $plugin_public, 'handle_ajax_get_versions' );
 		$this->loader->add_action( 'wp_ajax_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_get_books', $plugin_public, 'handle_ajax_get_books' );
 		$this->loader->add_action( 'wp_ajax_bible_here_get_verses', $plugin_public, 'handle_ajax_get_verses' );

@@ -138,7 +138,6 @@ class Bible_Here_Public {
 	 */
 	public function handle_ajax_get_versions() {
 		global $wpdb;
-		
 		// Verify nonce
 		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
 			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401 ) );
@@ -205,7 +204,7 @@ class Bible_Here_Public {
 			FROM $versions_table v
 			  JOIN $languages_table l ON v.language = l.code
 			$where_clause
-			ORDER BY rank ASC, name ASC";
+			ORDER BY l.name, rank, name";
 		
 		if ( ! empty( $query_params ) ) {
 			$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );

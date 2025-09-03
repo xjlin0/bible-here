@@ -74,7 +74,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 					<!-- Tab Content -->
 					<div class="menu-content">
 						<!-- Versions Tab -->
-						<div class="tab-content" data-content="versions" style="display: none;">
+						<div class="tab-content" data-content="versions">
 							<div class="versions-list">
 								<div class="version-item active"><?php _e( '和合本', 'bible-here' ); ?></div>
 								<div class="version-item"><?php _e( 'KJV', 'bible-here' ); ?></div>
@@ -83,7 +83,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 						</div>
 
 						<!-- Books Tab -->
-						<div class="tab-content" data-content="books">
+						<div class="tab-content active" data-content="books">
 							<div class="books-section">
 								<h5 class="testament-title"><?php _e( '舊約', 'bible-here' ); ?></h5>
 								<div class="books-grid old-testament">
@@ -163,7 +163,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 						</div>
 
 						<!-- Chapters Tab -->
-						<div class="tab-content" data-content="chapters" style="display: none;">
+						<div class="tab-content" data-content="chapters">
 							<div class="chapters-grid">
 								<!-- Chapters will be dynamically populated based on selected book -->
 							</div>
