@@ -439,7 +439,7 @@ class Bible_Here_Public {
 			'table_name' => $table_name_for_query,
 			'book_number' => $book_number_start,
 			'book_name' => $book_info['title_full'] ?? 'Unknown',
-			'chapter' => $chapter_number_start,
+			'chapter_number' => $chapter_number_start,
 			'version_name' => $version_info['name'] ?? 'Unknown Version',
 			'verses' => $verses ?: array()
 		);

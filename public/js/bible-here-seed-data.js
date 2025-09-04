@@ -19,7 +19,7 @@ const openingVerses = {
 		"table_name": "bible_here_en_kjv",
 		"book_number": 19,
 		"book_name": "Psalms",
-		"chapter": 117,
+		"chapter_number": 117,
 		"version_name": "King James Version",
 		"verses": [
 			{
@@ -37,7 +37,7 @@ const openingVerses = {
 		"table_name": "bible_here_zh_tw_cuvt",
 		"book_number": 19,
 		"book_name": "詩篇",
-		"chapter": 117,
+		"chapter_number": 117,
 		"version_name": "和合本(繁)Chinese Union Version Traditional",
 		"verses": [
 			{
