@@ -139,8 +139,12 @@ class Bible_Here_Public {
 	public function handle_ajax_get_versions() {
 		global $wpdb;
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
-			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401, 'message' => 'token needed for Bible_Here_Public::handle_ajax_get_versions()' ) );
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token for Bible_Here_Public::handle_ajax_get_versions() at line ' . __LINE__,
+				'code' => 'invalid_nonce'
+			), 401 );
 		}
 
 		// Get parameters from GET request
@@ -427,7 +431,7 @@ class Bible_Here_Public {
 		}
 
 		return array(
-			'table_name' => $bible_table,
+			'table_name' => $table_name_for_query,
 			'book_number' => $book_number_start,
 			'book_name' => $book_info['title_full'] ?? 'Unknown',
 			'chapter' => $chapter_number_start,
@@ -521,8 +525,12 @@ class Bible_Here_Public {
 		global $wpdb;
 		
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
-			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401, 'message' => 'token needed for Bible_Here_Public::handle_ajax_get_books()' ) );
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token for Bible_Here_Public::handle_ajax_get_books() at line ' . __LINE__,
+				'code' => 'invalid_nonce'
+			), 401 );
 		}
 
 		// Get parameters from GET request
@@ -595,9 +603,12 @@ class Bible_Here_Public {
 	public function handle_ajax_get_strong_dictionary() {
 		global $wpdb;
 		
-		// Verify nonce
-		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
-			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401, 'message' => 'token needed for Bible_Here_Public::handle_ajax_get_strong_dictionary()' ) );
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token for Bible_Here_Public::handle_ajax_get_strong_dictionary() at line ' . __LINE__,
+				'code' => 'invalid_nonce'
+			), 401 );
 		}
 
 		// Get parameters from GET request
@@ -678,8 +689,12 @@ class Bible_Here_Public {
 		global $wpdb;
 		
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
-			wp_die( 'Security check failed', 'Unauthorized', array( 'response' => 401, 'message' => 'token needed for Bible_Here_Public::handle_ajax_get_cross_references()' ) );
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token for Bible_Here_Public::handle_ajax_get_cross_references() at line ' . __LINE__,
+				'code' => 'invalid_nonce'
+			), 401 );
 		}
 
 		// Get parameters from GET request
