@@ -412,6 +412,11 @@ class Bible_Here_Public {
 			return new WP_Error( 'database_error', 'Database error: ' . $wpdb->last_error );
 		}
 
+		// Convert verse field to integer
+		foreach ( $verses as &$verse ) {
+			$verse['verse'] = intval( $verse['verse'] );
+		}
+
 		// Add commentary if provided
 		if ( ! empty( $commentary_table ) && $verses ) {
 			$commentary_exists = $wpdb->get_var( $wpdb->prepare( 

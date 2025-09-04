@@ -90,16 +90,16 @@ class BibleHereReader {
 					"chapter": 117,
 					"version_name": "King James Version",
 					"verses": [
-					{
-						"verse": "1",
-						"text": "O praise the LORD, all ye nations: praise him, all ye people.",
-						"verse_id": "19117001"
-					},
-					{
-						"verse": "2",
-						"text": "For his merciful kindness is great toward us: and the truth of the LORD endureth for ever. Praise ye the LORD.",
-						"verse_id": "19117002"
-					}]
+						{
+							"verse": 1,
+							"text": "O praise the LORD, all ye nations: praise him, all ye people.",
+							"verse_id": "19117001"
+						},
+						{
+							"verse": 2,
+							"text": "For his merciful kindness is great toward us: and the truth of the LORD endureth for ever. Praise ye the LORD.",
+							"verse_id": "19117002"
+						}]
 				},
 			zh: {
 				"table_name": "bible_here_zh_tw_cuvt",
@@ -108,16 +108,16 @@ class BibleHereReader {
 				"chapter": 117,
 				"version_name": "和合本(繁)Chinese Union Version Traditional",
 				"verses": [
-				{
-					"verse": "1",
-					"text": "萬國阿、你們都當讚美耶和華．萬民哪、你們都當頌讚他。",
-					"verse_id": "19117001"
-				},
-				{
-					"verse": "2",
-					"text": "因為他向我們大施慈愛．耶和華的誠實、存到永遠。你們要讚美耶和華。",
-					"verse_id": "19117002"
-				}]
+					{
+						"verse": 1,
+						"text": "萬國阿、你們都當讚美耶和華．萬民哪、你們都當頌讚他。",
+						"verse_id": "19117001"
+					},
+					{
+						"verse": 2,
+						"text": "因為他向我們大施慈愛．耶和華的誠實、存到永遠。你們要讚美耶和華。",
+						"verse_id": "19117002"
+					}]
 			},
 		};
 
