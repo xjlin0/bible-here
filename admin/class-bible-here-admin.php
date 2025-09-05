@@ -788,7 +788,7 @@ class Bible_Here_Admin {
 	public function handle_ajax_save_version() {
 		// Verify nonce for security
 		if (!wp_verify_nonce($_POST['nonce'], 'bible_here_ajax_nonce')) {
-			wp_send_json_error('Security check failed in Bible_Here_Admin::handle_ajax_save_version()');
+			wp_send_json_error(array('message' => 'Security check failed in Bible_Here_Admin::handle_ajax_save_version()'));
 			return;
 		}
 		
@@ -811,10 +811,15 @@ class Bible_Here_Admin {
 		));
 		
 		if (!$existing_data) {
-			wp_send_json_error('Version not found');
+			wp_send_json_error(array('message' => 'Version not found'));
 			return;
 		}
-		
+
+		if (isset($_POST['table_name']) && ($_POST['table_name'] != $existing_data->table_name)){
+			wp_send_json_error(array('message' => 'Table name cannot be changed for installed or uploaded versions'));
+			return;
+		}
+
 		// Get form data and merge with existing data
 		$table_name_value = sanitize_text_field($_POST['table_name'] ?? $existing_data->table_name);
 		$language = sanitize_text_field($_POST['language'] ?? $existing_data->language);
@@ -842,7 +847,7 @@ class Bible_Here_Admin {
 			wp_send_json_error('Table name must start with "bible_here" for security reasons');
 			return;
 		}
-		
+
 		// Update the database
 		$result = $wpdb->update(
 			$table_name,

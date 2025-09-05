@@ -836,7 +836,7 @@
 				// Implement conditional editing logic for seed=true records
 				const seedValue = data.seed;
 				const rankValue = data.rank;
-				
+				console.log("bible-here-admin.js 839 rankValue: ", rankValue);
 				if (seedValue == 1 || seedValue === true) {
 					// For seed=true records, only allow editing for_login and rank (if rank is not null)
 					const readonlyFields = ['table-name', 'language', 'abbreviation', 'name', 'name-short', 'info-url', 'publisher', 'copyright', 'download-url', 'trim', 'type'];
@@ -858,13 +858,21 @@
 					allFields.forEach(fieldId => {
 						const field = document.getElementById(fieldId);
 						if (field) {
-							// Use disabled for select elements, readOnly for input/textarea
-							if (field.tagName === 'SELECT') {
-								field.disabled = false;
+							if (rankValue && fieldId === 'table-name') {
+								field.readOnly = true;
+								field.title = 'Table name cannot be changed for uploaded versions';
+							} else if (fieldId === 'rank') {
+								field.required = true;
+								field.title = 'Rank cannot be empty for uploaded versions';
 							} else {
-								field.readOnly = false;
+								// Use disabled for select elements, readOnly for input/textarea
+								if (field.tagName === 'SELECT') {
+									field.disabled = false;
+								} else {
+									field.readOnly = false;
+								}
+								field.style.backgroundColor = '';
 							}
-							field.style.backgroundColor = '';
 						}
 					});
 				}
@@ -1058,18 +1066,15 @@
 		const action = versionId ? 'update' : 'add';
 		const confirmMessage = versionId ? 'Are you sure you want to save changes to this version?' : 'Are you sure you want to add this new version?';
 
-		if (!confirm(confirmMessage)) {
-			return;
-		}
-
 		// Validate required fields
 		const language = document.getElementById('language').value.trim();
 		const abbreviation = document.getElementById('abbreviation').value.trim();
 		const name = document.getElementById('name').value.trim();
 		const tableName = document.getElementById('table-name').value.trim();
+		const rank = document.getElementById('rank').value.trim();
 
-		if (!language || !abbreviation || !name || !tableName) {
-			const errorMessage = 'Please fill in all required fields: Language, Abbreviation, Name, and Table Name.';
+		if (!language || !abbreviation || !name || !tableName || (versionId && !rank)) {
+			const errorMessage = 'Please fill in all required fields: Language, Abbreviation, Name, Table Name, and Rank(for installed versions only).';
 			
 			// Show error in both page notice and modal warning area
 			showNotice('Error: ' + errorMessage, 'error');
@@ -1098,6 +1103,11 @@
 			}
 			return;
 		}
+
+		if (!confirm(confirmMessage)) {
+			return;
+		}
+
 		const form = document.getElementById('version-form');
 		const formData = new FormData(form);
 		// const versionId = document.getElementById('version-id').value;
