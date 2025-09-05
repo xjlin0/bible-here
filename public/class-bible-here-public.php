@@ -424,7 +424,7 @@ class Bible_Here_Public {
 
 		// Build main query
 		$sql = "SELECT 
-				CAST(verse_number AS UNSIGNED) as verse,
+				CAST(verse_number AS UNSIGNED) as verse_number,
 				verse_text as text,
 				verse_id
 			FROM $bible_table

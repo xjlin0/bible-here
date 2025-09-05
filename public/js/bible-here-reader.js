@@ -489,63 +489,69 @@ class BibleHereReader {
 					console.log('✅ API 返回章節內容，經文數量:', data.data.version1.verses.length);
 					
 					// 快取 API 結果
-				if (this.cacheManager) {
-					console.log('💾 [BibleHereReader] 將章節內容存入快取');
-					
-					// Cache version1 data
-					if (data.data.version1 && data.data.version1.verses) {
-						console.log('📊 [BibleHereReader] 準備快取 version1 經文資料:', {
-							version: this.currentVersion,
-							book: this.currentBook,
-							chapter: this.currentChapter,
-							verseCount: data.data.version1.verses.length,
-							sample: data.data.version1.verses.slice(0, 2)
-						});
+					if (this.cacheManager) {
+						console.log('💾 [BibleHereReader] 將章節內容存入快取');
 						
-						const versesForCacheV1 = data.data.version1.verses.map(verse => ({
-							book_number: this.currentBook,
-							chapter_number: this.currentChapter,
-							verse_number: verse.verse,
-							text: verse.text,
-							verse_id: verse.verse_id
-						}));
+						// Cache version1 data
+						if (data.data.version1 && data.data.version1.verses) {
+							console.log('📊 [BibleHereReader] 準備快取 version1 經文資料:', {
+								version: this.currentVersion,
+								book: this.currentBook,
+								chapter: this.currentChapter,
+								verseCount: data.data.version1.verses.length,
+								sample: data.data.version1.verses.slice(0, 2)
+							});
+							
+							const versesForCacheV1 = data.data.version1.verses.map(verse => ({
+								book_number: this.currentBook,
+								chapter_number: this.currentChapter,
+								verse_number: verse.verse,
+								text: verse.text,
+								verse_id: verse.verse_id
+							}));
+							
+							await this.cacheManager.cacheVerses(
+								versesForCacheV1,
+								this.currentVersion
+							);
+							console.log('✅ [BibleHereReader] version1 章節內容已成功存入快取');
+						}
 						
-						await this.cacheManager.cacheVerses(
-							versesForCacheV1,
-							this.currentVersion
-						);
-						console.log('✅ [BibleHereReader] version1 章節內容已成功存入快取');
+						// Cache version2 data if exists
+						if (data.data.version2 && data.data.version2.verses) {
+							console.log('📊 [BibleHereReader] 準備快取 version2 經文資料:', {
+								book: this.currentBook,
+								chapter: this.currentChapter,
+								verseCount: data.data.version2.verses.length,
+								sample: data.data.version2.verses.slice(0, 2)
+							});
+							
+							const versesForCacheV2 = data.data.version2.verses.map(verse => ({
+								book_number: this.currentBook,
+								chapter_number: this.currentChapter,
+								verse_number: verse.verse,
+								text: verse.text,
+								verse_id: verse.verse_id
+							}));
+							
+							// Use a different version identifier for version2
+							const version2Key = this.currentVersion + '_v2';
+							await this.cacheManager.cacheVerses(
+								versesForCacheV2,
+								version2Key
+							);
+							console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
+						}
 					}
-					
-					// Cache version2 data if exists
-					if (data.data.version2 && data.data.version2.verses) {
-						console.log('📊 [BibleHereReader] 準備快取 version2 經文資料:', {
-							book: this.currentBook,
-							chapter: this.currentChapter,
-							verseCount: data.data.version2.verses.length,
-							sample: data.data.version2.verses.slice(0, 2)
-						});
-						
-						const versesForCacheV2 = data.data.version2.verses.map(verse => ({
-							book_number: this.currentBook,
-							chapter_number: this.currentChapter,
-							verse_number: verse.verse,
-							text: verse.text,
-							verse_id: verse.verse_id
-						}));
-						
-						// Use a different version identifier for version2
-						const version2Key = this.currentVersion + '_v2';
-						await this.cacheManager.cacheVerses(
-							versesForCacheV2,
-							version2Key
-						);
-						console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
-					}
-				}
 					
 					this.hideLoading();
-					this.displayChapterContent(data.data.version1);
+					// console.log('✅ [BibleHereReader548] data: ', data);
+					// 根據當前模式選擇顯示方法
+					if (this.isDualMode) {
+						this.displayDualVersionContent(data.data);
+					} else {
+						this.displayChapterContent(data.data.version1);
+					}
 				} else {
 					// 改善錯誤處理邏輯
 					const errorMessage = typeof data.data === 'string' ? data.data : 
@@ -567,6 +573,62 @@ class BibleHereReader {
 		}
 
 		/**
+		 * Display chapter content for dual version mode
+		 */
+		displayDualVersionContent(data) {
+			console.log('📖 顯示雙版本內容:', data);
+			
+			// 獲取雙版本模式的容器
+			const version1Container = this.elements.dualMode.querySelector('.version-1 .verses-container');
+			const version2Container = this.elements.dualMode.querySelector('.version-2 .verses-container');
+			
+			if (!version1Container || !version2Container) {
+				console.error('❌ 找不到雙版本容器');
+				return;
+			}
+			console.error('589 verse: ', verse);
+			// 顯示 version1 內容
+			if (data.version1 && data.version1.verses) {
+				let html1 = '';
+				data.version1.verses.forEach(verse => {
+					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
+					html1 += `<span class="verse-number">${verse.verse_number}</span>`;
+					html1 += `<span class="verse-text">${verse.text}</span>`;
+					html1 += `</p>`;
+				});
+				version1Container.innerHTML = html1;
+			} else {
+				version1Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
+			}
+			
+			// 顯示 version2 內容（如果有的話）
+			if (data.version2 && data.version2.verses) {
+				let html2 = '';
+				data.version2.verses.forEach(verse => {
+					html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
+					html2 += `<span class="verse-number">${verse.verse_number}</span>`;
+					html2 += `<span class="verse-text">${verse.text}</span>`;
+					html2 += `</p>`;
+				});
+				version2Container.innerHTML = html2;
+			} else {
+				// 如果沒有 version2，顯示相同的 version1 內容
+				if (data.version1 && data.version1.verses) {
+					let html1 = '';
+					data.version1.verses.forEach(verse => {
+						html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
+						html1 += `<span class="verse-number">${verse.verse_number}</span>`;
+						html1 += `<span class="verse-text">${verse.text}</span>`;
+						html1 += `</p>`;
+					});
+					version2Container.innerHTML = html1;
+				} else {
+					version2Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
+				}
+			}
+		}
+		
+		/**
 		 * Display chapter content for single version mode
 		 */
 		displayChapterContent(chapterData, versionKey) {
@@ -586,7 +648,7 @@ class BibleHereReader {
 			}
 
 			let html = '';
-			chapterData.verses.forEach(verse => {
+			Object.values(chapterData.verses).forEach(verse => {
 				html += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html += `<span class="verse-number">${verse.verse_number}</span>`;
 				html += `<span class="verse-text">${verse.text}</span>`;
@@ -981,7 +1043,7 @@ class BibleHereReader {
 		// Load content for the current mode - 載入真實 API 資料
 		if (this.isDualMode) {
 			// 載入真實 API 資料
-			await this.displayDualVersions();
+			await this.loadChapter();
 			// Initialize resizable divider for dual mode
 			setTimeout(() => {
 				this.initializeResizableDivider();
