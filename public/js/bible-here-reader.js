@@ -15,6 +15,7 @@ class BibleHereReader {
 		constructor(container) {
 			// Handle both string ID and DOM element
 			if (typeof container === 'string') {
+				console.log("18 container: "+container);
 				this.container = document.getElementById(container);
 			} else {
 				this.container = container;
@@ -23,16 +24,28 @@ class BibleHereReader {
 			if (!this.container) {
 				throw new Error('Bible Here Reader container not found');
 			}
-			
+
 			this.readerId = this.container.getAttribute('id');
 			this.currentMode = this.container.dataset.mode || 'single';
 			this.currentLanguage = this.container.dataset.language || 'en';
 			this.currentVersion = this.container.dataset.version || 'bible_here_en_kjv';
-			this.currentBook = this.container.dataset.book || 'genesis';
-			this.currentChapter = parseInt(this.container.dataset.chapter) || 1;
+			console.log(`📖 [BibleHereReader32] this.container.dataset.book: ${this.container.dataset.book}, this.container.dataset.chapter: ${this.container.dataset.chapter}`);
+			this.currentBook = parseInt(this.container.dataset.book) || 19;
+			this.currentChapter = parseInt(this.container.dataset.chapter) || 117;
 			
 			// Initialize dual mode state
 			this.isDualMode = false;
+			
+			// 初始化快取管理器
+			this.cacheManager = null;
+			console.log('📖 [BibleHereReader41] 初始化開始，Reader ID:', this.readerId);
+			console.log('📊 初始狀態:', {
+				mode: this.currentMode,
+				language: this.currentLanguage,
+				version: this.currentVersion,
+				book: this.currentBook,
+				chapter: this.currentChapter
+			});
 			
 			// Cache DOM elements
 			this.elements = {
@@ -63,22 +76,59 @@ class BibleHereReader {
 			this.applyFontSize(this.fontSizePreference);
 			this.initializeFontSizeSlider();
 			
+			// console.log('🎨 Prefs:', { theme: this.themePreference, fontSize: this.fontSizePreference});
+
 			this.init();
 		}
 
 		/**
 		 * Initialize the reader
 		 */
-		init() {
+		async init() {
+			console.log('🚀 BibleHereReader init() just triggered.');
+			
 			// Set initial data-mode attribute based on isDualMode
 			this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
 			
 			this.bindEvents();
 			this.initializeSelectors();
 			
+			// 初始化快取管理器
+			await this.initializeCacheManager();
+			
 			// Load default KJV Genesis Chapter 1
 			if (this.currentMode === 'single') {
 				this.loadChapter();
+			}
+			
+			console.log('✅ BibleHereReader init() 完成');
+		}
+
+		/**
+		 * Initialize cache manager
+		 */
+		async initializeCacheManager() {
+			console.log('🗄️ [BibleHereReader] 初始化快取管理器');
+			
+			try {
+				// 使用全域的快取管理器實例
+				if (typeof window.bibleHereCacheManager !== 'undefined' && window.bibleHereCacheManager) {
+					this.cacheManager = window.bibleHereCacheManager;
+					console.log('✅ [BibleHereReader] 快取管理器連接成功');
+					console.log('📊 [BibleHereReader] 快取管理器狀態:', {
+						isInitialized: this.cacheManager.isInitialized,
+						cacheExpiry: this.cacheManager.cacheExpiry
+					});
+					
+					// 檢查快取統計
+					const stats = await this.cacheManager.getCacheStats();
+					console.log('📈 [BibleHereReader] 快取統計:', stats);
+				} else {
+					console.warn('⚠️ [BibleHereReader] 全域快取管理器不可用，將直接使用 API');
+				}
+			} catch (error) {
+				console.error('❌ [BibleHereReader] 快取管理器初始化失敗:', error);
+				console.warn('⚠️ [BibleHereReader] 將直接使用 API 獲取資料');
 			}
 		}
 
@@ -91,7 +141,7 @@ class BibleHereReader {
 		bindEvents() {
 			// Book and Chapter button click
 		if (this.elements.bookChapterButton) {
-			console.log('綁定書卷章節按鈕點擊事件');
+			// console.log('綁定書卷章節按鈕點擊事件');
 			this.elements.bookChapterButton.addEventListener('click', () => {
 				console.log('書卷章節按鈕被點擊');
 				this.toggleBookChapterMenu();
@@ -221,10 +271,9 @@ class BibleHereReader {
 		 * Initialize selectors based on current state
 		 */
 		initializeSelectors() {
-			if (this.currentLanguage && this.elements.languageSelect) {
-				this.elements.languageSelect.val(this.currentLanguage);
-				this.loadVersions();
-			}
+			// 不在初始化時載入版本，避免重設 currentBook 和 currentChapter
+			// 這些值已經在 constructor 中正確設定
+			console.log('🔧 [BibleHereReader] initializeSelectors 跳過版本載入，保持現有設定');
 		}
 
 		/**
@@ -348,10 +397,17 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Load chapter content
+		 * Load chapter content using cache manager or API
 		 */
-		loadChapter() {
+		async loadChapter() {
+			console.log('📖 開始載入章節:', {
+				version: this.currentVersion,
+				book: this.currentBook,
+				chapter: this.currentChapter
+			});
+			
 			if (!this.currentVersion || !this.currentBook || !this.currentChapter) {
+				console.warn('⚠️ 缺少必要參數');
 				this.showError('Please select version, book, and chapter');
 				return;
 			}
@@ -363,12 +419,151 @@ class BibleHereReader {
 				this.switchMode('single');
 			}
 
-			// Mock chapter loading for phase 1
-			// This will be replaced with actual API call in phase 2
-			setTimeout(() => {
+			try {
+				let chapterContent = null;
+				
+				// 嘗試從快取獲取
+			if (this.cacheManager) {
+				console.log('🗄️ [BibleHereReader] 嘗試從快取獲取章節內容');
+				chapterContent = await this.cacheManager.getCachedVerses(
+					this.currentLanguage,
+					this.currentVersion,
+					this.currentBook,
+					this.currentChapter
+				);
+				
+				if (chapterContent && chapterContent.length > 0) {
+					console.log('✅ [BibleHereReader] 從快取獲取到章節內容，經文數量:', chapterContent.length);
+					console.log('📖 [BibleHereReader] 快取經文資料預覽:', chapterContent.slice(0, 3));
+					this.hideLoading();
+					this.displayChapterContent({ verses: chapterContent });
+					return;
+				} else {
+					console.log('⚠️ [BibleHereReader] 快取中沒有找到章節內容，將從 API 獲取');
+				}
+			}
+				
+				// 從 API 獲取
+			console.log('🌐 從 API 獲取章節內容');
+			
+			// 構建 URL 參數
+			const url = new URL(bibleHereAjax.ajaxurl);
+			url.searchParams.set('action', 'bible_here_public_get_verses');
+			url.searchParams.set('book_number_start', this.currentBook);
+			url.searchParams.set('book_number_end', this.currentBook);
+			url.searchParams.set('chapter_number_start', this.currentChapter);
+			url.searchParams.set('chapter_number_end', this.currentChapter);
+			url.searchParams.set('version1_bible', this.currentVersion);
+			
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: {
+					"X-WP-Nonce": bibleHereAjax.nonce
+				}
+			});
+				
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				
+				const data = await response.json();
+				
+				// 添加詳細的 API 回應日誌
+				console.log('📋 [BibleHereReader] API 完整回應:', {
+					success: data.success,
+					data: data.data,
+					message: data.message,
+					fullResponse: data
+				});
+				
+				// 檢查回應條件並添加日誌
+				console.log('🔍 [BibleHereReader] 檢查回應條件:', {
+					hasSuccess: !!data.success,
+					hasData: !!data.data,
+					hasVersion1: !!(data.data && data.data.version1),
+					hasVersion1Verses: !!(data.data && data.data.version1 && data.data.version1.verses),
+					versesLength: data.data && data.data.version1 && data.data.version1.verses ? data.data.version1.verses.length : 0
+				});
+				
+				if (data.success && data.data && data.data.version1 && data.data.version1.verses) {
+					console.log('✅ API 返回章節內容，經文數量:', data.data.version1.verses.length);
+					
+					// 快取 API 結果
+				if (this.cacheManager) {
+					console.log('💾 [BibleHereReader] 將章節內容存入快取');
+					
+					// Cache version1 data
+					if (data.data.version1 && data.data.version1.verses) {
+						console.log('📊 [BibleHereReader] 準備快取 version1 經文資料:', {
+							version: this.currentVersion,
+							book: this.currentBook,
+							chapter: this.currentChapter,
+							verseCount: data.data.version1.verses.length,
+							sample: data.data.version1.verses.slice(0, 2)
+						});
+						
+						const versesForCacheV1 = data.data.version1.verses.map(verse => ({
+							book_number: this.currentBook,
+							chapter_number: this.currentChapter,
+							verse_number: verse.verse,
+							text: verse.text,
+							verse_id: verse.verse_id
+						}));
+						
+						await this.cacheManager.cacheVerses(
+							versesForCacheV1,
+							this.currentVersion
+						);
+						console.log('✅ [BibleHereReader] version1 章節內容已成功存入快取');
+					}
+					
+					// Cache version2 data if exists
+					if (data.data.version2 && data.data.version2.verses) {
+						console.log('📊 [BibleHereReader] 準備快取 version2 經文資料:', {
+							book: this.currentBook,
+							chapter: this.currentChapter,
+							verseCount: data.data.version2.verses.length,
+							sample: data.data.version2.verses.slice(0, 2)
+						});
+						
+						const versesForCacheV2 = data.data.version2.verses.map(verse => ({
+							book_number: this.currentBook,
+							chapter_number: this.currentChapter,
+							verse_number: verse.verse,
+							text: verse.text,
+							verse_id: verse.verse_id
+						}));
+						
+						// Use a different version identifier for version2
+						const version2Key = this.currentVersion + '_v2';
+						await this.cacheManager.cacheVerses(
+							versesForCacheV2,
+							version2Key
+						);
+						console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
+					}
+				}
+					
+					this.hideLoading();
+					this.displayChapterContent(data.data.version1);
+				} else {
+					// 改善錯誤處理邏輯
+					const errorMessage = typeof data.data === 'string' ? data.data : 
+										(data.message || JSON.stringify(data) || 'Failed to load chapter');
+					console.log('❌ [BibleHereReader] API 回應不符合預期:', {
+						success: data.success,
+						data: data.data,
+						message: data.message,
+						errorMessage: errorMessage
+					});
+					throw new Error(errorMessage);
+				}
+				
+			} catch (error) {
+				console.error('❌ 載入章節失敗:', error);
 				this.hideLoading();
-				this.displayMockChapter();
-			}, 1000);
+				this.showError('Failed to load chapter: ' + error.message);
+			}
 		}
 
 		/**
@@ -392,9 +587,9 @@ class BibleHereReader {
 
 			let html = '';
 			chapterData.verses.forEach(verse => {
-				html += `<p class="verse" data-verse="${verse.verse_number}">`;
+				html += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html += `<span class="verse-number">${verse.verse_number}</span>`;
-				html += `<span class="verse-text">${verse.verse_text}</span>`;
+				html += `<span class="verse-text">${verse.text}</span>`;
 				html += `</p>`;
 			});
 
@@ -508,81 +703,25 @@ class BibleHereReader {
 				bookDisplayName = bookKeyMapping[this.currentBook];
 			}
 			
+			// 使用實際的 currentBook 和 currentChapter 值
 			this.elements.bookChapterText.textContent = `${bookDisplayName} ${this.currentChapter}`;
 		}
 	}
 
 		/**
-		 * Display dual versions content (for testing)
+		 * Display dual versions content (載入真實資料)
 		 */
-		displayDualVersions() {
+		async displayDualVersions() {
 			const dualMode = this.elements.dualMode;
 			if (!dualMode) return;
 			
-			const version1 = dualMode.querySelector('.version-1');
-			const version2 = dualMode.querySelector('.version-2');
-			
-			if (version1) {
-				this.populateVersionContainer(version1, 'King James Version', 'KJV');
-			}
-			
-			if (version2) {
-				this.populateVersionContainer(version2, 'New International Version', 'NIV');
-			}
+			// 載入真實 API 資料而非模擬資料
+			await this.loadChapter();
 		}
 		
-		/**
-		 * Populate a version container with mock content
-		 */
-		populateVersionContainer(container, versionName, versionAbbr) {
-			const versesContainer = container.querySelector('.verses-container');
-			
-			if (versesContainer) {
-				// Generate mock verses with slight variation for different versions
-				let versesHtml = '';
-				for (let i = 1; i <= 50; i++) {
-					const versionSuffix = versionAbbr === 'KJV' ? ' (traditional text)' : ' (modern translation)';
-					versesHtml += `
-						<div class="verse" data-verse-id="${this.formatVerseId(this.currentBook, this.currentChapter, i)}">
-							<span class="verse-number">${i}</span>
-							<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}${versionSuffix}. This content will be replaced with actual Bible text in phase 2 when the API is implemented. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span>
-						</div>
-					`;
-				}
-				versesContainer.innerHTML = versesHtml;
-			}
-		}
+
 		
-		/**
-		 * Display mock chapter content (for phase 1 testing)
-		 */
-		displayMockChapter() {
-			const versionContainer = this.elements.singleMode.querySelector('.bible-version');
-			let chapterContent = versionContainer.querySelector('.chapter-content');
 
-			// Create .chapter-content if it doesn't exist
-			if (!chapterContent) {
-				chapterContent = document.createElement('div');
-				chapterContent.className = 'chapter-content';
-				versionContainer.appendChild(chapterContent);
-			}
-
-			// Generate mock verses
-		let versesHtml = '';
-		for (let i = 1; i <= 50; i++) {
-			versesHtml += `
-				<div class="verse" data-verse-id="${this.formatVerseId(this.currentBook, this.currentChapter, i)}">
-					<span class="verse-number">${i}</span>
-					<span class="verse-text">This is a sample verse ${i} from ${this.currentBook} chapter ${this.currentChapter}. This content will be replaced with actual Bible text in phase 2 when the API is implemented. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </span>
-				</div>
-			`;
-		}
-			// console.log("hi 318 here is versionContainer: ", versionContainer); debugger;
-			chapterContent.innerHTML = versesHtml;
-			
-			// Show add version button
-			// this.elements.versionsButton.show();
-		}
 
 		/**
 		 * Format verse ID
@@ -702,63 +841,100 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Navigate to previous chapter
-		 */
-		navigatePrevious() {
-			if (this.currentChapter > 1) {
-				this.currentChapter--;
-				this.updateChapterSelect();
-				this.loadChapter();
-			} else {
-				// Go to previous book's last chapter
-				const currentBookIndex = this.books.findIndex(book => book.book_number === this.currentBook);
+	 * Navigate to previous chapter
+	 */
+	async navigatePrevious() {
+		if (this.currentChapter > 1) {
+			this.currentChapter--;
+			this.updateBookChapterButton();
+			this.loadChapter();
+		} else {
+			// Go to previous book's last chapter
+			const books = await this.getCachedBooks();
+			if (books) {
+				const currentBookIndex = books.findIndex(book => book.book_number == this.currentBook);
 				if (currentBookIndex > 0) {
-					this.currentBook = this.books[currentBookIndex - 1].book_number;
-					this.updateBookSelect();
-					this.loadChapters(this.currentBook).then(() => {
-						this.currentChapter = this.chapters.length;
-						this.updateChapterSelect();
-						this.loadChapter();
-					});
+					const previousBook = books[currentBookIndex - 1];
+					this.currentBook = previousBook.book_number;
+					this.currentChapter = previousBook.chapters; // 使用書卷的章節數作為最後一章
+					this.updateBookChapterButton();
+					this.loadChapter();
 				}
 			}
 		}
+	}
 
 		/**
-		 * Navigate to next chapter
-		 */
-		navigateNext() {
-			if (this.currentChapter < this.chapters.length) {
-				this.currentChapter++;
-				this.updateChapterSelect();
-				this.loadChapter();
-			} else {
-				// Go to next book's first chapter
-				const currentBookIndex = this.books.findIndex(book => book.book_number === this.currentBook);
-				if (currentBookIndex < this.books.length - 1) {
-					this.currentBook = this.books[currentBookIndex + 1].book_number;
-					this.updateBookSelect();
-					this.loadChapters(this.currentBook).then(() => {
-						this.currentChapter = 1;
-						this.updateChapterSelect();
-						this.loadChapter();
-					});
+	 * Navigate to next chapter
+	 */
+	async navigateNext() {
+		// 從書卷快取中獲取當前書卷的章節數
+		const currentBookData = await this.getCurrentBookData();
+		const maxChapters = currentBookData ? currentBookData.chapters : 1;
+		
+		if (this.currentChapter < maxChapters) {
+			this.currentChapter++;
+			this.updateBookChapterButton();
+			this.loadChapter();
+		} else {
+			// Go to next book's first chapter
+			const books = await this.getCachedBooks();
+			if (books) {
+				const currentBookIndex = books.findIndex(book => book.book_number == this.currentBook);
+				if (currentBookIndex >= 0 && currentBookIndex < books.length - 1) {
+					this.currentBook = books[currentBookIndex + 1].book_number;
+					this.currentChapter = 1;
+					this.updateBookChapterButton();
+					this.loadChapter();
 				}
 			}
 		}
+	}
 
 		/**
-		 * Open search interface
-		 */
-		openSearch() {
-			// TODO: Implement search functionality
-			console.log('Search functionality to be implemented');
+	 * Open search interface
+	 */
+	openSearch() {
+		// TODO: Implement search functionality
+		console.log('Search functionality to be implemented');
+	}
+
+	/**
+	 * Get current book data from cache
+	 */
+	async getCurrentBookData() {
+		if (!this.cacheManager) return null;
+		
+		try {
+			const books = await this.cacheManager.getCachedBooks(this.currentLanguage);
+			if (books && books.length > 0) {
+				return books.find(book => book.book_number == this.currentBook);
+			}
+		} catch (error) {
+			console.error('❌ 獲取當前書卷資料失敗:', error);
 		}
+		
+		return null;
+	}
+
+	/**
+	 * Get cached books
+	 */
+	async getCachedBooks() {
+		if (!this.cacheManager) return null;
+		
+		try {
+			return await this.cacheManager.getCachedBooks(this.currentLanguage);
+		} catch (error) {
+			console.error('❌ 獲取書卷快取失敗:', error);
+			return null;
+		}
+	}
 
 		/**
 	 * Toggle between single and dual version modes
 	 */
-	toggleVersions() {
+	async toggleVersions() {
 		console.log('Version toggle clicked - switching modes');
 		
 		// Toggle between single and dual version modes
@@ -802,15 +978,17 @@ class BibleHereReader {
 			this.elements.dualMode.style.display = this.isDualMode ? 'block' : 'none';
 		}
 		
-		// Load content for the current mode
+		// Load content for the current mode - 載入真實 API 資料
 		if (this.isDualMode) {
-			this.displayDualVersions();
+			// 載入真實 API 資料
+			await this.displayDualVersions();
 			// Initialize resizable divider for dual mode
 			setTimeout(() => {
 				this.initializeResizableDivider();
 			}, 100);
 		} else {
-			this.displayMockChapter();
+			// 載入真實 API 資料
+			await this.loadChapter();
 		}
 	}
 
@@ -1023,8 +1201,8 @@ class BibleHereReader {
 		 * Apply font size to the reader
 		 */
 		applyFontSize(size) {
-			console.log('🎨 Applying font size:', size);
-			console.log('🔍 Container element:', this.container);
+			// console.log('🎨 Applying font size:', size);
+			// console.log('🔍 Container element:', this.container);
 			
 			// Remove existing font size classes - corrected class names to match CSS
 			const existingClasses = ['font-size-xs', 'font-size-sm', 'font-size-base', 'font-size-lg', 'font-size-xl', 'font-size-2xl', 'font-size-3xl', 'font-size-4xl'];
@@ -1038,20 +1216,20 @@ class BibleHereReader {
 			// Apply new font size class
 			const newClassName = `font-size-${size}`;
 			this.container.classList.add(newClassName);
-			console.log('✅ Added new font size class:', newClassName);
+			// console.log('✅ Added new font size class:', newClassName);
 			
 			// Force a style recalculation
 			this.container.offsetHeight;
 			
 			// Verify the class was applied
 			if (this.container.classList.contains(newClassName)) {
-				console.log('✅ Font size class successfully applied');
+				// console.log('✅ Font size class successfully applied');
 			} else {
 				console.error('❌ Failed to apply font size class');
 			}
 			
 			// Log current classes for debugging
-			console.log('📋 Current container classes:', Array.from(this.container.classList));
+			// console.log('📋 Current container classes:', Array.from(this.container.classList));
 			
 			// Check if verse elements exist and log their computed styles
 			const verseTexts = this.container.querySelectorAll('.verse-text');
@@ -1093,7 +1271,7 @@ class BibleHereReader {
 				}
 				slider.value = currentIndex;
 				valueDisplay.textContent = fontSizePixels[currentIndex];
-				console.log('🎚️ Font size slider initialized with index:', currentIndex, 'size:', this.fontSizePreference);
+				// console.log('🎚️ Font size slider initialized with index:', currentIndex, 'size:', this.fontSizePreference);
 			}
 		}
 		
@@ -1441,54 +1619,84 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Load versions tab content
+		 * Load versions tab content using cache manager or API
 		 */
-		loadVersionsTab() {
-			console.log('loadVersionsTab called');
+		async loadVersionsTab() {
+			console.log('📚 開始載入版本列表');
 			const versionsContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="versions"] .versions-list');
 			if (!versionsContent) {
-				console.log('versionsContent not found');
+				console.log('❌ 找不到版本內容容器');
 				return;
 			}
 
 			// Show loading state
 			versionsContent.innerHTML = '<div class="loading-message">Loading versions...</div>';
 
-			// Call bible_here_public_get_versions API
-			const params = new URLSearchParams({
-				action: 'bible_here_public_get_versions',
-			});
-
-			const requestUrl = `${bibleHereAjax.ajaxurl}?${params}`;
-			console.log('Making AJAX (with nonce) request to:', requestUrl);
-
-			fetch(requestUrl, {
-				method: 'GET',
-				headers: {
-					"X-WP-Nonce": bibleHereAjax.nonce
+			try {
+				let versions = null;
+				
+				// 嘗試從快取獲取版本列表
+			if (this.cacheManager) {
+				console.log('🗄️ [BibleHereReader] 嘗試從快取獲取版本列表');
+				versions = await this.cacheManager.getVersions(navigator.languages, ["Bible", "Bible+Strong"]);
+				
+				if (versions && versions.length > 0) {
+					console.log('✅ [BibleHereReader] 從快取獲取到版本列表，版本數量:', versions.length);
+					console.log('📖 [BibleHereReader] 快取版本資料預覽:', versions.slice(0, 3));
+					this.renderVersionsList(versions, versionsContent);
+					return;
+				} else {
+					console.log('⚠️ [BibleHereReader] 快取中沒有找到版本列表，將從 API 獲取');
 				}
-			})
-			.then(response => {
-				console.log('Response received:', response);
+			}
+
+				// 從 API 獲取版本列表
+				console.log('🌐 從 API 獲取版本列表');
+				const params = new URLSearchParams({
+					action: 'bible_here_public_get_versions',
+				});
+
+				const requestUrl = `${bibleHereAjax.ajaxurl}?${params}`;
+				console.log('📡 發送 AJAX 請求到:', requestUrl);
+
+				const response = await fetch(requestUrl, {
+					method: 'GET',
+					headers: {
+						"X-WP-Nonce": bibleHereAjax.nonce
+					}
+				});
+				
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
-				return response.json();
-			})
-			.then(data => {
-				console.log('Response data:', data);
+				
+				const data = await response.json();
+				console.log('📊 API 回應資料:', data);
+				
 				if (data.success && data.data && data.data.versions) {
-					console.log('Versions loaded successfully:', data.data.versions);
+					console.log('✅ API 返回版本列表，版本數量:', data.data.versions.length);
+					
+					// 快取 API 結果
+				if (this.cacheManager) {
+					console.log('💾 [BibleHereReader] 將版本列表存入快取');
+					console.log('📊 [BibleHereReader] 準備快取的版本資料:', {
+						language: this.currentLanguage,
+						count: data.data.versions.length,
+						sample: data.data.versions.slice(0, 2)
+					});
+					await this.cacheManager.cacheVersions(data.data.versions, this.currentLanguage);
+					console.log('✅ [BibleHereReader] 版本資料已成功存入快取');
+				}
+					
 					this.renderVersionsList(data.data.versions, versionsContent);
 				} else {
-					console.log('API response error:', data);
 					throw new Error(data.data?.message || 'Cannot load versions');
 				}
-			})
-			.catch(error => {
-				console.error('Error loading versions:', error);
+				
+			} catch (error) {
+				console.error('❌ 載入版本列表失敗:', error);
 				versionsContent.innerHTML = `<div class="error-message">Loading versions failed: ${error.message}</div>`;
-			});
+			}
 		}
 
 		/**
@@ -1544,124 +1752,172 @@ class BibleHereReader {
 		}
 
 		/**
-		 * Load books tab content
+		 * Load books tab content using cache manager or API
 		 */
 		async loadBooksTab() {
-		console.log('loadBooksTab() 函數被調用');
+		console.log('📚 開始載入書卷列表');
 		const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
 		if (!booksContent) {
-			console.log('找不到 books content 元素');
+			console.log('❌ 找不到書卷內容容器');
 			return;
 		}
 
 		// Check if content already exists (has books sections)
 		const existingSections = booksContent.querySelectorAll('.books-section');
 		if (existingSections.length > 0) {
-			console.log('書卷內容已存在，只更新 active 狀態');
+			console.log('📖 書卷內容已存在，只更新 active 狀態');
 			// Content already exists, just update active states
 			this.updateBookActiveStates();
 			return;
 		}
 
-			console.log('開始發送 AJAX 請求獲取書卷資料');
 		try {
-			// 調用 API 獲取書卷列表
+			let books = null;
+			
+			// 嘗試從快取獲取書卷列表
+			if (this.cacheManager) {
+				console.log('🗄️ [BibleHereReader] 嘗試從快取獲取書卷列表');
+				books = await this.cacheManager.getCachedBooks(this.currentLanguage);
+				
+				if (books && books.length > 0) {
+					console.log('✅ [BibleHereReader] 從快取獲取到書卷列表，書卷數量:', books.length);
+					console.log('📚 [BibleHereReader] 快取書卷資料預覽:', books.slice(0, 3));
+					this.renderBooksList(books, booksContent);
+					return;
+				} else {
+					console.log('⚠️ [BibleHereReader] 快取中沒有找到書卷列表，將從 API 獲取');
+				}
+			}
+
+			// 從 API 獲取書卷列表
+			console.log('🌐 從 API 獲取書卷列表');
 			const params = new URLSearchParams({
 				action: 'bible_here_public_get_books',
 				_wpnonce: bibleHereAjax.nonce
 			});
 
-			console.log('發送 AJAX 請求，URL:', `${bibleHereAjax.ajaxurl}?${params}`);
-			console.log('請求參數:', { action: 'bible_here_public_get_books', _wpnonce: bibleHereAjax.nonce });
+			console.log('📡 發送 AJAX 請求到:', `${bibleHereAjax.ajaxurl}?${params}`);
 
 			const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 				method: 'GET'
 			});
 
-				const data = await response.json();
-			console.log('AJAX 請求成功，回應:', data);
+			const data = await response.json();
+			console.log('📊 API 回應資料:', data);
 			
 			if (!data.success) {
-				console.error('API 回應錯誤:', data.data);
-				return;
+				throw new Error(data.data || 'Failed to load books');
 			}
 
-				const books = data.data;
-				
-				// 分離舊約和新約書卷 (假設 API 返回的書卷有 testament 字段或根據 book_number 判斷)
-				const oldTestament = books.filter(book => {
-					// 如果有 testament 字段，使用它；否則根據 book_number 判斷
-					if (book.testament) {
-						return book.testament === 'old' || book.testament === 'OT';
-					}
-					// 假設舊約書卷編號 1-39
-					return book.book_number && book.book_number <= 39;
-				});
-				
-				const newTestament = books.filter(book => {
-					// 如果有 testament 字段，使用它；否則根據 book_number 判斷
-					if (book.testament) {
-						return book.testament === 'new' || book.testament === 'NT';
-					}
-					// 假設新約書卷編號 40-66
-					return book.book_number && book.book_number >= 40;
-				});
+			books = data.data.books;
+			console.log('📚 從 API 獲取到書卷資料，書卷數量:', Object.keys(books).length);
 
-				let html = '<div class="books-section">';
-				html += '<h5 class="testament-title">舊約</h5>';
-				html += '<div class="books-grid old-testament">';
-				oldTestament.forEach(book => {
-					// 使用 book_name 作為 key，如果沒有則使用 book_key
-					const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
-					const isActive = bookKey === this.currentBook;
-					const bookDisplayName = book.book_abbreviation || book.book_name;
-					const bookFullName = book.book_name;
-					
-					html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
-					html += `<span class="book-name">${bookDisplayName}</span>`;
-					html += `<span class="book-full-name">${bookFullName}</span>`;
-					html += `</div>`;
+			// 將書卷資料存入快取 - 轉換物件為陣列格式
+			const booksArray = Object.values(books);
+			if (this.cacheManager && books && Object.keys(books).length > 0) {
+				console.log('💾 [BibleHereReader] 將書卷資料存入快取');
+				console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
+					language: this.currentLanguage,
+					count: booksArray.length,
+					sample: booksArray.slice(0, 2)
 				});
-				html += '</div></div>';
+				try {
+					await this.cacheManager.cacheBooks(booksArray, this.currentLanguage);
+					console.log('✅ [BibleHereReader] 書卷資料已成功存入快取');
+				} catch (cacheError) {
+					console.error('❌ [BibleHereReader] 存入快取時發生錯誤:', cacheError);
+				}
+			}
 
-				html += '<div class="books-section">';
-				html += '<h5 class="testament-title">新約</h5>';
-				html += '<div class="books-grid new-testament">';
-				newTestament.forEach(book => {
-					// 使用 book_name 作為 key，如果沒有則使用 book_key
-					const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
-					const isActive = bookKey === this.currentBook;
-					const bookDisplayName = book.book_abbreviation || book.book_name;
-					const bookFullName = book.book_name;
-					
-					html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
-					html += `<span class="book-name">${bookDisplayName}</span>`;
-					html += `<span class="book-full-name">${bookFullName}</span>`;
-					html += `</div>`;
-				});
-				html += '</div></div>';
-
-				booksContent.innerHTML = html;
-
-				// Bind events for new book items
-				const bookItems = booksContent.querySelectorAll('.book-item');
-				bookItems.forEach(item => {
-					item.addEventListener('click', () => {
-						const bookName = item.querySelector('.book-full-name').textContent;
-						this.selectBook(item.dataset.book, bookName);
-					});
-				});
+			// 渲染書卷列表 - 傳入陣列格式
+			this.renderBooksList(booksArray, booksContent);
 			} catch (error) {
-			console.error('AJAX 請求失敗:', error);
-			// 顯示錯誤訊息給用戶
-			booksContent.innerHTML = '<div class="error-message">載入書卷列表時發生錯誤，請稍後再試。</div>';
-		}
-		}
+		console.error('❌ 載入書卷列表時發生錯誤:', error);
+		// 顯示錯誤訊息給用戶
+		booksContent.innerHTML = '<div class="error-message">載入書卷列表時發生錯誤，請稍後再試。</div>';
+	}
+	}
 
-		/**
-		 * Update active states for existing book items
-		 */
-		updateBookActiveStates() {
+	/**
+	 * Render books list from data
+	 */
+	renderBooksList(books, booksContent) {
+		console.log('🎨 開始渲染書卷列表，書卷數量:', books.length);
+		
+		// 分離舊約和新約書卷
+		const oldTestament = books.filter(book => {
+			// 如果有 testament 字段，使用它；否則根據 book_number 判斷
+			if (book.testament) {
+				return book.testament === 'old' || book.testament === 'OT';
+			}
+			// 假設舊約書卷編號 1-39
+			return book.book_number && book.book_number <= 39;
+		});
+		
+		const newTestament = books.filter(book => {
+			// 如果有 testament 字段，使用它；否則根據 book_number 判斷
+			if (book.testament) {
+				return book.testament === 'new' || book.testament === 'NT';
+			}
+			// 假設新約書卷編號 40-66
+			return book.book_number && book.book_number >= 40;
+		});
+
+		console.log('📖 舊約書卷數量:', oldTestament.length, '新約書卷數量:', newTestament.length);
+
+		let html = '<div class="books-section">';
+		html += '<h5 class="testament-title">舊約</h5>';
+		html += '<div class="books-grid old-testament">';
+		oldTestament.forEach(book => {
+			// 使用 book_name 作為 key，如果沒有則使用 book_key
+			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+			const isActive = bookKey === this.currentBook;
+			const bookDisplayName = book.book_abbreviation || book.book_name;
+			const bookFullName = book.book_name;
+			
+			html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			html += `<span class="book-name">${bookDisplayName}</span>`;
+			html += `<span class="book-full-name">${bookFullName}</span>`;
+			html += `</div>`;
+		});
+		html += '</div></div>';
+
+		html += '<div class="books-section">';
+		html += '<h5 class="testament-title">新約</h5>';
+		html += '<div class="books-grid new-testament">';
+		newTestament.forEach(book => {
+			// 使用 book_name 作為 key，如果沒有則使用 book_key
+			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+			const isActive = bookKey === this.currentBook;
+			const bookDisplayName = book.book_abbreviation || book.book_name;
+			const bookFullName = book.book_name;
+			
+			html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			html += `<span class="book-name">${bookDisplayName}</span>`;
+			html += `<span class="book-full-name">${bookFullName}</span>`;
+			html += `</div>`;
+		});
+		html += '</div></div>';
+
+		booksContent.innerHTML = html;
+		console.log('✅ 書卷列表 HTML 已生成並插入到頁面');
+
+		// 綁定書卷點擊事件
+		const bookItems = booksContent.querySelectorAll('.book-item');
+		bookItems.forEach(item => {
+			item.addEventListener('click', () => {
+				const bookName = item.querySelector('.book-full-name').textContent;
+				console.log('📚 書卷被點擊:', { bookKey: item.dataset.book, bookName });
+				this.selectBook(item.dataset.book, bookName);
+			});
+		});
+		console.log('🔗 書卷點擊事件已綁定，共', bookItems.length, '個書卷');
+	}
+
+	/**
+	 * Update active states for existing book items
+	 */
+	updateBookActiveStates() {
 			const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
 			if (!booksContent) return;
 

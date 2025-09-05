@@ -19,8 +19,8 @@ if ( ! defined( 'WPINC' ) ) {
 
 // Determine the initial mode - always single mode now
 $initial_mode = 'single';
-$default_book = !empty( $atts['book'] ) ? sanitize_text_field( $atts['book'] ) : 'Genesis';
-$default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 1;
+$default_book = !empty( $atts['book'] ) ? sanitize_text_field( $atts['book'] ) : 19;
+$default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 117;
 $default_language = !empty( $atts['language'] ) ? sanitize_text_field( $atts['language'] ) : 'en';
 $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['version'] ) : 'bible_here_en_kjv';
 
@@ -78,7 +78,6 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 							<div class="versions-list">
 								<div class="version-item active"><?php _e( '和合本', 'bible-here' ); ?></div>
 								<div class="version-item"><?php _e( 'KJV', 'bible-here' ); ?></div>
-								<div class="version-item"><?php _e( 'NIV', 'bible-here' ); ?></div>
 							</div>
 						</div>
 

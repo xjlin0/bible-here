@@ -111,11 +111,38 @@ class Bible_Here_Public {
 			'all' 
 		);
 
-		// Enqueue reader-specific JavaScript (no jQuery dependency)
+		// Enqueue Dexie.js from CDN for IndexedDB support
+		wp_enqueue_script( 
+			$this->plugin_name . '-dexie', 
+			'https://unpkg.com/dexie@3.2.4/dist/dexie.min.js', 
+			array(), 
+			'3.2.4', 
+			true 
+		);
+
+		// Enqueue cache management JavaScript
+		wp_enqueue_script( 
+			$this->plugin_name . '-cache', 
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-cache.js', 
+			array( $this->plugin_name . '-dexie' ), 
+			$this->version, 
+			true 
+		);
+
+		// Enqueue seed data JavaScript
+		wp_enqueue_script( 
+			$this->plugin_name . '-seed-data', 
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-seed-data.js', 
+			array(), 
+			$this->version, 
+			true 
+		);
+
+		// Enqueue reader-specific JavaScript (depends on cache and seed data)
 		wp_enqueue_script( 
 			$this->plugin_name . '-reader', 
 			plugin_dir_url( __FILE__ ) . 'js/bible-here-reader.js', 
-			array(), 
+			array( $this->plugin_name . '-cache', $this->plugin_name . '-seed-data' ), 
 			$this->version, 
 			true 
 		);
@@ -582,8 +609,9 @@ class Bible_Here_Public {
 		$books = array();
 		if ( $results ) {
 			foreach ( $results as $book ) {
-				$books[] = array(
-					'book_number' => intval( $book['book_number'] ),
+				$book_number = intval( $book['book_number'] );
+				$books[$book_number] = array(
+					'book_number' => $book_number,
 					'title_full' => $book['title_full'],
 					'title_short' => $book['title_short'],
 					'genre_name' => $book['genre_name'],
