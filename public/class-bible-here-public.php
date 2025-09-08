@@ -74,8 +74,8 @@ class Bible_Here_Public {
 		// Parse shortcode attributes with new defaults
 		$atts = shortcode_atts( array(
 			'version' => 'bible_here_en_kjv',
-			'book' => '1',
-			'chapter' => '1',
+			'book' => '19',
+			'chapter' => '117',
 			'language' => 'en'
 		), $atts, 'bible-here-reader' );
 

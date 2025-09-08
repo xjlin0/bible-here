@@ -24,7 +24,7 @@ class BibleHereReader {
 		if (!this.container) {
 			throw new Error('Bible Here Reader container not found');
 		}
-
+		console.log('📖 [BibleHereReader27] this.container:', this.container);
 		this.readerId = this.container.getAttribute('id');
 		this.currentMode = this.container.dataset.mode || 'single';
 		this.currentLanguage = this.container.dataset.language || 'en';
@@ -981,7 +981,7 @@ class BibleHereReader {
 		try {
 			return await this.cacheManager.getCachedBooks(this.currentLanguage);
 		} catch (error) {
-			console.error('❌ 獲取書卷快取失敗:', error);
+			console.error('❌ [BibleHereReader984] 獲取書卷快取失敗:', error);
 			return null;
 		}
 	}
@@ -1290,8 +1290,8 @@ class BibleHereReader {
 		const verseTexts = this.container.querySelectorAll('.verse-text');
 		const verseNumbers = this.container.querySelectorAll('.verse_number');
 		
-		console.log('📝 Found verse texts:', verseTexts.length);
-		console.log('🔢 Found verse numbers:', verseNumbers.length);
+		console.log('📝 [BibleHereReader1293] Found verse texts:', verseTexts.length);
+		console.log('🔢 [BibleHereReader1294] Found verse numbers:', verseNumbers.length);
 		
 		if (verseTexts.length > 0) {
 			const firstVerseText = verseTexts[0];
@@ -2072,6 +2072,7 @@ class BibleHereReader {
  * Initialize all Bible Here Readers on the page
  */
 document.addEventListener('DOMContentLoaded', function() {
+	console.log('🎬 [BibleHereReader2075] DOM loaded, initializing reader system...');
 	const readers = document.querySelectorAll('.bible-here-reader');
 	readers.forEach(function(element) {
 		new BibleHereReader(element);
