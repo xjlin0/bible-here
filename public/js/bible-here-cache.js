@@ -396,42 +396,31 @@ class BibleHereCacheManager {
      */
     async getVerses(languageCode, versionTable, bookNumber, chapterNumber, verseStart = null, verseEnd = null) {
         try {
-            console.log('🔍 [CacheManager395] Searching cached verses:', {
+            console.log('🔍 [CacheManager399] Searching cached verses:', {
                 version: versionTable,
                 book: bookNumber, chapter: chapterNumber,
                 verseRange: verseStart && verseEnd ? `${verseStart}-${verseEnd}` : 'all'
             });
-            const versesCount = await this.db.verses.count();
-            console.log('📖 [CacheManager401] versesCount: '+versesCount);
-            const cachedVerses = [];
-            console.log('📖 [CacheManager403] verseStart: '+verseStart+' verseEnd: '+verseEnd);
-            if (verseStart && verseEnd) {
-                // Get specific verse range
-                for (let verseNum = verseStart; verseNum <= verseEnd; verseNum++) {
-                    const verseId = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}${String(verseNum).padStart(3, '0')}`;;
-                    const compositeKey = [versionTable, verseId];  // Use array format for composite key
+            console.log('📖 [CacheManager407] verseStart: '+verseStart+' verseEnd: '+verseEnd);
+            // 構建章節的起始和結束 verse_id
+            const chapterPrefix = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}`;
+            const startVerseId = `${chapterPrefix}${verseStart ? String(verseStart).padStart(3, '0') : '000'}`; // 假設註釋在第一節前有整章概論
+            const endVerseId = `${chapterPrefix}${verseEnd ? String(verseEnd).padStart(3, '0') : '176'}`;   // 最後一節（假設最多176節）
 
-                    const cachedVerse = await this.db.verses.get(compositeKey);
-                    if (cachedVerse) {
-                        cachedVerses.push(cachedVerse);
-                    }
-                }
-            } else {
-                console.log('📖 [CacheManager416] starting getting all verses since we have no idea how many verses in this chapter');
-                for (let verseNum = 1; verseNum <= 176; verseNum++) { // Assume max 176 verses max
-                    const verseId = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}${String(verseNum).padStart(3, '0')}`;
-                    console.log('📖 [CacheManager419] finding verseId: '+verseId);
-                    const compositeKey = [versionTable, verseId];  // Use array format for composite key
-                    const cachedVerse = await this.db.verses.get(compositeKey);
-                    if (cachedVerse) {
-                        cachedVerses.push(cachedVerse);
-                    }
-                }
-            }
-            console.log('📖 [CacheManager427] Found', cachedVerses.length, 'cached verses');
+            // 使用範圍查詢取代迴圈
+            const cachedVerses = await this.db.verses
+                .where('[table_name+verse_id]')
+                .between(  // implicitly sort by versionTable and verse_id
+                    [versionTable, startVerseId],
+                    [versionTable, endVerseId],
+                    true,  // inclusive start
+                    true   // inclusive end
+                )
+                .toArray();
+            console.log('📖 [CacheManager420] Found', cachedVerses.length, 'cached verses');
             return cachedVerses;
         } catch (error) {
-            console.error('❌ [CacheManager430] Failed to get cached verses:', error);
+            console.error('❌ [CacheManager423] Failed to get cached verses:', error);
             return [];
         }
     }
@@ -577,7 +566,7 @@ class BibleHereCacheManager {
             const now = Date.now();
             const allVersions = await this.db.versions.toArray();
             const validVersions = [];
-            console.log('📖 [CacheManager576] allVersions: ', allVersions);
+            console.log('📖 [CacheManager569] allVersions: ', allVersions);
             for (const versionCache of allVersions) {
                 // Check if version has expired (1-hour expiry)
                 // if (now - versionCache.updatedAt > this.versionsExpiry) {
@@ -586,7 +575,7 @@ class BibleHereCacheManager {
                 // } // should do it after API or loading
                 
                 const version = versionCache.value;
-                console.log('📖 [CacheManager585] version: ', version);
+                console.log('📖 [CacheManager578] version: ', version);
                 // Apply language filter
                 if (languages && !languages.includes(version.language_code)) {
                     continue;
@@ -600,7 +589,7 @@ class BibleHereCacheManager {
                 validVersions.push(version);
             }
             
-            console.log('📖 [CacheManager588] Found', validVersions.length, 'valid cached versions');
+            console.log('📖 [CacheManager592] Found', validVersions.length, 'valid cached versions');
             return validVersions;
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached versions:', error);
@@ -627,7 +616,7 @@ class BibleHereCacheManager {
                 return;
             }
             
-            console.log(`🔄 [CacheManager615] Found ${expiredVersions.length} expired versions, updating in background...`);
+            console.log(`🔄 [CacheManager619] Found ${expiredVersions.length} expired versions, updating in background...`);
             
             // Update expired versions in background
             for (const expiredVersion of expiredVersions) {
@@ -706,13 +695,13 @@ class BibleHereCacheManager {
 window.bibleHereDB = new BibleHereDB();
 window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
 
-console.log('🌐 [BibleHereCache705] Global database and cache manager instances created');
+console.log('🌐 [BibleHereCache698] Global database and cache manager instances created');
 
 // Auto-initialize cache system when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            console.log('🎬 [BibleHereCache711] DOM loaded, initializing cache system...');
+            console.log('🎬 [BibleHereCache702] DOM loaded, initializing cache system...');
             await window.bibleHereCacheManager.initialize();
         } catch (error) {
             console.error('❌ [BibleHereCache] Failed to auto-initialize cache system:', error);
@@ -722,10 +711,10 @@ if (document.readyState === 'loading') {
     // DOM already loaded
     setTimeout(async () => {
         try {
-            console.log('🎬 [BibleHereCache721] DOM already loaded, initializing cache system...');
+            console.log('🎬 [BibleHereCache714] DOM already loaded, initializing cache system...');
             await window.bibleHereCacheManager.initialize();
         } catch (error) {
-            console.error('❌ [BibleHereCache724] Failed to auto-initialize cache system:', error);
+            console.error('❌ [BibleHereCache717] Failed to auto-initialize cache system:', error);
         }
     }, 100);
 }
