@@ -173,10 +173,14 @@ class BibleHereCacheManager {
             // Load seed data if cache is empty
             await this.loadSeedDataIfNeeded();
             
+            // Mark as initialized
+            this.isInitialized = true;
+            
             console.log('✅ [CacheManager] Cache system initialized successfully');
             return true;
         } catch (error) {
             console.error('❌ [CacheManager] Cache system initialization failed:', error);
+            this.isInitialized = false;
             throw error;
         }
     }

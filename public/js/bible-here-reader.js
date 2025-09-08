@@ -105,31 +105,85 @@ class BibleHereReader {
 	}
 
 		/**
-		 * Initialize cache manager
-		 */
+	 * Initialize cache manager
+	 */
 	async initializeCacheManager() {
 		console.log('🗄️ [BibleHereReader111] 初始化快取管理器開始');
 		
 		try {
-			// 使用全域的快取管理器實例
-			if (typeof window.bibleHereCacheManager !== 'undefined' && window.bibleHereCacheManager) {
-				this.cacheManager = window.bibleHereCacheManager;
-				console.log('✅ [BibleHereReader117] 初始化快取管理器:快取管理器連接成功');
-				console.log('📊 [BibleHereReader118] 初始化快取管理器: 快取管理器狀態:', {
-					isInitialized: this.cacheManager.isInitialized,
-					cacheExpiry: this.cacheManager.cacheExpiry
-				});
-				
-				// 檢查快取統計
-				const stats = await this.cacheManager.getCacheStats();
-				console.log('📈 [BibleHereReader125] 初始化快取管理器: 快取統計:', stats);
-			} else {
-				console.warn('⚠️ [BibleHereReader127] 初始化快取管理器: 全域快取管理器不可用，將直接使用 API');
+			// 等待全域快取管理器可用
+			if (typeof window.bibleHereCacheManager === 'undefined' || !window.bibleHereCacheManager) {
+				console.log('⏳ [BibleHereReader] 等待全域快取管理器初始化...');
+				// 等待全域快取管理器創建
+				await this.waitForGlobalCacheManager();
 			}
+			
+			// 連接到全域快取管理器
+			this.cacheManager = window.bibleHereCacheManager;
+			console.log('✅ [BibleHereReader] 快取管理器連接成功');
+			
+			// 等待快取管理器完全初始化（包括 seed data 載入）
+			if (!this.cacheManager.isInitialized) {
+				console.log('⏳ [BibleHereReader] 等待快取管理器完全初始化（包括 seed data 載入）...');
+				await this.waitForCacheInitialization();
+			}
+			
+			console.log('📊 [BibleHereReader] 快取管理器狀態:', {
+				isInitialized: this.cacheManager.isInitialized,
+				cacheExpiry: this.cacheManager.cacheExpiry
+			});
+			
+			// 檢查快取統計
+			const stats = await this.cacheManager.getCacheStats();
+			console.log('📈 [BibleHereReader] 快取統計:', stats);
+			
 		} catch (error) {
-			console.error('❌ [BibleHereReader130] 快取管理器初始化失敗:', error);
-			console.warn('⚠️ [BibleHereReader132] 將直接使用 API 獲取資料');
+			console.error('❌ [BibleHereReader] 快取管理器初始化失敗:', error);
+			console.warn('⚠️ [BibleHereReader] 將直接使用 API 獲取資料');
 		}
+	}
+
+	/**
+	 * Wait for global cache manager to be created
+	 */
+	async waitForGlobalCacheManager() {
+		return new Promise((resolve) => {
+			const checkInterval = setInterval(() => {
+				if (typeof window.bibleHereCacheManager !== 'undefined' && window.bibleHereCacheManager) {
+					clearInterval(checkInterval);
+					resolve();
+				}
+			}, 50); // Check every 50ms
+			
+			// Timeout after 10 seconds
+			setTimeout(() => {
+				clearInterval(checkInterval);
+				console.warn('⚠️ [BibleHereReader] 等待全域快取管理器超時');
+				resolve();
+			}, 10000);
+		});
+	}
+
+	/**
+	 * Wait for cache manager to be fully initialized
+	 */
+	async waitForCacheInitialization() {
+		return new Promise((resolve) => {
+			const checkInterval = setInterval(() => {
+				if (this.cacheManager && this.cacheManager.isInitialized) {
+					clearInterval(checkInterval);
+					console.log('✅ [BibleHereReader] 快取管理器初始化完成');
+					resolve();
+				}
+			}, 50); // Check every 50ms
+			
+			// Timeout after 15 seconds
+			setTimeout(() => {
+				clearInterval(checkInterval);
+				console.warn('⚠️ [BibleHereReader] 等待快取管理器初始化超時');
+				resolve();
+			}, 15000);
+		});
 	}
 
 	/**
