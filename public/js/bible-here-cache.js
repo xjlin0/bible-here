@@ -253,11 +253,11 @@ class BibleHereCacheManager {
             console.log('  - languageCode: en');
             
             await this.cacheBooks(booksData, 'en');
-            console.log(`✅ [BibleHereCacheManager] 已載入英文書卷 Seed Data (${booksData.length} 本書卷)`);
+            console.log(`✅ [BibleHereCacheManager256] 已載入英文書卷 Seed Data (${booksData.length} 本書卷)`);
             
             // Check if browser languages include zh-TW and load if available
             const browserLanguages = navigator.languages || [navigator.language || 'en'];
-            console.log('🌐 [BibleHereCacheManager] 瀏覽器語言列表:', browserLanguages);
+            console.log('🌐 [BibleHereCacheManager260] 瀏覽器語言列表:', browserLanguages);
             
             const hasChineseTraditional = browserLanguages.some(lang => 
                 lang.toLowerCase().includes('zh-tw') || 
@@ -268,7 +268,7 @@ class BibleHereCacheManager {
                 // For now, we use the same books data but with Chinese language code
                 // In the future, this could load actual Chinese book names from seed data
                 await this.cacheBooks(booksData, 'zh-TW');
-                console.log(`✅ [BibleHereCacheManager] 已載入繁體中文書卷 Seed Data (${booksData.length} 本書卷)`);
+                console.log(`✅ [BibleHereCacheManager271] 已載入繁體中文書卷 Seed Data (${booksData.length} 本書卷)`);
             }
             
         } catch (error) {
@@ -318,7 +318,7 @@ class BibleHereCacheManager {
                 console.log('  - enData.book_name:', enData.book_name);
                 
                 await this.cacheVerses(versesData, enData.table_name);
-                console.log(`✅ [BibleHereCacheManager] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
+                console.log(`✅ [BibleHereCacheManager321] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
             }
             
             // Check browser languages for Chinese Traditional
@@ -339,11 +339,11 @@ class BibleHereCacheManager {
                     verse_id: v.verse_id
                 }));
                 await this.cacheVerses(versesData, zhData.table_name);
-                console.log(`✅ [BibleHereCacheManager] 已載入中文經文 Seed Data (${zhData.book_name} ${zhData.chapter_number}, ${versesData.length} verses)`);
+                console.log(`✅ [BibleHereCacheManager342] 已載入中文經文 Seed Data (${zhData.book_name} ${zhData.chapter_number}, ${versesData.length} verses)`);
             }
             
         } catch (error) {
-            console.error('❌ [BibleHereCacheManager] 載入經文 Seed Data 時發生錯誤:', error);
+            console.error('❌ [BibleHereCacheManager346] 載入經文 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution
         }
     }
@@ -392,15 +392,15 @@ class BibleHereCacheManager {
      */
     async getVerses(languageCode, versionTable, bookNumber, chapterNumber, verseStart = null, verseEnd = null) {
         try {
-            console.log('🔍 [CacheManager384] Searching cached verses:', {
+            console.log('🔍 [CacheManager395] Searching cached verses:', {
                 version: versionTable,
                 book: bookNumber,
                 chapter: chapterNumber,
                 verseRange: verseStart && verseEnd ? `${verseStart}-${verseEnd}` : 'all'
             });
-            console.log('📖 [CacheManager390] versionTable: '+versionTable);
+            console.log('📖 [CacheManager401] versionTable: '+versionTable);
             const cachedVerses = [];
-            
+            console.log('📖 [CacheManager403] verseEnd: '+verseEnd);
             if (verseStart && verseEnd) {
                 // Get specific verse range
                 for (let verseNum = verseStart; verseNum <= verseEnd; verseNum++) {
@@ -424,10 +424,10 @@ class BibleHereCacheManager {
                 }
             }
             
-            console.log('📖 [CacheManager421] Found', cachedVerses.length, 'cached verses');
+            console.log('📖 [CacheManager427] Found', cachedVerses.length, 'cached verses');
             return cachedVerses;
         } catch (error) {
-            console.error('❌ [CacheManager424] Failed to get cached verses:', error);
+            console.error('❌ [CacheManager430] Failed to get cached verses:', error);
             return [];
         }
     }

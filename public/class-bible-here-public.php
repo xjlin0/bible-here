@@ -441,7 +441,7 @@ class Bible_Here_Public {
 
 		// Convert verse field to integer
 		foreach ( $verses as &$verse ) {
-			$verse['verse'] = intval( $verse['verse'] );
+			$verse['verse_number'] = intval( $verse['verse_number'] );
 		}
 
 		// Add commentary if provided
