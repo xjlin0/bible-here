@@ -142,6 +142,8 @@ class BibleHereCacheManager {
     constructor(db) {
         this.db = db;
         this.versionsExpiry = 60 * 60 * 1000; // 1 hour in milliseconds for versions only
+        this.isInitialized = false; // Initialize as false to prevent undefined state
+        this.isInitializing = false; // Track initialization status
         
         // Bind all methods to this instance to prevent context loss in async operations
         this.initialize = this.initialize.bind(this);
@@ -164,8 +166,16 @@ class BibleHereCacheManager {
      * Initialize cache system and load seed data if needed
      */
     async initialize() {
+        // Prevent multiple initialization attempts
+        if (this.isInitializing || this.isInitialized) {
+            console.log('🔄 [CacheManager] Initialization already in progress or completed');
+            return this.isInitialized;
+        }
+        
+        this.isInitializing = true;
+        
         try {
-            console.log('🚀 [CacheManager] Starting cache system initialization...');
+            console.log('🚀 [CacheManager169] Starting cache system initialization...');
             
             // Initialize database
             await this.db.initialize();
@@ -175,12 +185,14 @@ class BibleHereCacheManager {
             
             // Mark as initialized
             this.isInitialized = true;
+            this.isInitializing = false;
             
-            console.log('✅ [CacheManager] Cache system initialized successfully');
+            console.log('✅ [CacheManager180] Cache system initialized successfully');
             return true;
         } catch (error) {
-            console.error('❌ [CacheManager] Cache system initialization failed:', error);
-            this.isInitialized = false;
+            console.error('❌ [CacheManager183] Cache system initialization failed:', error);
+            this.isInitializing = false;
+            // Don't set isInitialized to false on error, keep it as false from constructor
             throw error;
         }
     }
@@ -196,24 +208,24 @@ class BibleHereCacheManager {
             const booksCount = await this.db.books.count();
             const versesCount = await this.db.verses.count();
             
-            console.log('📊 [CacheManager] Current cache counts:', { books: booksCount, verses: versesCount });
+            console.log('📊 [CacheManager199] Current cache counts:', { books: booksCount, verses: versesCount });
             
             // Load seed data if cache is empty
             if (booksCount === 0 || versesCount === 0) {
-                console.log('📥 [CacheManager199] Cache is empty, loading seed data...');
+                console.log('📥 [CacheManager203] Cache is empty, loading seed data...');
                 
                 // Load books first - MUST succeed before proceeding
                 await this.loadBooksFromSeedData();
-                console.log('✅ [CacheManager203] Books seed data loaded successfully');
+                console.log('✅ [CacheManager207] Books seed data loaded successfully');
                 
                 // Load verses only after books loading succeeded
                 await this.loadSeedVerses();
-                console.log('✅ [CacheManager207] Verses seed data loaded successfully');
+                console.log('✅ [CacheManager211] Verses seed data loaded successfully');
             } else {
-                console.log('✅ [CacheManager209] Cache already contains data, skipping seed data loading');
+                console.log('✅ [CacheManager213] Cache already contains data, skipping seed data loading');
             }
         } catch (error) {
-            console.error('❌ [CacheManager212] Failed to check/load seed data:', error);
+            console.error('❌ [CacheManager216] Failed to check/load seed data:', error);
             // Don't continue execution if seed data loading fails
             throw error;
         }
@@ -224,7 +236,7 @@ class BibleHereCacheManager {
      * According to technical documentation: load 'en' by default, and 'zh-TW' if browser language includes it
      */
     async loadBooksFromSeedData() {
-        console.log('📚 [BibleHereCacheManager223] 開始載入書卷 Seed Data');
+        console.log('📚 [BibleHereCacheManager227] 開始載入書卷 Seed Data');
         
         try {
             // Check if seed data is available
@@ -272,11 +284,11 @@ class BibleHereCacheManager {
                 // For now, we use the same books data but with Chinese language code
                 // In the future, this could load actual Chinese book names from seed data
                 await this.cacheBooks(booksData, 'zh-TW');
-                console.log(`✅ [BibleHereCacheManager271] 已載入繁體中文書卷 Seed Data (${booksData.length} 本書卷)`);
+                console.log(`✅ [BibleHereCacheManager2715] 已載入繁體中文書卷 Seed Data (${booksData.length} 本書卷)`);
             }
             
         } catch (error) {
-            console.error('❌ [BibleHereCacheManager275] 載入書卷 Seed Data 時發生錯誤:', error);
+            console.error('❌ [BibleHereCacheManager279] 載入書卷 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution
         }
     }
@@ -285,7 +297,7 @@ class BibleHereCacheManager {
      * Load seed verses data
      */
     async loadSeedVerses() {
-        console.log('📖 [BibleHereCacheManager284] 開始載入經文 Seed Data');
+        console.log('📖 [BibleHereCacheManager288] 開始載入經文 Seed Data');
         
         try {
             // Check if seed data is available
@@ -401,7 +413,7 @@ class BibleHereCacheManager {
                 book: bookNumber, chapter: chapterNumber,
                 verseRange: verseStart && verseEnd ? `${verseStart}-${verseEnd}` : 'all'
             });
-            console.log('📖 [CacheManager407] verseStart: '+verseStart+' verseEnd: '+verseEnd);
+            console.log('📖 [CacheManager404] verseStart: '+verseStart+' verseEnd: '+verseEnd);
             // 構建章節的起始和結束 verse_id
             const chapterPrefix = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}`;
             const startVerseId = `${chapterPrefix}${verseStart ? String(verseStart).padStart(3, '0') : '000'}`; // 假設註釋在第一節前有整章概論
@@ -695,26 +707,26 @@ class BibleHereCacheManager {
 window.bibleHereDB = new BibleHereDB();
 window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
 
-console.log('🌐 [BibleHereCache698] Global database and cache manager instances created');
+console.log('🌐 [BibleHereCache699] Global database and cache manager instances created');
 
 // Auto-initialize cache system when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            console.log('🎬 [BibleHereCache702] DOM loaded, initializing cache system...');
+            console.log('🎬 [BibleHereCache705] DOM loaded, initializing cache system...');
             await window.bibleHereCacheManager.initialize();
         } catch (error) {
             console.error('❌ [BibleHereCache] Failed to auto-initialize cache system:', error);
         }
     });
 } else {
-    // DOM already loaded
-    setTimeout(async () => {
+    // DOM already loaded - initialize immediately without delay
+    (async () => {
         try {
-            console.log('🎬 [BibleHereCache714] DOM already loaded, initializing cache system...');
+            console.log('🎬 [BibleHereCache715] DOM already loaded, initializing cache system immediately...');
             await window.bibleHereCacheManager.initialize();
         } catch (error) {
-            console.error('❌ [BibleHereCache717] Failed to auto-initialize cache system:', error);
+            console.error('❌ [BibleHereCache718] Failed to auto-initialize cache system:', error);
         }
-    }, 100);
+    })();
 }

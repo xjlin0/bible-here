@@ -120,7 +120,7 @@ class BibleHereReader {
 			
 			// 連接到全域快取管理器
 			this.cacheManager = window.bibleHereCacheManager;
-			console.log('✅ [BibleHereReader] 快取管理器連接成功');
+			if(this.cacheManager){console.log('✅ [BibleHereReader] 快取管理器連接成功')}else{console.log('❌ [BibleHereReader] 快取管理器連接失敗')}
 			
 			// 等待快取管理器完全初始化（包括 seed data 載入）
 			if (!this.cacheManager.isInitialized) {
@@ -170,17 +170,29 @@ class BibleHereReader {
 	async waitForCacheInitialization() {
 		return new Promise((resolve) => {
 			const checkInterval = setInterval(() => {
+				// Check if cache manager is initialized
 				if (this.cacheManager && this.cacheManager.isInitialized) {
 					clearInterval(checkInterval);
-					console.log('✅ [BibleHereReader] 快取管理器初始化完成');
+					console.log('✅ [BibleHereReader176] 快取管理器初始化完成');
 					resolve();
+					return;
+				}
+				
+				// Check if initialization failed (not initializing and not initialized)
+				if (this.cacheManager && 
+					!this.cacheManager.isInitializing && 
+					!this.cacheManager.isInitialized) {
+					clearInterval(checkInterval);
+					console.warn('⚠️ [BibleHereReader] 快取管理器初始化失敗，將使用 API 模式');
+					resolve();
+					return;
 				}
 			}, 50); // Check every 50ms
 			
 			// Timeout after 15 seconds
 			setTimeout(() => {
 				clearInterval(checkInterval);
-				console.warn('⚠️ [BibleHereReader] 等待快取管理器初始化超時');
+				console.warn('⚠️ [BibleHereReader195] 等待快取管理器初始化超時');
 				resolve();
 			}, 15000);
 		});
