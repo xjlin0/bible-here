@@ -261,7 +261,7 @@ class BibleHereCacheManager {
                 chapters: book.chapters
             }));
             
-            // Always load English books first (default)
+            // Load English books only (default)
             console.log('🔍 [Debug] About to call this.cacheBooks with:');
             console.log('  - this:', this);
             console.log('  - this.cacheBooks:', typeof this.cacheBooks);
@@ -269,23 +269,7 @@ class BibleHereCacheManager {
             console.log('  - languageCode: en');
             
             await this.cacheBooks(booksData, 'en');
-            console.log(`✅ [BibleHereCacheManager256] 已載入英文書卷 Seed Data (${booksData.length} 本書卷)`);
-            
-            // Check if browser languages include zh-TW and load if available
-            const browserLanguages = navigator.languages || [navigator.language || 'en'];
-            console.log('🌐 [BibleHereCacheManager260] 瀏覽器語言列表:', browserLanguages);
-            
-            const hasChineseTraditional = browserLanguages.some(lang => 
-                lang.toLowerCase().includes('zh-tw') || 
-                lang.toLowerCase().includes('zh-hant')
-            );
-            
-            if (hasChineseTraditional) {
-                // For now, we use the same books data but with Chinese language code
-                // In the future, this could load actual Chinese book names from seed data
-                await this.cacheBooks(booksData, 'zh-TW');
-                console.log(`✅ [BibleHereCacheManager2715] 已載入繁體中文書卷 Seed Data (${booksData.length} 本書卷)`);
-            }
+            console.log(`✅ [BibleHereCacheManager256] 已載入英文書卷 Seed Data (${booksData.length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
             
         } catch (error) {
             console.error('❌ [BibleHereCacheManager279] 載入書卷 Seed Data 時發生錯誤:', error);
@@ -337,26 +321,7 @@ class BibleHereCacheManager {
                 console.log(`✅ [BibleHereCacheManager321] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
             }
             
-            // Check browser languages for Chinese Traditional
-            const browserLanguages = navigator.languages || [navigator.language || 'en'];
-            const hasChineseTraditional = browserLanguages.some(lang => 
-                lang.toLowerCase().includes('zh-tw') || 
-                lang.toLowerCase().includes('zh-hant')
-            );
-            
-            // Load Chinese verses if browser language includes zh-TW
-            if (hasChineseTraditional && seedVerses.zh) {
-                const zhData = seedVerses.zh;
-                const versesData = zhData.verses.map(v => ({
-                    book_number: zhData.book_number,
-                    chapter_number: zhData.chapter_number,
-                    verse_number: v.verse,
-                    text: v.text,
-                    verse_id: v.verse_id
-                }));
-                await this.cacheVerses(versesData, zhData.table_name);
-                console.log(`✅ [BibleHereCacheManager342] 已載入中文經文 Seed Data (${zhData.book_name} ${zhData.chapter_number}, ${versesData.length} verses)`);
-            }
+            // Only load English verses from seed data
             
         } catch (error) {
             console.error('❌ [BibleHereCacheManager346] 載入經文 Seed Data 時發生錯誤:', error);
@@ -516,18 +481,32 @@ class BibleHereCacheManager {
             console.log('🔍 [CacheManager] Searching cached books for language:', language);
             
             const cachedBooks = await this.db.books.get(language);
+            console.log('🔍 [DEBUG] 快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
-                const booksCount = Array.isArray(cachedBooks.value.books) ? cachedBooks.value.books.length : Object.keys(cachedBooks.value.books).length;
+                const booksData = cachedBooks.value.books;
+                const booksCount = Array.isArray(booksData) ? booksData.length : Object.keys(booksData).length;
                 console.log('📚 [CacheManager506] Found cached books:', booksCount);
-                return cachedBooks.value.books;
+                console.log('🔍 [DEBUG] 書卷資料格式:', {
+                    isArray: Array.isArray(booksData),
+                    firstBookSample: Array.isArray(booksData) ? booksData[0] : Object.values(booksData)[0]
+                });
+                
+                // Convert object to array if needed for consistent return format
+                if (!Array.isArray(booksData)) {
+                    const booksArray = Object.values(booksData);
+                    console.log('🔄 [DEBUG] 轉換物件為陣列格式，陣列長度:', booksArray.length);
+                    return booksArray;
+                }
+                
+                return booksData;
             }
             
             console.log('📚 [CacheManager] No cached books found for language:', language);
-            return {}; // Return empty object instead of empty array
+            return []; // Return empty array for consistency
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached books:', error);
-            return {}; // Return empty object instead of empty array
+            return []; // Return empty array for consistency
         }
     }
     

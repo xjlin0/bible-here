@@ -746,93 +746,15 @@ class BibleHereReader {
 		this.updateBookChapterButton();
 	}
 
-	/**
-	 * Book name mapping for display
-	 */
-	getBookNameMapping() {
-		return {
-			'Genesis': '創世記',
-			'Exodus': '出埃及記',
-			'Leviticus': '利未記',
-			'Numbers': '民數記',
-			'Deuteronomy': '申命記',
-			'Joshua': '約書亞記',
-			'Judges': '士師記',
-			'Ruth': '路得記',
-			'1Samuel': '撒母耳記上',
-			'2Samuel': '撒母耳記下',
-			'1Kings': '列王紀上',
-			'2Kings': '列王紀下',
-			'1Chronicles': '歷代志上',
-			'2Chronicles': '歷代志下',
-			'Ezra': '以斯拉記',
-			'Nehemiah': '尼希米記',
-			'Esther': '以斯帖記',
-			'Job': '約伯記',
-			'Psalms': '詩篇',
-			'Proverbs': '箴言',
-			'Ecclesiastes': '傳道書',
-			'SongofSongs': '雅歌',
-			'Isaiah': '以賽亞書',
-			'Jeremiah': '耶利米書',
-			'Lamentations': '耶利米哀歌',
-			'Ezekiel': '以西結書',
-			'Daniel': '但以理書',
-			'Hosea': '何西阿書',
-			'Joel': '約珥書',
-			'Amos': '阿摩司書',
-			'Obadiah': '俄巴底亞書',
-			'Jonah': '約拿書',
-			'Micah': '彌迦書',
-			'Nahum': '那鴻書',
-			'Habakkuk': '哈巴谷書',
-			'Zephaniah': '西番雅書',
-			'Haggai': '哈該書',
-			'Zechariah': '撒迦利亞書',
-			'Malachi': '瑪拉基書',
-			'Matthew': '馬太福音',
-			'Mark': '馬可福音',
-			'Luke': '路加福音',
-			'John': '約翰福音',
-			'Acts': '使徒行傳',
-			'Romans': '羅馬書',
-			'1Corinthians': '哥林多前書',
-			'2Corinthians': '哥林多後書',
-			'Galatians': '加拉太書',
-			'Ephesians': '以弗所書',
-			'Philippians': '腓立比書',
-			'Colossians': '歌羅西書',
-			'1Thessalonians': '帖撒羅尼迦前書',
-			'2Thessalonians': '帖撒羅尼迦後書',
-			'1Timothy': '提摩太前書',
-			'2Timothy': '提摩太後書',
-			'Titus': '提多書',
-			'Philemon': '腓利門書',
-			'Hebrews': '希伯來書',
-			'James': '雅各書',
-			'1Peter': '彼得前書',
-			'2Peter': '彼得後書',
-			'1John': '約翰一書',
-			'2John': '約翰二書',
-			'3John': '約翰三書',
-			'Jude': '猶大書',
-			'Revelation': '啟示錄'
-		};
-	}
+
 
 	/**
 	 * Update book chapter button text
 	 */
 	updateBookChapterButton() {
 		if (this.elements.bookChapterText) {
-			// Get display name for current book
-			let bookDisplayName = this.currentBook;
-			
-			// Use book key mapping to get Chinese name
-			const bookKeyMapping = this.getBookKeyMapping();
-			if (bookKeyMapping[this.currentBook]) {
-				bookDisplayName = bookKeyMapping[this.currentBook];
-			}
+			// 使用英文書卷名稱
+			const bookDisplayName = this.currentBook;
 			
 			// 使用實際的 currentBook 和 currentChapter 值
 			this.elements.bookChapterText.textContent = `${bookDisplayName} ${this.currentChapter}`;
@@ -1903,19 +1825,25 @@ class BibleHereReader {
 			let books = null;
 			
 			// 嘗試從快取獲取書卷列表
-			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader] 嘗試從快取獲取書卷列表');
-				books = await this.cacheManager.getCachedBooks(this.currentLanguage);
-				
-				if (books && books.length > 0) {
-					console.log('✅ [BibleHereReader] 從快取獲取到書卷列表，書卷數量:', books.length);
-					console.log('📚 [BibleHereReader] 快取書卷資料預覽:', books.slice(0, 3));
-					this.renderBooksList(books, booksContent);
-					return;
-				} else {
-					console.log('⚠️ [BibleHereReader] 快取中沒有找到書卷列表，將從 API 獲取');
-				}
+		if (this.cacheManager) {
+			console.log('🗄️ [BibleHereReader] 嘗試從快取獲取書卷列表');
+			console.log('🌐 [DEBUG] 當前語言參數:', this.currentLanguage);
+			books = await this.cacheManager.getCachedBooks(this.currentLanguage);
+			
+			if (books && books.length > 0) {
+				console.log('✅ [BibleHereReader] 從快取獲取到書卷列表，書卷數量:', books.length);
+				console.log('📚 [BibleHereReader] 快取書卷資料預覽:', books.slice(0, 3));
+				console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
+					firstBookName: books[0]?.book_name,
+					secondBookName: books[1]?.book_name,
+					thirdBookName: books[2]?.book_name
+				});
+				this.renderBooksList(books, booksContent);
+				return;
+			} else {
+				console.log('⚠️ [BibleHereReader] 快取中沒有找到書卷列表，將從 API 獲取');
 			}
+		}
 
 			// 從 API 獲取書卷列表
 			console.log('🌐 從 API 獲取書卷列表');
@@ -1971,6 +1899,7 @@ class BibleHereReader {
 	 */
 	renderBooksList(books, booksContent) {
 		console.log('🎨 開始渲染書卷列表，書卷數量:', books.length);
+		console.log('🌐 [DEBUG] 當前語言參數 (renderBooksList):', this.currentLanguage);
 		
 		// 分離舊約和新約書卷
 		const oldTestament = books.filter(book => {
@@ -1997,17 +1926,19 @@ class BibleHereReader {
 		html += '<h5 class="testament-title">舊約</h5>';
 		html += '<div class="books-grid old-testament">';
 		oldTestament.forEach(book => {
-			// 使用 book_name 作為 key，如果沒有則使用 book_key
-			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
-			const isActive = bookKey === this.currentBook;
-			const bookDisplayName = book.book_abbreviation || book.book_name;
-			const bookFullName = book.book_name;
-			
-			html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
-			html += `<span class="book-name">${bookDisplayName}</span>`;
-			html += `<span class="book-full-name">${bookFullName}</span>`;
-			html += `</div>`;
-		});
+				// 使用 book_name 作為 key，如果沒有則使用 book_key
+				const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+				const isActive = bookKey === this.currentBook;
+				
+				// 使用英文書卷名稱
+				const bookDisplayName = book.book_abbreviation || book.book_name;
+				const bookFullName = book.book_name;
+				
+				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+				html += `<span class="book-name">${bookDisplayName}</span>`;
+				html += `<span class="book-full-name">${bookFullName}</span>`;
+				html += `</div>`;
+			});
 		html += '</div></div>';
 
 		html += '<div class="books-section">';
@@ -2017,6 +1948,8 @@ class BibleHereReader {
 			// 使用 book_name 作為 key，如果沒有則使用 book_key
 			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
 			const isActive = bookKey === this.currentBook;
+			
+			// 使用英文書卷名稱
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
