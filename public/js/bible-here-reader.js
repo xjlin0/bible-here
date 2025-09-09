@@ -169,11 +169,16 @@ class BibleHereReader {
 	 */
 	async waitForCacheInitialization() {
 		return new Promise((resolve) => {
-			const checkInterval = setInterval(() => {
+			// 保存 setInterval 和 setTimeout 的 ID，以便後續清除
+			let checkIntervalId;
+			let timeoutId;
+
+			const checkStatus = () => {
 				// Check if cache manager is initialized
 				if (this.cacheManager && this.cacheManager.isInitialized) {
-					clearInterval(checkInterval);
-					console.log('✅ [BibleHereReader176] 快取管理器初始化完成');
+					console.log('✅ [BibleHereReader181] 快取管理器初始化完成');
+					clearInterval(checkIntervalId);  // 清除檢查狀態的計時器
+					clearTimeout(timeoutId);  // 清除超時計時器
 					resolve();
 					return;
 				}
@@ -182,19 +187,21 @@ class BibleHereReader {
 				if (this.cacheManager && 
 					!this.cacheManager.isInitializing && 
 					!this.cacheManager.isInitialized) {
-					clearInterval(checkInterval);
 					console.warn('⚠️ [BibleHereReader] 快取管理器初始化失敗，將使用 API 模式');
+					clearInterval(checkIntervalId);  // 清除檢查狀態的計時器
+					clearTimeout(timeoutId);  // 清除超時計時器
 					resolve();
 					return;
 				}
-			}, 50); // Check every 50ms
-			
-			// Timeout after 15 seconds
-			setTimeout(() => {
-				clearInterval(checkInterval);
-				console.warn('⚠️ [BibleHereReader195] 等待快取管理器初始化超時');
+			};
+
+			checkIntervalId = setInterval(checkStatus, 50);  // 每 50ms 檢查一次狀態
+
+			timeoutId = setTimeout(() => {
+				console.warn('⚠️ [BibleHereReader203] 等待快取管理器初始化超時');
+				clearInterval(checkIntervalId);  // 清除檢查狀態的計時器
 				resolve();
-			}, 15000);
+			}, 15000);  // Timeout after 15 seconds
 		});
 	}
 
