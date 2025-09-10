@@ -790,7 +790,7 @@ class BibleHereReader {
 		
 		// 按語言分組版本
 		const versionsByLanguage = {};
-		versions.forEach(version => {
+		versions.versions.forEach(version => {
 			const lang = version.language || 'unknown';
 			if (!versionsByLanguage[lang]) {
 				versionsByLanguage[lang] = [];
@@ -1976,7 +1976,7 @@ class BibleHereReader {
 			if (this.cacheManager && books && Object.keys(books).length > 0) {
 				console.log('💾 [BibleHereReader] 將書卷資料存入快取');
 				console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
-					language: this.currentLanguage,
+					language: this.currentLanguage,   // hi books may be in difference languages
 					count: booksArray.length,
 					sample: booksArray.slice(0, 2)
 				});

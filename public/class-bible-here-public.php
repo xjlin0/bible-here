@@ -555,7 +555,7 @@ class Bible_Here_Public {
 	 */
 	public function handle_ajax_get_books() {
 		global $wpdb;
-		
+
 		// Verify nonce
 		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
 			sleep(2);
@@ -566,37 +566,61 @@ class Bible_Here_Public {
 		}
 
 		// Get parameters from GET request
-		$language = sanitize_text_field( $_GET['language'] ?? 'en' );  // default to English
+		$languages_param = sanitize_text_field( $_GET['languages'] ?? '' ); // Default to empty string
 		$genre_type = sanitize_text_field( $_GET['genre_type'] ?? '' );
 		
-		// Get books from database
-		$books_table = $wpdb->prefix . 'bible_here_books';
-		$genres_table = $wpdb->prefix . 'bible_here_genres';
 		// Build WHERE conditions
-		$where_conditions = array( 'b.language = %s' );
-		$query_params = array( $language );
+		$where_conditions = array();
+		$query_params = array();
+
+		// Only add language filter if languages parameter is provided
+		if ( ! empty($languages_param) ) {
+			// Split the comma-separated string into an array of languages
+			$languages = explode(',', $languages_param);
+			$sanitized_languages = array_map('trim', $languages);
+			$sanitized_languages = array_map('sanitize_text_field', $sanitized_languages);
+			$sanitized_languages = array_filter($sanitized_languages);
+
+			if (empty($sanitized_languages)) {
+				wp_send_json_error( array(
+					'message' => 'Invalid or empty languages parameter.',
+					'code' => 'invalid_languages_param'
+				), 400 );
+			}
+
+			$placeholders = implode(', ', array_fill(0, count($sanitized_languages), '%s'));
+			$where_conditions[] = "b.language IN ($placeholders)";
+			$query_params = array_merge($query_params, $sanitized_languages);
+		}
 		
 		// Add genre_type filter if provided
 		if ( ! empty( $genre_type ) ) {
 			$where_conditions[] = 'b.genre_type = %s';
 			$query_params[] = $genre_type;
 		}
-		
-		$where_clause = implode( ' AND ', $where_conditions );
-		
+
+		$where_clause = '';
+		if ( ! empty( $where_conditions ) ) {
+			$where_clause = ' WHERE ' . implode( ' AND ', $where_conditions );
+		}
+
+		// Get books from database
+		$books_table = $wpdb->prefix . 'bible_here_books';
+		$genres_table = $wpdb->prefix . 'bible_here_genres';
+
 		$sql = "SELECT 
 				book_number,
 				title_full,
 				title_short,
 				g.name AS genre_name,
 				g.type AS genre_type,
-				chapters
+				b.chapters
 			FROM $books_table b
 			  JOIN $genres_table g
 			    ON g.language=b.language
-			      AND g.genre_number = b.genre_number
-			WHERE $where_clause
-			ORDER BY book_number ASC";
+				  AND g.genre_number=b.genre_number
+			{$where_clause}
+			ORDER BY b.book_number ASC";
 		
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );
 		
@@ -604,8 +628,8 @@ class Bible_Here_Public {
 		if ( $wpdb->last_error ) {
 			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
 		}
-		
-		// Transform results to match expected format
+
+		// Transform results to match original expected format
 		$books = array();
 		if ( $results ) {
 			foreach ( $results as $book ) {

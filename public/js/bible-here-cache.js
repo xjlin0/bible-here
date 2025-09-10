@@ -515,12 +515,12 @@ class BibleHereCacheManager {
      */
     async cacheVersions(versions) {
         try {
-            console.log('💾 [CacheManager] Caching versions, Count:', versions.length);
+            console.log('💾 [CacheManager518] Caching versions::', versions);
             
             const now = Date.now();
             const versionsToCache = [];
             
-            versions.forEach(version => {
+            versions.versions.forEach(version => {
                 versionsToCache.push({
                     table_name: version.table_name,
                     value: {
