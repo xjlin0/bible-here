@@ -226,6 +226,7 @@ class BibleHereReader {
 		// Book selection change (hidden)
 		if (this.elements.bookSelect) {
 			this.elements.bookSelect.addEventListener('change', (e) => {
+				console.log('229 bookSelect changed here is e.target.value: ', e.target.value);
 				this.currentBook = e.target.value;
 				this.updateBookChapterButton();
 				this.onBookChange();
@@ -471,7 +472,7 @@ class BibleHereReader {
 		 * Load chapter content using cache manager or API
 		 */
 	async loadChapter() {
-		console.log('📖 [BibleHereReader403] async loadChapter() 開始載入章節:', {
+		console.log('📖 [BibleHereReader474] async loadChapter() 開始載入章節:', {
 			version: this.currentVersion,
 			book: this.currentBook,
 			chapter: this.currentChapter
@@ -492,25 +493,37 @@ class BibleHereReader {
 
 		try {
 			let chapterContent = null;
-			
-			// 嘗試從快取獲取
+
+			// 獲取當前書卷的 book_number
+			let bookNumber = this.currentBook;
+			const currentBookData = await this.getCurrentBookData();
+			if (currentBookData && currentBookData.book_number) {
+				bookNumber = currentBookData.book_number;
+				console.log('📚 從快取獲取到 book_number:', bookNumber);
+			}
+
+			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 		if (this.cacheManager) {
-			console.log('🗄️ [BibleHereReader427] async loadChapter() 嘗試從快取獲取章節內容');
+			console.log('🗄️ [BibleHereReader506] async loadChapter() 嘗試從快取獲取章節內容:', {
+				table_name: this.currentVersion,
+				book_number: bookNumber,
+				chapter_number: this.currentChapter
+			});
 			chapterContent = await this.cacheManager.getCachedVerses(
 				this.currentLanguage,
 				this.currentVersion,
-				this.currentBook,
+				bookNumber,
 				this.currentChapter
 			);
-			console.log('🗄️ [BibleHereReader434] async loadChapter() chapterContent: ', chapterContent);
+			console.log('🗄️ [BibleHereReader517] async loadChapter() chapterContent: ', chapterContent);
 			if (chapterContent && chapterContent.length > 0) {
-				console.log('✅ [BibleHereReader436] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-				console.log('📖 [BibleHereReader437] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+				console.log('✅ [BibleHereReader519] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+				console.log('📖 [BibleHereReader520] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
 				this.displayChapterContent({ verses: chapterContent });
 				return;
 			} else {
-				console.log('⚠️ [BibleHereReader442] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
+				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
 			}
 		}
 			
@@ -523,7 +536,7 @@ class BibleHereReader {
 		url.searchParams.set('book_number_start', this.currentBook);
 		url.searchParams.set('book_number_end', this.currentBook);
 		url.searchParams.set('chapter_number_start', this.currentChapter);
-		url.searchParams.set('chapter_number_end', this.currentChapter);
+		url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 		url.searchParams.set('version1_bible', this.currentVersion);
 		
 		const response = await fetch(url, {
@@ -654,12 +667,18 @@ class BibleHereReader {
 		const version2Container = this.elements.dualMode.querySelector('.version-2 .verses-container');
 		
 		if (!version1Container || !version2Container) {
-			console.error('❌ 找不到雙版本容器');
+			console.error('❌ 找不到雙版本容器:', {
+				version1Container: !!version1Container,
+				version2Container: !!version2Container,
+				dualMode: !!this.elements.dualMode
+			});
 			return;
 		}
-		console.error('589 verse: ', verse);
+		
+		console.log('✅ 找到雙版本容器，開始顯示內容');
 		// 顯示 version1 內容
 		if (data.version1 && data.version1.verses) {
+			console.log('📖 顯示 version1 內容，經文數量:', data.version1.verses.length);
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
@@ -668,12 +687,15 @@ class BibleHereReader {
 				html1 += `</p>`;
 			});
 			version1Container.innerHTML = html1;
+			console.log('✅ version1 內容已顯示');
 		} else {
+			console.log('⚠️ 沒有 version1 資料');
 			version1Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 		}
 		
 		// 顯示 version2 內容（如果有的話）
 		if (data.version2 && data.version2.verses) {
+			console.log('📖 顯示 version2 內容，經文數量:', data.version2.verses.length);
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
@@ -682,7 +704,9 @@ class BibleHereReader {
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
+			console.log('✅ version2 內容已顯示');
 		} else {
+			console.log('⚠️ 沒有 version2 資料，使用 version1 內容');
 			// 如果沒有 version2，顯示相同的 version1 內容
 			if (data.version1 && data.version1.verses) {
 				let html1 = '';
@@ -693,10 +717,14 @@ class BibleHereReader {
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
+				console.log('✅ version2 容器已顯示 version1 內容');
 			} else {
+				console.log('❌ 沒有任何版本資料可顯示');
 				version2Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			}
 		}
+		
+		console.log('🎉 雙版本內容顯示完成');
 	}
 	
 	/**
@@ -736,7 +764,7 @@ class BibleHereReader {
 	 * Load versions after chapter content is displayed
 	 */
 	async loadVersionsAfterChapter() {
-		console.log('📚 [BibleHereReader] 經文顯示完成，開始載入版本資料');
+		console.log('📚 [BibleHereReader767] 經文顯示完成，開始載入版本資料.  Todo: check cache data time before AJAX');
 		
 		try {
 			// 構建 AJAX URL
@@ -1061,7 +1089,7 @@ class BibleHereReader {
 		try {
 			const books = await this.cacheManager.getCachedBooks(this.currentLanguage);
 			if (books && books.length > 0) {
-				return books.find(book => book.book_number == this.currentBook);
+				return books.find(book => book.book_number == this.currentBook);  // Todo: check ===
 			}
 		} catch (error) {
 			console.error('❌ 獲取當前書卷資料失敗:', error);
@@ -1662,10 +1690,10 @@ class BibleHereReader {
 		const bookItems = this.elements.bookChapterMenu.querySelectorAll('.book-item');
 		bookItems.forEach(item => {
 			item.addEventListener('click', () => {
+				console.log("1693 book-item 被點擊, here is item:", item);
 				this.selectBook(item.dataset.book, item.textContent);
 			});
 		});
-
 		// Chapter selection will be dynamically bound when chapters are populated
 	}
 
@@ -2045,7 +2073,7 @@ class BibleHereReader {
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
-			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookKey}" title="${bookFullName}">`;
 			oldTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
 			oldTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
 			oldTestamentHtml += `</div>`;
@@ -2062,7 +2090,7 @@ class BibleHereReader {
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
-			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookKey}" title="${bookFullName}">`;
 			newTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
 			newTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
 			newTestamentHtml += `</div>`;
@@ -2073,16 +2101,16 @@ class BibleHereReader {
 		newTestamentGrid.innerHTML = newTestamentHtml;
 		console.log('✅ 書卷列表已插入到預定義的 books-grid 容器中');
 
-		// 綁定書卷點擊事件
+		// 綁定書卷點擊事件  Todo: reduce the number of the event listener
 		const bookItems = booksContent.querySelectorAll('.book-item');
 		bookItems.forEach(item => {
 			item.addEventListener('click', () => {
-				const bookName = item.querySelector('.book-full-name').textContent;
-				console.log('📚 書卷被點擊:', { bookKey: item.dataset.book, bookName });
-				this.selectBook(item.dataset.book, bookName);
+				// const bookName = item.querySelector('.book-full-name').textContent;
+				console.log('📚 2109 書卷被點擊:', { bookKey: item.dataset.book, item: item, item_dataset_bookNumber: item.dataset.bookNumber});
+				this.selectBook(item.dataset.book, parseInt(item.dataset.bookNumber));
 			});
 		});
-		console.log('🔗 書卷點擊事件已綁定，共', bookItems.length, '個書卷');
+		console.log('🔗 2113 書卷點擊事件已綁定，共', bookItems.length, '個書卷');
 	}
 
 	/**
@@ -2106,32 +2134,32 @@ class BibleHereReader {
 	}
 
 	/**
-	 * Load chapters tab content
+	 * Load chapters tab content dynamically from books cache
 	 */
-	loadChaptersTab() {
+	async loadChaptersTab() {
+		console.log('📖 開始載入章節列表');
 		const chaptersContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="chapters"] .chapters-grid');
-		if (!chaptersContent) return;
+		if (!chaptersContent) {
+			console.log('❌ 找不到章節內容容器');
+			return;
+		}
 
-		// Get chapter count for current book
-		const chapterCounts = {
-			'genesis': 50, 'exodus': 40, 'leviticus': 27, 'numbers': 36, 'deuteronomy': 34,
-			'joshua': 24, 'judges': 21, 'ruth': 4, '1samuel': 31, '2samuel': 24,
-			'1kings': 22, '2kings': 25, '1chronicles': 29, '2chronicles': 36, 'ezra': 10,
-			'nehemiah': 13, 'esther': 10, 'job': 42, 'psalms': 150, 'proverbs': 31,
-			'ecclesiastes': 12, 'songofsolomon': 8, 'isaiah': 66, 'jeremiah': 52, 'lamentations': 5,
-			'ezekiel': 48, 'daniel': 12, 'hosea': 14, 'joel': 3, 'amos': 9,
-			'obadiah': 1, 'jonah': 4, 'micah': 7, 'nahum': 3, 'habakkuk': 3,
-			'zephaniah': 3, 'haggai': 2, 'zechariah': 14, 'malachi': 4,
-			'matthew': 28, 'mark': 16, 'luke': 24, 'john': 21, 'acts': 28,
-			'romans': 16, '1corinthians': 16, '2corinthians': 13, 'galatians': 6, 'ephesians': 6,
-			'philippians': 4, 'colossians': 4, '1thessalonians': 5, '2thessalonians': 3, '1timothy': 6,
-			'2timothy': 4, 'titus': 3, 'philemon': 1, 'hebrews': 13, 'james': 5,
-			'1peter': 5, '2peter': 3, '1john': 5, '2john': 1, '3john': 1,
-			'jude': 1, 'revelation': 22
-		};
+		// Get chapter count from books cache
+		let chapterCount = 1; // Default fallback
+		
+		try {
+			const currentBookData = await this.getCurrentBookData();
+			if (currentBookData && currentBookData.chapters) {
+				chapterCount = currentBookData.chapters;
+				console.log('📚 從快取獲取章節數量:', { book: this.currentBook, chapters: chapterCount });
+			} else {
+				console.log('⚠️ 無法從快取獲取章節數量，使用預設值 1');
+			}
+		} catch (error) {
+			console.error('❌ 獲取章節數量時發生錯誤:', error);
+		}
 
-		const chapterCount = chapterCounts[this.currentBook] || 1;
-
+		// Generate chapter grid
 		let html = '';
 		for (let i = 1; i <= chapterCount; i++) {
 			const isActive = i === this.currentChapter;
@@ -2139,14 +2167,17 @@ class BibleHereReader {
 		}
 
 		chaptersContent.innerHTML = html;
+		console.log('✅ 章節列表已生成，共', chapterCount, '章');
 
 		// Bind events for new chapter items
 		const chapterItems = chaptersContent.querySelectorAll('.chapter-item');
 		chapterItems.forEach(item => {
 			item.addEventListener('click', () => {
+				console.log('📖 章節被點擊:', item.dataset.chapter);
 				this.selectChapter(parseInt(item.dataset.chapter));
 			});
 		});
+		console.log('🔗 章節點擊事件已綁定，共', chapterItems.length, '個章節');
 	}
 
 	/**
@@ -2156,16 +2187,20 @@ class BibleHereReader {
 		this.currentVersion = versionKey;
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
-		// Load chapter with new version
+		console.log("📚 2190 selectVersion(), versionKey:", versionKey);
 		this.loadChapter();
 	}
 
 	/**
 	 * Select book
 	 */
-	selectBook(bookKey, bookName) {
-		this.currentBook = bookKey;
+	async selectBook(bookKey, bookNumber) {
+		this.currentBook = bookNumber;
 		this.currentChapter = 1; // Reset to chapter 1
+		console.log('📚 2200 selectBook: bookKey & bookNumber', { bookKey, bookNumber });
+		// Update chapters tab with new book's chapter count
+		await this.loadChaptersTab();
+		
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
 		// Load first chapter of selected book
@@ -2179,7 +2214,7 @@ class BibleHereReader {
 		this.currentChapter = chapterNumber;
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
-		// Load selected chapter
+		console.log('📚 2217 selectChapter: chapterNumber', chapterNumber);
 		this.loadChapter();
 	}
 }
