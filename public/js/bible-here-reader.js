@@ -388,13 +388,15 @@ class BibleHereReader {
 		this.showLoading();
 
 		const params = new URLSearchParams({
-			action: 'bible_here_get_versions',
+			action: 'bible_here_public_get_versions',
 			language: this.currentLanguage,
-			_wpnonce: bibleHereAjax.nonce
 		});
 
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
-			method: 'GET'
+			method: 'GET',
+			headers: {
+				"X-WP-Nonce": bibleHereAjax.nonce
+			}
 		})
 		.then(response => response.json())
 		.then(data => {
@@ -725,6 +727,107 @@ class BibleHereReader {
 		});
 
 		container.innerHTML = html;
+		
+		// 經文顯示完成後，載入版本資料
+		this.loadVersionsAfterChapter();
+	}
+
+	/**
+	 * Load versions after chapter content is displayed
+	 */
+	async loadVersionsAfterChapter() {
+		console.log('📚 [BibleHereReader] 經文顯示完成，開始載入版本資料');
+		
+		try {
+			// 構建 AJAX URL
+			const url = new URL(bibleHereAjax.ajaxurl);
+			url.searchParams.set('action', 'bible_here_public_get_versions');
+			
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: {
+					"X-WP-Nonce": bibleHereAjax.nonce
+				}
+			});
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			console.log('📚 [BibleHereReader] 版本資料 API 回應:', data);
+			
+			if (data.success && data.data) {
+				// 將版本資料載入到快取
+				if (this.cacheManager) {
+					await this.cacheManager.cacheVersions(data.data);
+					console.log('✅ [BibleHereReader] 版本資料已載入快取');
+				}
+				
+				// 更新版本列表顯示
+				this.updateVersionsDisplay(data.data);
+			} else {
+				console.warn('⚠️ [BibleHereReader] 版本資料載入失敗:', data.message || '未知錯誤');
+			}
+			
+		} catch (error) {
+			console.error('❌ [BibleHereReader] 載入版本資料時發生錯誤:', error);
+		}
+	}
+
+	/**
+	 * Update versions display in the UI
+	 */
+	updateVersionsDisplay(versions) {
+		console.log('🔄 [BibleHereReader] 更新版本列表顯示:', versions);
+		
+		// 找到版本列表容器
+		const versionsList = document.querySelector('.versions-list');
+		if (!versionsList) {
+			console.warn('⚠️ [BibleHereReader] 找不到版本列表容器');
+			return;
+		}
+		
+		// 按語言分組版本
+		const versionsByLanguage = {};
+		versions.forEach(version => {
+			const lang = version.language || 'unknown';
+			if (!versionsByLanguage[lang]) {
+				versionsByLanguage[lang] = [];
+			}
+			versionsByLanguage[lang].push(version);
+		});
+		
+		// 生成 HTML
+		let html = '';
+		Object.keys(versionsByLanguage).forEach(language => {
+			html += `<div class="language-group">`;
+			html += `<h4 class="language-title">${language.toUpperCase()}</h4>`;
+			html += `<div class="versions-grid">`;
+			
+			versionsByLanguage[language].forEach(version => {
+				html += `<div class="version-item" data-version="${version.table_name}">`;
+				html += `<span class="version-name">${version.version_name}</span>`;
+				html += `<span class="version-abbr">${version.abbreviation || ''}</span>`;
+				html += `</div>`;
+			});
+			
+			html += `</div></div>`;
+		});
+		
+		// 更新容器內容
+		versionsList.innerHTML = html;
+		
+		// 綁定點擊事件
+		const versionItems = versionsList.querySelectorAll('.version-item');
+		versionItems.forEach(item => {
+			item.addEventListener('click', (e) => {
+				const versionName = e.currentTarget.dataset.version;
+				this.selectVersion(versionName);
+			});
+		});
+		
+		console.log('✅ [BibleHereReader] 版本列表顯示已更新');
 	}
 
 	/**
@@ -1813,37 +1916,37 @@ class BibleHereReader {
 		}
 
 		// Check if content already exists (has books sections)
-		const existingSections = booksContent.querySelectorAll('.books-section');
-		if (existingSections.length > 0) {
-			console.log('📖 書卷內容已存在，只更新 active 狀態');
-			// Content already exists, just update active states
-			this.updateBookActiveStates();
-			return;
-		}
+		// const existingSections = booksContent.querySelectorAll('.books-section');
+		// if (existingSections.length > 0) {
+		// 	console.log('📖 書卷內容已存在，只更新 active 狀態');
+		// 	// Content already exists, just update active states
+		// 	this.updateBookActiveStates();
+		// 	return;
+		// }
 
 		try {
 			let books = null;
 			
 			// 嘗試從快取獲取書卷列表
-		if (this.cacheManager) {
-			console.log('🗄️ [BibleHereReader] 嘗試從快取獲取書卷列表');
-			console.log('🌐 [DEBUG] 當前語言參數:', this.currentLanguage);
-			books = await this.cacheManager.getCachedBooks(this.currentLanguage);
-			
-			if (books && books.length > 0) {
-				console.log('✅ [BibleHereReader] 從快取獲取到書卷列表，書卷數量:', books.length);
-				console.log('📚 [BibleHereReader] 快取書卷資料預覽:', books.slice(0, 3));
-				console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
-					firstBookName: books[0]?.book_name,
-					secondBookName: books[1]?.book_name,
-					thirdBookName: books[2]?.book_name
-				});
-				this.renderBooksList(books, booksContent);
-				return;
-			} else {
-				console.log('⚠️ [BibleHereReader] 快取中沒有找到書卷列表，將從 API 獲取');
+			if (this.cacheManager) {
+				console.log('🗄️ [BibleHereReader 1932] 嘗試從快取獲取書卷列表');
+				console.log('🌐 [DEBUG] 當前語言參數:', this.currentLanguage);
+				books = await this.cacheManager.getCachedBooks(this.currentLanguage);
+				
+				if (books && books.length > 0) {
+					console.log('✅ [BibleHereReader] 從快取獲取到書卷列表，書卷數量:', books.length);
+					console.log('📚 [BibleHereReader] 快取書卷資料預覽:', books.slice(0, 3));
+					console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
+						firstBookName: books[0]?.book_name,
+						secondBookName: books[1]?.book_name,
+						thirdBookName: books[2]?.book_name
+					});
+					this.renderBooksList(books, booksContent);
+					return;
+				} else {
+					console.log('⚠️ [BibleHereReader] 快取中沒有找到書卷列表，將從 API 獲取');
+				}
 			}
-		}
 
 			// 從 API 獲取書卷列表
 			console.log('🌐 從 API 獲取書卷列表');
@@ -1922,28 +2025,34 @@ class BibleHereReader {
 
 		console.log('📖 舊約書卷數量:', oldTestament.length, '新約書卷數量:', newTestament.length);
 
-		let html = '<div class="books-section">';
-		html += '<h5 class="testament-title">舊約</h5>';
-		html += '<div class="books-grid old-testament">';
-		oldTestament.forEach(book => {
-				// 使用 book_name 作為 key，如果沒有則使用 book_key
-				const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
-				const isActive = bookKey === this.currentBook;
-				
-				// 使用英文書卷名稱
-				const bookDisplayName = book.book_abbreviation || book.book_name;
-				const bookFullName = book.book_name;
-				
-				html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
-				html += `<span class="book-name">${bookDisplayName}</span>`;
-				html += `<span class="book-full-name">${bookFullName}</span>`;
-				html += `</div>`;
-			});
-		html += '</div></div>';
+		// 找到預定義的 books-grid 容器
+		const oldTestamentGrid = booksContent.querySelector('.books-grid.old-testament');
+		const newTestamentGrid = booksContent.querySelector('.books-grid.new-testament');
+		
+		if (!oldTestamentGrid || !newTestamentGrid) {
+			console.error('❌ 找不到預定義的 books-grid 容器');
+			return;
+		}
 
-		html += '<div class="books-section">';
-		html += '<h5 class="testament-title">新約</h5>';
-		html += '<div class="books-grid new-testament">';
+		// 渲染舊約書卷
+		let oldTestamentHtml = '';
+		oldTestament.forEach(book => {
+			// 使用 book_name 作為 key，如果沒有則使用 book_key
+			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
+			const isActive = bookKey === this.currentBook;
+			
+			// 使用英文書卷名稱
+			const bookDisplayName = book.book_abbreviation || book.book_name;
+			const bookFullName = book.book_name;
+			
+			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			oldTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
+			oldTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
+			oldTestamentHtml += `</div>`;
+		});
+		
+		// 渲染新約書卷
+		let newTestamentHtml = '';
 		newTestament.forEach(book => {
 			// 使用 book_name 作為 key，如果沒有則使用 book_key
 			const bookKey = book.book_key || book.book_name.toLowerCase().replace(/\s+/g, '');
@@ -1953,15 +2062,16 @@ class BibleHereReader {
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
-			html += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
-			html += `<span class="book-name">${bookDisplayName}</span>`;
-			html += `<span class="book-full-name">${bookFullName}</span>`;
-			html += `</div>`;
+			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book="${bookKey}" title="${bookFullName}">`;
+			newTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
+			newTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
+			newTestamentHtml += `</div>`;
 		});
-		html += '</div></div>';
 
-		booksContent.innerHTML = html;
-		console.log('✅ 書卷列表 HTML 已生成並插入到頁面');
+		// 將書卷資料插入到預定義的容器中
+		oldTestamentGrid.innerHTML = oldTestamentHtml;
+		newTestamentGrid.innerHTML = newTestamentHtml;
+		console.log('✅ 書卷列表已插入到預定義的 books-grid 容器中');
 
 		// 綁定書卷點擊事件
 		const bookItems = booksContent.querySelectorAll('.book-item');
