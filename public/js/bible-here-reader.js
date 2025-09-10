@@ -553,7 +553,7 @@ class BibleHereReader {
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader556] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -565,6 +565,7 @@ class BibleHereReader {
 				hasSuccess: !!data.success,
 				hasData: !!data.data,
 				hasVersion1: !!(data.data && data.data.version1),
+				hasVersion2: !!(data.data && data.data.version2),
 				hasVersion1Verses: !!(data.data && data.data.version1 && data.data.version1.verses),
 				versesLength: data.data && data.data.version1 && data.data.version1.verses ? data.data.version1.verses.length : 0
 			});
@@ -629,13 +630,15 @@ class BibleHereReader {
 				}
 				
 				this.hideLoading();
-				// console.log('✅ [BibleHereReader548] data: ', data);
 				// 根據當前模式選擇顯示方法
-				if (this.isDualMode) {
-					this.displayDualVersionContent(data.data);
-				} else {
-					this.displayChapterContent(data.data.version1);
-				}
+				// if (!this.isDualMode) {
+				// 	this.displayDualVersionContent(data.data);
+				// } else {
+                    // data.data.version2 = data.data.version1
+					console.log("[single mode] 638 not reassigning v2 with v1 content: ", data);
+					// this.displayChapterContent(data.data.version1);
+				// }
+				this.displayDualVersionContent(data.data);
 			} else {
 				// 改善錯誤處理邏輯
 				const errorMessage = typeof data.data === 'string' ? data.data : 
@@ -660,7 +663,7 @@ class BibleHereReader {
 	 * Display chapter content for dual version mode
 	 */
 	displayDualVersionContent(data) {
-		console.log('📖 顯示雙版本內容:', data);
+		console.log('📖 處理雙版本內容:', data);
 		
 		// 獲取雙版本模式的容器
 		const version1Container = this.elements.dualMode.querySelector('.version-1 .verses-container');
@@ -675,7 +678,7 @@ class BibleHereReader {
 			return;
 		}
 		
-		console.log('✅ 找到雙版本容器，開始顯示內容');
+		console.log('✅ 找到雙版本容器，開始處理內容');
 		// 顯示 version1 內容
 		if (data.version1 && data.version1.verses) {
 			console.log('📖 顯示 version1 內容，經文數量:', data.version1.verses.length);
@@ -695,7 +698,7 @@ class BibleHereReader {
 		
 		// 顯示 version2 內容（如果有的話）
 		if (data.version2 && data.version2.verses) {
-			console.log('📖 顯示 version2 內容，經文數量:', data.version2.verses.length);
+			console.log('📖 處理 version2 內容，經文數量:', data.version2.verses.length);
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
@@ -704,9 +707,9 @@ class BibleHereReader {
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
-			console.log('✅ version2 內容已顯示');
+			console.log('✅ version2 內容已處理');
 		} else {
-			console.log('⚠️ 沒有 version2 資料，使用 version1 內容');
+			console.log('⚠️ 712 沒有 version2 資料，使用 version1 內容');
 			// 如果沒有 version2，顯示相同的 version1 內容
 			if (data.version1 && data.version1.verses) {
 				let html1 = '';
@@ -717,14 +720,14 @@ class BibleHereReader {
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
-				console.log('✅ version2 容器已顯示 version1 內容');
+				console.log('✅ version2 容器已處理 version1 內容');
 			} else {
-				console.log('❌ 沒有任何版本資料可顯示');
+				console.log('❌ 沒有任何版本資料可處理');
 				version2Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			}
 		}
 		
-		console.log('🎉 雙版本內容顯示完成');
+		console.log('🎉 雙版本內容處理完成');
 	}
 	
 	/**

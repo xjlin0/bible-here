@@ -47,7 +47,7 @@ class BibleHereDB extends Dexie {
         
         // Add hooks for console.log()
         this.verses.hook('creating', (primKey, obj, trans) => {
-            console.log('📝 [BibleHereDB] Creating verse cache:', { key: primKey, hasValue: !!obj.value });
+            // console.log('📝 [BibleHereDB] Creating verse cache:', { key: primKey, hasValue: !!obj.value });
         });
         
         this.books.hook('creating', (primKey, obj, trans) => {
