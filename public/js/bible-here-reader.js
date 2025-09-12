@@ -628,15 +628,15 @@ class BibleHereReader {
 						console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
 					}
 				}
-				
+
 				this.hideLoading();
 				// 根據當前模式選擇顯示方法
-				// if (!this.isDualMode) {
+				// if (this.isDualMode) {
 				// 	this.displayDualVersionContent(data.data);
 				// } else {
-                    // data.data.version2 = data.data.version1
-					console.log("[single mode] 638 not reassigning v2 with v1 content: ", data);
-					// this.displayChapterContent(data.data.version1);
+                //     // data.data.version2 = data.data.version1
+				// 	console.log("[single mode] 638 not reassigning v2 with v1 content: ", data);
+				// 	this.displayChapterContent(data.data.version1);
 				// }
 				this.displayDualVersionContent(data.data);
 			} else {
