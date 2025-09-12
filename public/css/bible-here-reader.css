@@ -1538,7 +1538,8 @@
 
 .books-grid {
 	display: grid;
-	grid-template-columns: repeat(8, 1fr);
+	/* grid-template-columns: repeat(8, 1fr); */
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 	gap: 6px;
 }
 
@@ -1597,6 +1598,7 @@
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
 	gap: 6px;
+	padding-bottom: 60px;
 }
 
 .chapter-item {
@@ -1647,7 +1649,8 @@
 	}
 	
 	.books-grid {
-		grid-template-columns: repeat(5, 1fr);
+		/* grid-template-columns: repeat(5, 1fr); */
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 		gap: 4px;
 	}
 	
@@ -1685,7 +1688,8 @@
 	}
 	
 	.books-grid {
-		grid-template-columns: repeat(5, 1fr);
+		/* grid-template-columns: repeat(5, 1fr); */
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 		gap: 3px;
 	}
 	
@@ -1701,6 +1705,7 @@
 	
 	.chapters-grid {
 		grid-template-columns: repeat(5, 1fr);
+		/* grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); */
 		gap: 3px;
 	}
 	
