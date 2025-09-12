@@ -521,6 +521,7 @@ class BibleHereReader {
 				console.log('📖 [BibleHereReader520] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
 				this.displayChapterContent({ verses: chapterContent });
+				this.displayDualVersionContent({version1: { verses: chapterContent }});  // load single and dual data for faster switching
 				return;
 			} else {
 				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
@@ -630,13 +631,13 @@ class BibleHereReader {
 				}
 
 				this.hideLoading();
-				// 根據當前模式選擇顯示方法
+				// it's necessary to load data for both single- and dual-version-mode so toggling mode will work?
 				// if (this.isDualMode) {
 				// 	this.displayDualVersionContent(data.data);
 				// } else {
                 //     // data.data.version2 = data.data.version1
 				// 	console.log("[single mode] 638 not reassigning v2 with v1 content: ", data);
-				// 	this.displayChapterContent(data.data.version1);
+				this.displayChapterContent(data.data.version1);
 				// }
 				this.displayDualVersionContent(data.data);
 			} else {
