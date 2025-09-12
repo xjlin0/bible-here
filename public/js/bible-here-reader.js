@@ -520,8 +520,8 @@ class BibleHereReader {
 				console.log('✅ [BibleHereReader519] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
 				console.log('📖 [BibleHereReader521] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
-				this.displayChapterContent({version1: { verses: chapterContent }, table_name: this.currentVersion});
-				this.displayDualVersionContent({version1: { verses: chapterContent }, table_name: this.currentVersion});  // load single and dual data for faster switching
+				this.displayChapterContent({version1: { verses: chapterContent, table_name: this.currentVersion }});
+				this.displayDualVersionContent({version1: { verses: chapterContent, table_name: this.currentVersion}});  // load single and dual data for faster switching
 				return;
 			} else {
 				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
@@ -685,6 +685,9 @@ class BibleHereReader {
 				html1 += `</p>`;
 			});
 			version1Container.innerHTML = html1;
+			if (data.version1.table_name){
+				version1Container.dataset.tableName = data.version1.table_name;
+			}
 			console.log('✅ version1 內容已顯示');
 		} else {
 			console.log('⚠️ 沒有 version1 資料');
@@ -702,6 +705,9 @@ class BibleHereReader {
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
+			if (data.version2.table_name){
+				version2Container.dataset.tableName = data.version2.table_name;
+			}
 			console.log('✅ version2 內容已處理');
 		} else {
 			console.log('⚠️ 712 沒有 version2 資料，使用 version1 內容');
@@ -715,6 +721,9 @@ class BibleHereReader {
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
+				if (data.version1.table_name){
+					version2Container.dataset.tableName = data.version1.table_name;
+				}
 				console.log('✅ version2 容器已處理 version1 內容');
 			} else {
 				console.log('❌ 沒有任何版本資料可處理');
@@ -728,11 +737,15 @@ class BibleHereReader {
 	/**
 	 * Display chapter content for single version mode
 	 */
-	displayChapterContent(data, versionKey) {
+	displayChapterContent(data) {
 		const versionContainer = this.elements.singleMode.querySelector('.bible-version');
 		let container = versionContainer.querySelector('.verses-container');
 		let chapterData = data.version1;
-		// Create .verses-container if it doesn't exist
+
+		if (chapterData.table_name) {
+			container.dataset.tableName = chapterData.table_name;
+		}
+
 		if (!container) {
 			container = document.createElement('div');
 			container.className = 'verses-container';
