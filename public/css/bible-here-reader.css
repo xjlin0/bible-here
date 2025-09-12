@@ -1592,27 +1592,29 @@
 	opacity: 0.9;
 }
 
-/* Chapter Grid */
-.chapter-grid {
+/* Chapter Grid - 與書卷按鈕保持一致的樣式 */
+.chapters-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
 	gap: 6px;
 }
 
 .chapter-item {
-	padding: 8px;
+	padding: 6px 4px;
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
 	background: #ffffff;
 	cursor: pointer;
 	transition: all 0.2s ease;
-	font-size: 14px;
+	font-size: 22px;
 	text-align: center;
-	font-weight: 500;
-	min-height: 36px;
+	font-weight: 600;
+	min-height: 42px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	line-height: 1.1;
+	flex-direction: column;
 }
 
 .chapter-item:hover {
@@ -1659,8 +1661,15 @@
 		font-size: 12px;
 	}
 	
-	.chapter-grid {
-		grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+	.chapters-grid {
+		grid-template-columns: repeat(5, 1fr);
+		gap: 4px;
+	}
+	
+	.chapter-item {
+		font-size: 18px;
+		padding: 4px 2px;
+		min-height: 36px;
 	}
 }
 
@@ -1688,6 +1697,17 @@
 	
 	.book-item .book-subtitle {
 		font-size: 13px;
+	}
+	
+	.chapters-grid {
+		grid-template-columns: repeat(5, 1fr);
+		gap: 3px;
+	}
+	
+	.chapter-item {
+		font-size: 24px;
+		padding: 6px 2px;
+		min-height: 40px;
 	}
 	
 	/* Responsive Tab Styles */
