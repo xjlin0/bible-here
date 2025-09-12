@@ -166,7 +166,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 		<!-- Single Version Mode (Default) -->
 		<div class="single-version-mode">
 			<div class="bible-version version-1">
-				<div class="chapter-content">
+				<div class="verses-container">
 					<!-- Verses will be loaded here -->
 				</div>
 			</div>

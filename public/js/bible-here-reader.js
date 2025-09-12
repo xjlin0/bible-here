@@ -518,10 +518,10 @@ class BibleHereReader {
 			console.log('🗄️ [BibleHereReader517] async loadChapter() chapterContent: ', chapterContent);
 			if (chapterContent && chapterContent.length > 0) {
 				console.log('✅ [BibleHereReader519] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-				console.log('📖 [BibleHereReader520] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+				console.log('📖 [BibleHereReader521] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
-				this.displayChapterContent({ verses: chapterContent });
-				this.displayDualVersionContent({version1: { verses: chapterContent }});  // load single and dual data for faster switching
+				this.displayChapterContent({version1: { verses: chapterContent }, table_name: this.currentVersion});
+				this.displayDualVersionContent({version1: { verses: chapterContent }, table_name: this.currentVersion});  // load single and dual data for faster switching
 				return;
 			} else {
 				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
@@ -629,16 +629,10 @@ class BibleHereReader {
 						console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
 					}
 				}
-
+				console.log("632 data.data:", data.data);
 				this.hideLoading();
 				// it's necessary to load data for both single- and dual-version-mode so toggling mode will work?
-				// if (this.isDualMode) {
-				// 	this.displayDualVersionContent(data.data);
-				// } else {
-                //     // data.data.version2 = data.data.version1
-				// 	console.log("[single mode] 638 not reassigning v2 with v1 content: ", data);
-				this.displayChapterContent(data.data.version1);
-				// }
+				this.displayChapterContent(data.data);
 				this.displayDualVersionContent(data.data);
 			} else {
 				// 改善錯誤處理邏輯
@@ -734,14 +728,14 @@ class BibleHereReader {
 	/**
 	 * Display chapter content for single version mode
 	 */
-	displayChapterContent(chapterData, versionKey) {
+	displayChapterContent(data, versionKey) {
 		const versionContainer = this.elements.singleMode.querySelector('.bible-version');
-		let container = versionContainer.querySelector('.chapter-content');
-		
-		// Create .chapter-content if it doesn't exist
+		let container = versionContainer.querySelector('.verses-container');
+		let chapterData = data.version1;
+		// Create .verses-container if it doesn't exist
 		if (!container) {
 			container = document.createElement('div');
-			container.className = 'chapter-content';
+			container.className = 'verses-container';
 			versionContainer.appendChild(container);
 		}
 

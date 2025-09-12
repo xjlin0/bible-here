@@ -452,12 +452,12 @@ class BibleHereCacheManager {
                 versesToCache.push({
                     table_name: versionTable,
                     verse_id: verseId,
-                    version_table: versionTable,
+                    // version_table: versionTable,
                     book_number: verse.book_number,
                     chapter_number: verse.chapter_number,
                     verse_number: verse.verse_number,
                     text: verse.text,
-                    commentary_text: verse.commentary_text || null,
+                    // commentary_text: verse.commentary_text || null,
                     bookmark: null,  // Add default bookmark value
                     updatedAt: now
                 });

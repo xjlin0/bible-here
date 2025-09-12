@@ -422,12 +422,12 @@
 	line-height: 1.8;
 }
 
-.chapter-content {
+/* .chapter-content {
 	padding: 20px;
 	max-height: 600px;
 	overflow-y: auto;
 	line-height: 1.8;
-}
+} */
 
 /* Remove padding for dual version mode */
 .dual-version-mode .verses-container {
@@ -1169,45 +1169,45 @@
 }
 
 /* Font size adjustments */
-.bible-here-reader[data-font-size="0"] .chapter-content,
+/* .bible-here-reader[data-font-size="0"] .verses-container,
 .bible-here-reader[data-font-size="0"] .verse_number {
     font-size: 8px;
 }
 
-.bible-here-reader[data-font-size="1"] .chapter-content,
+.bible-here-reader[data-font-size="1"] .verses-container,
 .bible-here-reader[data-font-size="1"] .verse_number {
     font-size: 12px;
 }
 
-.bible-here-reader[data-font-size="2"] .chapter-content,
+.bible-here-reader[data-font-size="2"] .verses-container,
 .bible-here-reader[data-font-size="2"] .verse_number {
     font-size: 16px;
 }
 
-.bible-here-reader[data-font-size="3"] .chapter-content,
+.bible-here-reader[data-font-size="3"] .verses-container,
 .bible-here-reader[data-font-size="3"] .verse_number {
     font-size: 20px;
 }
 
-.bible-here-reader[data-font-size="4"] .chapter-content,
+.bible-here-reader[data-font-size="4"] .verses-container,
 .bible-here-reader[data-font-size="4"] .verse_number {
     font-size: 24px;
 }
 
-.bible-here-reader[data-font-size="5"] .chapter-content,
+.bible-here-reader[data-font-size="5"] .verses-container,
 .bible-here-reader[data-font-size="5"] .verse_number {
     font-size: 28px;
 }
 
-.bible-here-reader[data-font-size="6"] .chapter-content,
+.bible-here-reader[data-font-size="6"] .verses-container,
 .bible-here-reader[data-font-size="6"] .verse_number {
     font-size: 30px;
 }
 
-.bible-here-reader[data-font-size="7"] .chapter-content,
+.bible-here-reader[data-font-size="7"] .verses-container,
 .bible-here-reader[data-font-size="7"] .verse_number {
     font-size: 32px;
-}
+} */
 
 /* ===== BOOK CHAPTER MENU ===== */
 .book-chapter-menu {
@@ -1763,8 +1763,7 @@
 	}
 	
 	/* Override base styles that limit scrolling */
-	.verses-container,
-	.chapter-content {
+	.verses-container {
 		max-height: none !important;
 		height: auto !important;
 	}
@@ -1957,7 +1956,7 @@
 		padding: 5px 10px;
 	}
 	
-	.single-version-mode .chapter-content {
+	.single-version-mode .verses-container {
 		flex: 1;
 		min-height: 0;
 		max-height: none !important;
