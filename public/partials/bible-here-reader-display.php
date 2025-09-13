@@ -163,6 +163,20 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 
 	<!-- Content Area -->
 	<div class="bible-reader-content">
+		<!-- Loading Indicator -->
+		<div class="loading-indicator" style="display: none;">
+			<div class="spinner"></div>
+			<p><?php _e( 'Loading...', 'bible-here' ); ?></p>
+		</div>
+
+		<!-- Error Message -->
+		<div class="error-message" style="display: none;">
+			<div class="error-content">
+				<h4><?php _e( 'Error', 'bible-here' ); ?></h4>
+				<p class="error-text"></p>
+				<button type="button" class="btn-retry"><?php _e( 'Retry', 'bible-here' ); ?></button>
+			</div>
+		</div>
 		<!-- Single Version Mode (Default) -->
 		<div class="single-version-mode">
 			<div class="bible-version version-1">
@@ -191,21 +205,6 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 						<!-- Verses will be loaded here -->
 					</div>
 				</div>
-			</div>
-		</div>
-
-		<!-- Loading Indicator -->
-		<div class="loading-indicator" style="display: none;">
-			<div class="spinner"></div>
-			<p><?php _e( 'Loading...', 'bible-here' ); ?></p>
-		</div>
-
-		<!-- Error Message -->
-		<div class="error-message" style="display: none;">
-			<div class="error-content">
-				<h4><?php _e( 'Error', 'bible-here' ); ?></h4>
-				<p class="error-text"></p>
-				<button type="button" class="btn-retry"><?php _e( 'Retry', 'bible-here' ); ?></button>
 			</div>
 		</div>
 	</div>
