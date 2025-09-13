@@ -91,11 +91,11 @@
 	border-right: none;
 }
 
-.navigation-controls .book-chapter-selector {
+.navigation-controls .book-chapter-selector1 {
 	display: flex;
 }
 
-.navigation-controls .book-chapter-selector .btn-nav {
+.navigation-controls .book-chapter-selector1 .btn-nav {
 	border-radius: 0;
 	flex: none;
 }
@@ -182,7 +182,7 @@
 }
 
 /* ===== BOOK CHAPTER BUTTON ===== */
-.btn-book-chapter {
+.btn1-book-chapter {
 	min-width: 140px;
 	padding: 8px 20px;
 	font-size: 15px;
@@ -483,6 +483,7 @@
 	border: 4px solid #f3f3f3;
 	border-top: 4px solid #007cba;
 	border-radius: 50%;
+	border-bottom-width: 0;
 	animation: spin 1s linear infinite;
 	margin-bottom: 15px;
 }
@@ -577,7 +578,7 @@
 		padding: 10px 12px;
 	}
 
-	.btn-book-chapter {
+	.btn1-book-chapter {
 		min-width: 120px;
 		padding: 10px 20px;
 		font-size: 14px;
@@ -688,7 +689,7 @@
 		border-radius: 50%;
 	}
 
-	.btn-book-chapter {
+	.btn1-book-chapter {
 		min-width: 90px;
 		padding: 6px 12px;
 		font-size: 13px;

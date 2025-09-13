@@ -47,9 +47,9 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			</button>
 			
 			<!-- Book and Chapter Button -->
-			<div class="book-chapter-selector">
-				<button type="button" class="btn-nav btn-book-chapter" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
-					<span class="book-chapter-text" data-version-name-short="KJV" data-book-name-short="Ps">KJV Ps <?php echo esc_html( $default_chapter ); ?></span>
+			<div class="book-chapter-selector1">
+				<button type="button" class="btn-nav btn1-book-chapter" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
+					<span class="book-chapter-text1" data-version-name-short="KJV" data-book-name-short="Ps">KJV Ps <?php echo esc_html( $default_chapter ); ?></span>
 					<span class="dropdown-arrow">▼</span>
 				</button>
 				<!-- Hidden selectors for functionality -->

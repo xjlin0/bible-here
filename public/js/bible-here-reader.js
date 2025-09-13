@@ -53,8 +53,8 @@ class BibleHereReader {
 			reader: this.container,
 			bookSelect: this.container.querySelector('.book-select'),
 			chapterSelect: this.container.querySelector('.chapter-select'),
-			bookChapterButton: this.container.querySelector('.btn-book-chapter'),
-			bookChapterText: this.container.querySelector('.book-chapter-text'),
+			bookChapterButton1: this.container.querySelector('.btn1-book-chapter'),
+			bookChapterText1: this.container.querySelector('.book-chapter-text1'),
 			bookChapterMenu: this.container.querySelector('.book-chapter-menu'),
 			prevButton: this.container.querySelector('.btn-prev'),
 			nextButton: this.container.querySelector('.btn-next'),
@@ -211,9 +211,9 @@ class BibleHereReader {
 	 */
 	bindEvents() {
 		// Book and Chapter button click
-		if (this.elements.bookChapterButton) {
+		if (this.elements.bookChapterButton1) {
 			// console.log('綁定書卷章節按鈕點擊事件');
-			this.elements.bookChapterButton.addEventListener('click', () => {
+			this.elements.bookChapterButton1.addEventListener('click', () => {
 				console.log('書卷章節按鈕被點擊');
 				this.toggleBookChapterMenu();
 			});
@@ -292,7 +292,7 @@ class BibleHereReader {
 			// Close book chapter menu
 			if (this.elements.bookChapterMenu && 
 				!this.elements.bookChapterMenu.contains(e.target) && 
-				!this.elements.bookChapterButton.contains(e.target)) {
+				!this.elements.bookChapterButton1.contains(e.target)) {
 				this.hideBookChapterMenu();
 			}
 		});
@@ -896,18 +896,18 @@ class BibleHereReader {
 	 * Update book chapter button text
 	 */
 	updateBookChapterButton(versionLabel, bookLabel) {
-		if (this.elements.bookChapterText) {
+		if (this.elements.bookChapterText1) {
 			if (versionLabel) {
-				this.elements.bookChapterText.dataset.versionNameShort = versionLabel;
+				this.elements.bookChapterText1.dataset.versionNameShort = versionLabel;
 			} else {
-				versionLabel = this.elements.bookChapterText.dataset.versionNameShort;
+				versionLabel = this.elements.bookChapterText1.dataset.versionNameShort;
 			}
 			if (bookLabel){
-				this.elements.bookChapterText.dataset.bookNameShort = bookLabel;
+				this.elements.bookChapterText1.dataset.bookNameShort = bookLabel;
 			} else {
-				bookLabel = this.elements.bookChapterText.dataset.bookNameShort;
+				bookLabel = this.elements.bookChapterText1.dataset.bookNameShort;
 			}
-			this.elements.bookChapterText.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${this.currentChapter}`;
+			this.elements.bookChapterText1.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${this.currentChapter}`;
 		}
 	}
 
