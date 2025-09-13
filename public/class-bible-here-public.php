@@ -228,6 +228,7 @@ class Bible_Here_Public {
 				l.name AS language_name,
 				l.original AS language_original,
 				type,
+				v.name_short,
 				v.name AS name,
 				publisher,
 				info_url,

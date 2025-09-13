@@ -28,11 +28,11 @@ class BibleHereReader {
 		this.readerId = this.container.getAttribute('id');
 		this.currentMode = this.container.dataset.mode || 'single';
 		this.currentLanguage = this.container.dataset.language || 'en';
-		this.currentVersion = this.container.dataset.version || 'bible_here_en_kjv';
+		this.currentVersion1 = this.container.dataset.version1 || 'bible_here_en_kjv';
 		console.log(`📖 [BibleHereReader32] this.container.dataset.book: ${this.container.dataset.book}, this.container.dataset.chapter: ${this.container.dataset.chapter}`);
 		this.currentBook = parseInt(this.container.dataset.book) || 19;
 		this.currentChapter = parseInt(this.container.dataset.chapter) || 117;
-		
+		this.currentVersion1NameShort = this.container.dataset.version1NameShort || 'KJV';
 		// Initialize dual mode state
 		this.isDualMode = false;
 		
@@ -42,7 +42,7 @@ class BibleHereReader {
 		console.log('📊 初始狀態:', {
 			mode: this.currentMode,
 			language: this.currentLanguage,
-			version: this.currentVersion,
+			version: this.currentVersion1,
 			book: this.currentBook,
 			chapter: this.currentChapter
 		});
@@ -362,7 +362,7 @@ class BibleHereReader {
 	 * Handle version change
 	 */
 	onVersionChange() {
-		if (!this.currentVersion) {
+		if (!this.currentVersion1) {
 			this.resetSelectors(['book', 'chapter']);
 			return;
 		}
@@ -473,12 +473,12 @@ class BibleHereReader {
 		 */
 	async loadChapter() {
 		console.log('📖 [BibleHereReader474] async loadChapter() 開始載入章節:', {
-			version: this.currentVersion,
+			version: this.currentVersion1,
 			book: this.currentBook,
 			chapter: this.currentChapter
 		});
 		
-		if (!this.currentVersion || !this.currentBook || !this.currentChapter) {
+		if (!this.currentVersion1 || !this.currentBook || !this.currentChapter) {
 			console.warn('⚠️ 缺少必要參數');
 			this.showError('Please select version, book, and chapter');
 			return;
@@ -505,13 +505,13 @@ class BibleHereReader {
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 		if (this.cacheManager) {
 			console.log('🗄️ [BibleHereReader506] async loadChapter() 嘗試從快取獲取章節內容:', {
-				table_name: this.currentVersion,
+				table_name: this.currentVersion1,
 				book_number: bookNumber,
 				chapter_number: this.currentChapter
 			});
 			chapterContent = await this.cacheManager.getCachedVerses(
 				this.currentLanguage,
-				this.currentVersion,
+				this.currentVersion1,
 				bookNumber,
 				this.currentChapter
 			);
@@ -520,8 +520,8 @@ class BibleHereReader {
 				console.log('✅ [BibleHereReader519] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
 				console.log('📖 [BibleHereReader521] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
-				this.displayChapterContent({version1: { verses: chapterContent, table_name: this.currentVersion }});
-				this.displayDualVersionContent({version1: { verses: chapterContent, table_name: this.currentVersion}});  // load single and dual data for faster switching
+				this.displayChapterContent({version1: { verses: chapterContent, table_name: this.currentVersion1 }});
+				this.displayDualVersionContent({version1: { verses: chapterContent, table_name: this.currentVersion1}});  // load single and dual data for faster switching
 				return;
 			} else {
 				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
@@ -538,7 +538,7 @@ class BibleHereReader {
 		url.searchParams.set('book_number_end', this.currentBook);
 		url.searchParams.set('chapter_number_start', this.currentChapter);
 		url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
-		url.searchParams.set('version1_bible', this.currentVersion);
+		url.searchParams.set('version1_bible', this.currentVersion1);
 		
 		const response = await fetch(url, {
 			method: 'GET',
@@ -581,7 +581,7 @@ class BibleHereReader {
 					// Cache version1 data
 					if (data.data.version1 && data.data.version1.verses) {
 						console.log('📊 [BibleHereReader] 準備快取 version1 經文資料:', {
-							version: this.currentVersion,
+							version: this.currentVersion1,
 							book: this.currentBook,
 							chapter: this.currentChapter,
 							verseCount: data.data.version1.verses.length,
@@ -598,7 +598,7 @@ class BibleHereReader {
 						
 						await this.cacheManager.cacheVerses(
 							versesForCacheV1,
-							this.currentVersion
+							this.currentVersion1
 						);
 						console.log('✅ [BibleHereReader] version1 章節內容已成功存入快取');
 					}
@@ -621,7 +621,7 @@ class BibleHereReader {
 						}));
 						
 						// Use a different version identifier for version2
-						const version2Key = this.currentVersion + '_v2';
+						const version2Key = data.data.version2.table_name;
 						await this.cacheManager.cacheVerses(
 							versesForCacheV2,
 							version2Key
@@ -943,8 +943,8 @@ class BibleHereReader {
 		select.disabled = false;
 		
 		// Auto-select if we have a current version
-		if (this.currentVersion) {
-			select.value = this.currentVersion;
+		if (this.currentVersion1) {
+			select.value = this.currentVersion1;
 			this.loadBooks();
 		}
 	}
@@ -1008,7 +1008,7 @@ class BibleHereReader {
 			switch (selector) {
 				case 'version':
 					this.elements.versionSelect.empty().append('<option value="">Select Version</option>').prop('disabled', true);
-					this.currentVersion = '';
+					this.currentVersion1 = '';
 					break;
 				case 'book':
 					this.elements.bookSelect.empty().append('<option value="">Select Book</option>').prop('disabled', true);
@@ -1028,7 +1028,7 @@ class BibleHereReader {
 	 * Update load button state
 	 */
 	updateLoadButton() {
-		const canLoad = this.currentVersion && this.currentBook && this.currentChapter;
+		const canLoad = this.currentVersion1 && this.currentBook && this.currentChapter;
 		this.elements.loadButton.prop('disabled', !canLoad);
 	}
 
@@ -1262,7 +1262,7 @@ class BibleHereReader {
 	 */
 	loadVersionData() {
 		// This will be implemented when API is ready
-		console.log('Loading version data for:', this.currentVersion);
+		console.log('Loading version data for:', this.currentVersion1);
 	}
 
 	/**
@@ -1920,7 +1920,7 @@ class BibleHereReader {
 			
 			// Versions in this language
 			group.versions.forEach(version => {
-				const isActive = version.table_name === this.currentVersion;
+				const isActive = version.table_name === this.currentVersion1;
 				html += `<div class="version-item ${isActive ? 'active' : ''}" data-version="${version.table_name}">`;
 				html += `<span class="version-name">${version.name}</span>`;
 				if (version.publisher) {
@@ -2195,7 +2195,7 @@ class BibleHereReader {
 	 * Select version
 	 */
 	selectVersion(versionKey) {
-		this.currentVersion = versionKey;
+		this.currentVersion1 = versionKey;
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
 		console.log("📚 2190 selectVersion(), versionKey:", versionKey);
