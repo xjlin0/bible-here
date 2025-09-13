@@ -216,6 +216,8 @@ class Bible_Here {
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_strong_dictionary', $plugin_public, 'handle_ajax_get_strong_dictionary' );
 		$this->loader->add_action( 'wp_ajax_bible_here_public_get_cross_references', $plugin_public, 'handle_ajax_get_cross_references' );
 		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_cross_references', $plugin_public, 'handle_ajax_get_cross_references' );
+		$this->loader->add_action( 'wp_ajax_bible_here_public_get_abbreviations', $plugin_public, 'handle_ajax_get_abbreviations' );
+		$this->loader->add_action( 'wp_ajax_nopriv_bible_here_public_get_abbreviations', $plugin_public, 'handle_ajax_get_abbreviations' );
 
 	}
 

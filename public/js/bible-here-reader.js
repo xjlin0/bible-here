@@ -476,7 +476,7 @@ class BibleHereReader {
 		 * Load chapter content using cache manager or API
 		 */
 	async loadChapter() {
-		console.log('📖 [BibleHereReader477] async loadChapter() 開始載入章節:', {
+		console.log('📖 [BibleHereReader479] async loadChapter() 開始載入章節:', {
 			version: this.currentVersion1,
 			book: this.currentBook,
 			chapter: this.currentChapter
@@ -508,7 +508,7 @@ class BibleHereReader {
 
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 		if (this.cacheManager) {
-			console.log('🗄️ [BibleHereReader509] async loadChapter() 嘗試從快取獲取章節內容:', {
+			console.log('🗄️ [BibleHereReader511] async loadChapter() 嘗試從快取獲取章節內容:', {
 				table_name: this.currentVersion1,
 				book_number: bookNumber,
 				chapter_number: this.currentChapter
@@ -519,21 +519,21 @@ class BibleHereReader {
 				bookNumber,
 				this.currentChapter
 			);
-			console.log('🗄️ [BibleHereReader520] async loadChapter() chapterContent: ', chapterContent);
+			console.log('🗄️ [BibleHereReader522] async loadChapter() chapterContent: ', chapterContent);
 			if (chapterContent && chapterContent.length > 0) {
-				console.log('✅ [BibleHereReader522] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-				console.log('📖 [BibleHereReader523] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+				console.log('✅ [BibleHereReader524] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+				console.log('📖 [BibleHereReader525] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
 				this.displayChapterContent({version1: { verses: chapterContent, table_name: this.currentVersion1 }});
 				this.displayDualVersionContent({version1: { verses: chapterContent, table_name: this.currentVersion1}});  // load single and dual data for faster switching
 				return;
 			} else {
-				console.log('⚠️ [BibleHereReader525] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
+				console.log('⚠️ [BibleHereReader531] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
 			}
 		}
 			
 			// 從 API 獲取
-		console.log('🌐 447 async loadChapter() 從 API 獲取章節內容');
+		console.log('🌐 536 async loadChapter() 從 API 獲取章節內容');
 		
 		// 構建 URL 參數
 		const url = new URL(bibleHereAjax.ajaxurl);
@@ -558,7 +558,7 @@ class BibleHereReader {
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader556] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader561] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -633,7 +633,7 @@ class BibleHereReader {
 						console.log('✅ [BibleHereReader] version2 章節內容已成功存入快取');
 					}
 				}
-				console.log("632 data.data:", data.data);
+				// console.log("636 loading AJAX data to cache finished data.data:", data.data);
 				this.hideLoading();
 				// it's necessary to load data for both single- and dual-version-mode so toggling mode will work?
 				this.displayChapterContent(data.data);
@@ -866,7 +866,7 @@ class BibleHereReader {
 		versionItems.forEach(item => {
 			item.addEventListener('click', (e) => {
 				console.log("🔄 [BibleHereReader] addEventListener at 866");
-				this.selectVersion(e.currentTarget.dataset);
+				this.selectVersionAndLoadBooksTab(e.currentTarget.dataset);
 			});
 		});
 		
@@ -1694,7 +1694,7 @@ class BibleHereReader {
 		tabs.forEach(tab => {
 			tab.addEventListener('click', (e) => {
 				e.preventDefault();
-				console.log('1695 Tab clicked:', tab.dataset.tab);
+				console.log('1697 Tab clicked:', tab.dataset.tab);
 				this.switchBookChapterTab(tab.dataset.tab);
 			});
 		});
@@ -1703,8 +1703,8 @@ class BibleHereReader {
 		const versionItems = this.elements.bookChapterMenu.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
-				console.log("🔄 [BibleHereReader1704] addEventListener");
-				this.selectVersion(item.dataset);
+				console.log("🔄 [BibleHereReader1706] addEventListener");
+				this.selectVersionAndLoadBooksTab(item.dataset);
 			});
 		});
 
@@ -1810,7 +1810,7 @@ class BibleHereReader {
 				break;
 			case 'books':
 				console.log('載入 books tab');
-				this.loadBooksTab();
+				this.loadBooksTabAndUpdateBookChapterButton();
 				break;
 			case 'chapters':
 				console.log('載入 chapters tab');
@@ -1950,7 +1950,7 @@ class BibleHereReader {
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
 				console.log("🔄 [BibleHereReader] addEventListener at 1950 here is item.dataset: ", item.dataset);
-				this.selectVersion(item.dataset);
+				this.selectVersionAndLoadBooksTab(item.dataset);
 			});
 		});
 	}
@@ -1958,8 +1958,8 @@ class BibleHereReader {
 	/**
 	 * Load books tab content using cache manager or API
 	 */
-	async loadBooksTab() {
-		console.log('📚 1960 開始載入書卷列表');
+	async loadBooksTabAndUpdateBookChapterButton() {
+		console.log('📚 1962 開始載入書卷列表');
 		const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
 		if (!booksContent) {
 			console.log('❌ 找不到書卷內容容器');
@@ -2090,7 +2090,7 @@ class BibleHereReader {
 			oldTestamentHtml += `<span class="book-full-name">${book.title_full}</span>`;
 			oldTestamentHtml += `</div>`;
 		});
-		
+
 		// 渲染新約書卷
 		let newTestamentHtml = '';
 		newTestament.forEach(book => {
@@ -2194,14 +2194,14 @@ class BibleHereReader {
 	/**
 	 * Select version
 	 */
-	selectVersion(versionDataset) {
-		console.log("📚 2209 selectVersion(), versionDataset:", versionDataset);
+	selectVersionAndLoadBooksTab(versionDataset) {
+		console.log("📚 2209 selectVersionAndLoadBooksTab(), versionDataset:", versionDataset);
 		this.currentVersion1 = versionDataset.version;
 		this.currentLanguage = versionDataset.versionLanguage;
 		this.updateBookChapterButton(versionDataset.versionNameShort);
 		this.hideBookChapterMenu();
 		this.loadChapter();
-
+		this.loadBooksTabAndUpdateBookChapterButton();
 	}
 
 	/**

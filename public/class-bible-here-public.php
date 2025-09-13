@@ -745,6 +745,76 @@ class Bible_Here_Public {
 	}
 
 	/**
+	 * Handle AJAX request for getting Bible abbreviations.
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_abbreviations() {
+		global $wpdb;
+		
+		// Verify nonce
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token for Bible_Here_Public::handle_ajax_get_abbreviations() at line ' . __LINE__,
+				'code' => 'invalid_nonce'
+			), 401 );
+		}
+
+		$abbreviations_table = $wpdb->prefix . 'bible_here_abbreviations';
+		// Get parameters from GET request
+		$languages_param = sanitize_text_field( $_GET['languages'] ?? '' );
+		$where_clause = '';
+		// Build IN clause for multiple languages
+		if ( !empty( $languages_param ) ) {
+			$languages = explode(',', $languages_param);
+			$sanitized_languages = array_map('trim', $languages);
+			$sanitized_languages = array_map('sanitize_text_field', $sanitized_languages);
+			$sanitized_languages = array_filter($sanitized_languages);
+
+			if (empty($sanitized_languages)) {
+				wp_send_json_error( array(
+					'message' => 'Invalid or empty languages parameter, please remove languages parameter if you want to get all languages.',
+					'code' => 'invalid_languages_param'
+				), 400 );
+			}
+
+			$placeholders = implode(',', array_fill(0, count($sanitized_languages), '%s'));
+			$where_clause = "WHERE language IN ($placeholders)";
+		}
+
+		$sql = "SELECT book_number, abbreviation, language
+			FROM $abbreviations_table
+			$where_clause
+			ORDER BY language, book_number";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $sanitized_languages ), ARRAY_A );
+		
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ), 500 );
+		}
+
+		// Transform results to match expected format
+		$abbreviations = array();
+		if ( $results ) {
+			foreach ( $results as $entry ) {
+				$abbreviations[] = array(
+					'book_number' => intval( $entry['book_number'] ),
+					'abbreviation' => $entry['abbreviation'],
+					'language' => $entry['language']
+				);
+			}
+		}
+
+		$response_data = array(
+			'abbreviations' => $abbreviations
+		);
+		
+		wp_send_json_success( $response_data );
+	}
+
+	/**
 	 * Handle AJAX request for getting cross references.
 	 *
 	 * @since    1.0.0

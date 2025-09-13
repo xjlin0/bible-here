@@ -270,18 +270,17 @@ class BibleHereCacheManager {
      * Load seed verses data
      */
     async loadSeedVerses() {
-        console.log('📖 [BibleHereCacheManager288] 開始載入經文 Seed Data');
+        console.log('📖 [BibleHereCacheManager273] 開始載入經文 Seed Data');
         
         try {
-            // Check if seed data is available
             if (typeof window.BibleHereSeedData === 'undefined') {
-                console.warn('⚠️ [BibleHereCacheManager] Seed Data 不可用');
+                console.warn('⚠️ [BibleHereCacheManager] Seed Data unavailable');
                 return;
-            }
+            }  // Check if seed data is available
             
             const seedVerses = window.BibleHereSeedData.openingVerses;
             if (!seedVerses) {
-                console.warn('⚠️ [BibleHereCacheManager] 經文 Seed Data 為空');
+                console.warn('⚠️ [BibleHereCacheManager] Seed Data empty');
                 return;
             }
             
@@ -290,30 +289,6 @@ class BibleHereCacheManager {
                 const versesData = seedVerses[language].verses;
                 await this.cacheVerses(versesData, seedVerses[language].table_name);
             }
-
-            // if (seedVerses.en) {
-                // const enData = seedVerses.en;
-                // console.log('🔍 [Debug] enData:', enData);
-                // console.log('🔍 [Debug] enData.verses:', enData.verses);
-                // console.log('🔍 [Debug] enData.verses type:', typeof enData.verses, Array.isArray(enData.verses));
-                
-                // const versesData = enData.verses.map(v => {return {
-                //     ...v,
-                //     book_number: enData.book_number,
-                //     chapter_number: enData.chapter_number,
-                // }});
-                // console.log('🔍 [Debug] versesData:', versesData);
-                // console.log('🔍 [Debug] versesData type:', typeof versesData, Array.isArray(versesData));
-                // console.log('🔍 [Debug] About to call cacheVerses with:');
-                // console.log('  - versesData:', versesData);
-                // console.log('  - enData.table_name:', enData.table_name);
-                // console.log('  - enData.book_name:', enData.book_name);
-                
-                // await this.cacheVerses(versesData, enData.table_name);
-                // console.log(`✅ [BibleHereCacheManager321] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
-            // }
-            
-            // Only load English verses from seed data
             
         } catch (error) {
             console.error('❌ [BibleHereCacheManager346] 載入經文 Seed Data 時發生錯誤:', error);
@@ -328,7 +303,7 @@ class BibleHereCacheManager {
         try {
             const now = Date.now();
             const booksCacheEntry = [];
-console.log('💾 [CacheManager339] Caching books for language: ', Object.keys(booksData));
+console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(booksData));
             Object.keys(booksData).forEach(language => {
                 booksCacheEntry.push({
                     language_code: language,
