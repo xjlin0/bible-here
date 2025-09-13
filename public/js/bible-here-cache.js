@@ -24,26 +24,26 @@ class BibleHereDB extends Dexie {
         // Define database schema according to technical document
         this.version(1).stores({
             // Verses table: composite primary key [table_name+verse_id], value as object
-            verses: '[table_name+verse_id], value, updatedAt',
+            verses: '[table_name+verse_id], bookmark, updatedAt',
             
             // Books table: primary key language_code, value as object
-            books: 'language_code&, value, updatedAt',
+            books: 'language_code&, updatedAt',
             
             // Versions table: primary key table_name, value as object with updatedAt
-            versions: 'table_name&, value, updatedAt'
+            versions: 'table_name&, updatedAt'
         });
         
-        // Version 2: Add bookmark field to verses table
-        this.version(2).stores({
-            // Verses table: composite primary key [table_name+verse_id], with bookmark index
-            verses: '[table_name+verse_id], value, updatedAt, bookmark',
+        // // Version 2: Add bookmark field to verses table
+        // this.version(2).stores({
+        //     // Verses table: composite primary key [table_name+verse_id], with bookmark index
+        //     verses: '[table_name+verse_id], updatedAt, bookmark',
             
-            // Books table: primary key language_code, value as object
-            books: 'language_code&, value, updatedAt',
+        //     // Books table: primary key language_code, value as object
+        //     books: 'language_code&, updatedAt',
             
-            // Versions table: primary key table_name, value as object with updatedAt
-            versions: 'table_name&, value, updatedAt'
-        });
+        //     // Versions table: primary key table_name, value as object with updatedAt
+        //     versions: 'table_name&, updatedAt'
+        // });
         
         // Add hooks for console.log()
         this.verses.hook('creating', (primKey, obj, trans) => {
@@ -220,12 +220,12 @@ class BibleHereCacheManager {
                 
                 // Load verses only after books loading succeeded
                 await this.loadSeedVerses();
-                console.log('✅ [CacheManager211] Verses seed data loaded successfully');
+                console.log('✅ [CacheManager223] Verses seed data loaded successfully');
             } else {
-                console.log('✅ [CacheManager213] Cache already contains data, skipping seed data loading');
+                console.log('✅ [CacheManager225] Cache already contains data, skipping seed data loading');
             }
         } catch (error) {
-            console.error('❌ [CacheManager216] Failed to check/load seed data:', error);
+            console.error('❌ [CacheManager228] Failed to check/load seed data:', error);
             // Don't continue execution if seed data loading fails
             throw error;
         }
@@ -286,29 +286,32 @@ class BibleHereCacheManager {
             }
             
             // Always load English verses (Psalm 117)
-            if (seedVerses.en) {
-                const enData = seedVerses.en;
-                console.log('🔍 [Debug] enData:', enData);
-                console.log('🔍 [Debug] enData.verses:', enData.verses);
-                console.log('🔍 [Debug] enData.verses type:', typeof enData.verses, Array.isArray(enData.verses));
-                
-                const versesData = enData.verses.map(v => ({
-                    book_number: enData.book_number,
-                    chapter_number: enData.chapter_number,
-                    verse_number: v.verse,
-                    text: v.text,
-                    verse_id: v.verse_id
-                }));
-                console.log('🔍 [Debug] versesData:', versesData);
-                console.log('🔍 [Debug] versesData type:', typeof versesData, Array.isArray(versesData));
-                console.log('🔍 [Debug] About to call cacheVerses with:');
-                console.log('  - versesData:', versesData);
-                console.log('  - enData.table_name:', enData.table_name);
-                console.log('  - enData.book_name:', enData.book_name);
-                
-                await this.cacheVerses(versesData, enData.table_name);
-                console.log(`✅ [BibleHereCacheManager321] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
+            for (const language in seedVerses) {
+                const versesData = seedVerses[language].verses;
+                await this.cacheVerses(versesData, seedVerses[language].table_name);
             }
+
+            // if (seedVerses.en) {
+                // const enData = seedVerses.en;
+                // console.log('🔍 [Debug] enData:', enData);
+                // console.log('🔍 [Debug] enData.verses:', enData.verses);
+                // console.log('🔍 [Debug] enData.verses type:', typeof enData.verses, Array.isArray(enData.verses));
+                
+                // const versesData = enData.verses.map(v => {return {
+                //     ...v,
+                //     book_number: enData.book_number,
+                //     chapter_number: enData.chapter_number,
+                // }});
+                // console.log('🔍 [Debug] versesData:', versesData);
+                // console.log('🔍 [Debug] versesData type:', typeof versesData, Array.isArray(versesData));
+                // console.log('🔍 [Debug] About to call cacheVerses with:');
+                // console.log('  - versesData:', versesData);
+                // console.log('  - enData.table_name:', enData.table_name);
+                // console.log('  - enData.book_name:', enData.book_name);
+                
+                // await this.cacheVerses(versesData, enData.table_name);
+                // console.log(`✅ [BibleHereCacheManager321] 已載入英文經文 Seed Data (${enData.book_name} ${enData.chapter_number}, ${versesData.length} verses)`);
+            // }
             
             // Only load English verses from seed data
             
