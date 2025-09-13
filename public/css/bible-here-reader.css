@@ -50,7 +50,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 12px;
+	/* gap: 12px; */
 	width: 100%;
 	box-sizing: border-box;
 	position: relative;
@@ -118,7 +118,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 8px;
+	/* gap: 8px; */
 	position: relative;
 	overflow: hidden;
 }
@@ -168,7 +168,7 @@
 /* ===== NAVIGATION ARROWS ===== */
 .btn-prev,
 .btn-next {
-	min-width: 50px;
+	/* min-width: 50px; */
 	padding: 8px 12px;
 	border-radius: 4px;
 	min-height: 36px;
@@ -553,7 +553,7 @@
 	}
 
 	.bible-reader-nav {
-		padding: 8px 16px;
+		padding: 0;
 	}
 
 	.nav-controls {
@@ -564,7 +564,7 @@
 	}
 
 	.btn-nav {
-		padding: 10px 16px;
+		/* padding: 10px 16px; */
 		font-size: 13px;
 		min-height: 40px;
 	}
@@ -573,7 +573,7 @@
 	.btn-next,
 	.btn-search,
 	.btn-settings {
-		min-width: 44px;
+		/* min-width: 44px; */
 		padding: 10px 12px;
 	}
 
