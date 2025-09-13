@@ -895,16 +895,19 @@ class BibleHereReader {
 	/**
 	 * Update book chapter button text
 	 */
-	updateBookChapterButton(versionLabel) {
+	updateBookChapterButton(versionLabel, bookLabel) {
 		if (this.elements.bookChapterText) {
-			const bookDisplayName = this.currentBook;
 			if (versionLabel) {
 				this.elements.bookChapterText.dataset.versionNameShort = versionLabel;
 			} else {
 				versionLabel = this.elements.bookChapterText.dataset.versionNameShort;
 			}
-			// console.log("🔄 [BibleHereReader] updateBookChapterButton() 905,versionLabel:",versionLabel);
-			this.elements.bookChapterText.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookDisplayName} ${this.currentChapter}`;
+			if (bookLabel){
+				this.elements.bookChapterText.dataset.bookNameShort = bookLabel;
+			} else {
+				bookLabel = this.elements.bookChapterText.dataset.bookNameShort;
+			}
+			this.elements.bookChapterText.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${this.currentChapter}`;
 		}
 	}
 
@@ -1041,7 +1044,7 @@ class BibleHereReader {
 	 * Navigate to previous chapter
 	 */
 	async navigatePrevious() {
-		console.log("navigatePrevious() 1039, this.currentLanguage:", this.currentLanguage);
+		console.log("navigatePrevious() 1047, this.currentLanguage:", this.currentLanguage);
 		if (this.currentChapter > 1) {
 			this.currentChapter--;
 			this.updateBookChapterButton();
@@ -1065,7 +1068,7 @@ class BibleHereReader {
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1063, versionNameShort:", versionNameShort);
+		console.log("navigateNext() 1071, versionNameShort:", versionNameShort);
 		const currentBookData = await this.getCurrentBookData(this.currentLanguage);
 		const maxChapters = currentBookData ? currentBookData.chapters : 1;
 		
@@ -1707,7 +1710,7 @@ class BibleHereReader {
 		const bookItems = this.elements.bookChapterMenu.querySelectorAll('.book-item');
 		bookItems.forEach(item => {
 			item.addEventListener('click', () => {
-				console.log("1693 book-item 被點擊, here is item:", item);
+				console.log("1713 book-item 被點擊, here is item:", item);
 				this.selectBook(item.dataset.book, item.textContent);
 			});
 		});
@@ -2091,7 +2094,7 @@ class BibleHereReader {
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
-			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookKey}" title="${bookFullName}">`;
+			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookDisplayName}" title="${bookFullName}">`;
 			oldTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
 			oldTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
 			oldTestamentHtml += `</div>`;
@@ -2108,7 +2111,7 @@ class BibleHereReader {
 			const bookDisplayName = book.book_abbreviation || book.book_name;
 			const bookFullName = book.book_name;
 			
-			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookKey}" title="${bookFullName}">`;
+			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookDisplayName}" title="${bookFullName}">`;
 			newTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
 			newTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
 			newTestamentHtml += `</div>`;
@@ -2219,7 +2222,7 @@ class BibleHereReader {
 		// Update chapters tab with new book's chapter count
 		await this.loadChaptersTab();
 		
-		this.updateBookChapterButton();
+		this.updateBookChapterButton(null, bookKey);
 		this.hideBookChapterMenu();
 		// Load first chapter of selected book
 		this.loadChapter();
