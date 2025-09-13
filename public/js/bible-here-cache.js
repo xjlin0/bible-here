@@ -439,6 +439,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('🔍 [DEBUG] 快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
+                console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
                 return cachedBooks.value;
                 // const booksData = Object.values(cachedBooks.value);
                 // const booksCount = Array.isArray(booksData) ? booksData.length : Object.keys(booksData).length;

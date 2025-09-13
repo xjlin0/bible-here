@@ -1045,23 +1045,22 @@ class BibleHereReader {
 	/**
 	 * Navigate to previous chapter
 	 */
-	async navigatePrevious() {
-		console.log("navigatePrevious() 1047, this.currentLanguage:", this.currentLanguage);
+	async navigatePrevious(versionNameShort) {
+		console.log("navigatePrevious() 1049, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
 		if (this.currentChapter > 1) {
 			this.currentChapter--;
 			this.updateBookChapterButton();
 			this.loadChapter();
 		} else {
 			const books = await this.getCachedBooks(this.currentLanguage);
-			if (books) {
-				const currentBookIndex = books.findIndex(book => book.book_number == this.currentBook);
-				if (currentBookIndex > 0) {
-					const previousBook = books[currentBookIndex - 1];
-					this.currentBook = previousBook.book_number;
+			if (books && this.currentChapter > 0 && this.currentBook > 1) {
+				// if (this.currentChapter > 0 && this.currentBook > 1) {
+					const previousBook = books[this.currentBook - 1];
+					this.currentBook = this.currentBook - 1;
 					this.currentChapter = previousBook.chapters; // 使用書卷的章節數作為最後一章
-					this.updateBookChapterButton();
+					this.updateBookChapterButton(null, books[this.currentBook].title_short);
 					this.loadChapter();
-				}
+				// }
 			}
 		}
 	}
@@ -1070,25 +1069,22 @@ class BibleHereReader {
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1071, versionNameShort:", versionNameShort);
+		console.log("navigateNext() 1072, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
 		const currentBookData = await this.getCurrentBookData(this.currentLanguage);
 		const maxChapters = currentBookData ? currentBookData.chapters : 1;
-		
 		if (this.currentChapter < maxChapters) {
 			this.currentChapter++;
 			this.updateBookChapterButton();
 			this.loadChapter();
 		} else {
-			// Go to next book's first chapter
-			const books = await this.getCachedBooks();
-			if (books) {
-				const currentBookIndex = books.findIndex(book => book.book_number == this.currentBook);
-				if (currentBookIndex >= 0 && currentBookIndex < books.length - 1) {
-					this.currentBook = books[currentBookIndex + 1].book_number;
+			const books = await this.getCachedBooks();  // Go to next book's first chapter
+			if (books && this.currentBook >= 0 && this.currentBook < Object.keys(books).length) {
+				// if (this.currentBook >= 0 && this.currentBook < Object.keys(books).length) {
+					this.currentBook++;
 					this.currentChapter = 1;
-					this.updateBookChapterButton();
+					this.updateBookChapterButton(null, books[this.currentBook].title_short);
 					this.loadChapter();
-				}
+				// }
 			}
 		}
 	}
@@ -1106,11 +1102,10 @@ class BibleHereReader {
 	 */
 	async getCurrentBookData() {
 		if (!this.cacheManager) return null;
-		
 		try {
 			const books = await this.cacheManager.getCachedBooks(this.currentLanguage);
-			if (books && books.length > 0) {
-				return books.find(book => book.book_number == this.currentBook);  // Todo: check ===
+			if (books) {
+				return books[this.currentBook];
 			}
 		} catch (error) {
 			console.error('❌ 獲取當前書卷資料失敗:', error);
