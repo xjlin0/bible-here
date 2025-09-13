@@ -523,16 +523,7 @@ class BibleHereCacheManager {
             versions.forEach(version => {
                 versionsToCache.push({
                     table_name: version.table_name,
-                    value: {
-                        table_name: version.table_name,
-                        language_code: version.language_code,
-                        language_name: version.language_name,
-                        type: version.type,
-                        name: version.name,
-                        publisher: version.publisher,
-                        info_url: version.info_url,
-                        rank: version.rank
-                    },
+                    value: version,
                     updatedAt: now
                 });
             });
@@ -552,12 +543,12 @@ class BibleHereCacheManager {
      */
     async getVersions(languages = [], types = []) {
         try {
-            console.log('🔍 [CacheManager] Searching cached versions:', { languages, types });
+            console.log('🔍 [CacheManager] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
             
             const now = Date.now();
             const allVersions = await this.db.versions.toArray();
             const validVersions = [];
-            console.log('📖 [CacheManager569] allVersions: ', allVersions);
+            console.log('📖 [CacheManager560] allVersions: ', allVersions);
             for (const versionCache of allVersions) {
                 // Check if version has expired (1-hour expiry)
                 // if (now - versionCache.updatedAt > this.versionsExpiry) {
@@ -566,7 +557,7 @@ class BibleHereCacheManager {
                 // } // should do it after API or loading
                 
                 const version = versionCache.value;
-                console.log('📖 [CacheManager578] version: ', version);
+                console.log('📖 [CacheManager569] version: ', version);
                 // Apply language filter
                 if (languages && !languages.includes(version.language_code)) {
                     continue;
@@ -580,7 +571,7 @@ class BibleHereCacheManager {
                 validVersions.push(version);
             }
             
-            console.log('📖 [CacheManager592] Found', validVersions.length, 'valid cached versions');
+            console.log('📖 [CacheManager583] Found', validVersions.length, 'valid cached versions');
             return validVersions;
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached versions:', error);

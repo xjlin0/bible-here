@@ -49,7 +49,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			<!-- Book and Chapter Button -->
 			<div class="book-chapter-selector">
 				<button type="button" class="btn-nav btn-book-chapter" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
-					<span class="book-chapter-text"><?php echo esc_html( $default_book ); ?> <?php echo esc_html( $default_chapter ); ?></span>
+					<span class="book-chapter-text" data-version-name-short="KJV">KJV <?php echo esc_html( $default_book ); ?> <?php echo esc_html( $default_chapter ); ?></span>
 					<span class="dropdown-arrow">▼</span>
 				</button>
 				<!-- Hidden selectors for functionality -->
@@ -66,9 +66,9 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 				<div class="book-chapter-menu-content">
 					<!-- Tab Navigation -->
 					<div class="menu-tabs">
-						<button type="button" class="menu-tab" data-tab="versions"><?php _e( '和合本', 'bible-here' ); ?></button>
-						<button type="button" class="menu-tab active" data-tab="books"><?php _e( '書卷', 'bible-here' ); ?></button>
-						<button type="button" class="menu-tab" data-tab="chapters"><?php _e( '章', 'bible-here' ); ?></button>
+						<button type="button" class="menu-tab" data-tab="versions"><?php _e( 'Version', 'bible-here' ); ?></button>
+						<button type="button" class="menu-tab active" data-tab="books"><?php _e( 'Book', 'bible-here' ); ?></button>
+						<button type="button" class="menu-tab" data-tab="chapters"><?php _e( 'Chapter', 'bible-here' ); ?></button>
 					</div>
 
 					<!-- Tab Content -->
