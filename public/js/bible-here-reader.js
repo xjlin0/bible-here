@@ -861,8 +861,8 @@ class BibleHereReader {
 		const versionItems = versionsList.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', (e) => {
-				const versionName = e.currentTarget.dataset.version;
-				this.selectVersion(versionName);
+				console.log("🔄 [BibleHereReader] addEventListener at 864");
+				this.selectVersion(e.currentTarget.dataset.version);
 			});
 		});
 		
@@ -899,7 +899,7 @@ class BibleHereReader {
 			const bookDisplayName = this.currentBook;
 			
 			// 使用實際的 currentBook 和 currentChapter 值
-			this.elements.bookChapterText.textContent = `${bookDisplayName} ${this.currentChapter}`;
+			this.elements.bookChapterText.textContent = `902 ${bookDisplayName} ${this.currentChapter}`;
 		}
 	}
 
@@ -1693,6 +1693,7 @@ class BibleHereReader {
 		const versionItems = this.elements.bookChapterMenu.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
+				console.log("🔄 [BibleHereReader] addEventListener at 1696");
 				this.selectVersion(item.dataset.version);
 			});
 		});
@@ -1938,6 +1939,7 @@ class BibleHereReader {
 		const versionItems = container.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
+				console.log("🔄 [BibleHereReader] addEventListener at 1942");
 				this.selectVersion(item.dataset.version);
 			});
 		});
@@ -2194,11 +2196,11 @@ class BibleHereReader {
 	/**
 	 * Select version
 	 */
-	selectVersion(versionKey) {
-		this.currentVersion1 = versionKey;
+	selectVersion(versionTableName) {
+		this.currentVersion1 = versionTableName;
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
-		console.log("📚 2190 selectVersion(), versionKey:", versionKey);
+		console.log("📚 2203 selectVersion(), versionTableName:", versionTableName);
 		this.loadChapter();
 	}
 
