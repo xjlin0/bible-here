@@ -260,6 +260,7 @@ class Bible_Here_Public {
 					'language_original' => $version['language_original'],
 					'type' => $version['type'],
 					'name' => $version['name'],
+					'name_short' => $version['name_short'],
 					'publisher' => $version['publisher'] ?: null,
 					'info_url' => $version['info_url'] ?: null,
 					'rank' => intval( $version['rank'] )

@@ -42,7 +42,7 @@ class BibleHereReader {
 		console.log('📊 初始狀態:', {
 			mode: this.currentMode,
 			language: this.currentLanguage,
-			version: this.currentVersion1,
+			version1: this.currentVersion1,
 			book: this.currentBook,
 			chapter: this.currentChapter
 		});
@@ -799,12 +799,12 @@ class BibleHereReader {
 			if (data.success && data.data) {
 				// 將版本資料載入到快取
 				if (this.cacheManager) {
-					await this.cacheManager.cacheVersions(data.data);
+					await this.cacheManager.cacheVersions(data.data.versions);
 					console.log('✅ [BibleHereReader] 版本資料已載入快取');
 				}
 				
 				// 更新版本列表顯示
-				this.updateVersionsDisplay(data.data);
+				this.updateVersionsDisplay(data.data.versions);
 			} else {
 				console.warn('⚠️ [BibleHereReader] 版本資料載入失敗:', data.message || '未知錯誤');
 			}
@@ -829,25 +829,25 @@ class BibleHereReader {
 		
 		// 按語言分組版本
 		const versionsByLanguage = {};
-		versions.versions.forEach(version => {
-			const lang = version.language || 'unknown';
+		versions.forEach(version => {
+			const lang = version.language_original || 'unknown';
 			if (!versionsByLanguage[lang]) {
 				versionsByLanguage[lang] = [];
 			}
 			versionsByLanguage[lang].push(version);
 		});
-		
+		// console.log('🔄 [BibleHereReader839] 按語言分組版本:', versionsByLanguage);
 		// 生成 HTML
 		let html = '';
 		Object.keys(versionsByLanguage).forEach(language => {
 			html += `<div class="language-group">`;
-			html += `<h4 class="language-title">${language.toUpperCase()}</h4>`;
+			html += `<h4 class="language-title">${language}</h4>`;
 			html += `<div class="versions-grid">`;
 			
 			versionsByLanguage[language].forEach(version => {
-				html += `<div class="version-item" data-version="${version.table_name}">`;
-				html += `<span class="version-name">${version.version_name}</span>`;
-				html += `<span class="version-abbr">${version.abbreviation || ''}</span>`;
+				html += `<div class="version-item" data-version="${version.table_name}" data-version-name-short="${version.name_short}">`;
+				html += `<span class="version-name">${version.name}</span>`;
+				html += `<span class="version-abbr">${version.name_short || ''}</span>`;
 				html += `</div>`;
 			});
 			
@@ -1876,7 +1876,7 @@ class BibleHereReader {
 					count: data.data.versions.length,
 					sample: data.data.versions.slice(0, 2)
 				});
-				await this.cacheManager.cacheVersions(data.data.versions, this.currentLanguage);
+				await this.cacheManager.cacheVersions(data.data.versions);
 				console.log('✅ [BibleHereReader] 版本資料已成功存入快取');
 			}
 				

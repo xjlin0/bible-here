@@ -520,7 +520,7 @@ class BibleHereCacheManager {
             const now = Date.now();
             const versionsToCache = [];
             
-            versions.versions.forEach(version => {
+            versions.forEach(version => {
                 versionsToCache.push({
                     table_name: version.table_name,
                     value: {
