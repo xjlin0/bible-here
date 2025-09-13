@@ -2003,7 +2003,7 @@ class BibleHereReader {
 			console.log('🌐 從 API 獲取書卷列表');
 			const params = new URLSearchParams({
 				action: 'bible_here_public_get_books',
-				languages: this.currentLanguage,
+				languages: navigator.languages,
 			});
 
 			console.log('📡 發送 AJAX 請求到:', `${bibleHereAjax.ajaxurl}?${params}`);
@@ -2022,28 +2022,30 @@ class BibleHereReader {
 				throw new Error(data.data || 'Failed to load books');
 			}
 
-			books = data.data.books;
-			console.log('📚 從 API 獲取到書卷資料，書卷數量:', Object.keys(books).length);
+			// books = data.data.books;
+			console.log('📚 2026 從 API 獲取到書卷資料，當前語言書卷數量:', Object.keys(data.data[this.currentLanguage]).length);
 
 			// 將書卷資料存入快取 - 轉換物件為陣列格式
-			const booksArray = Object.values(books);
-			if (this.cacheManager && books && Object.keys(books).length > 0) {
-				console.log('💾 [BibleHereReader] 將書卷資料存入快取');
-				console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
-					language: this.currentLanguage,   // hi books may be in difference languages
-					count: booksArray.length,
-					sample: booksArray.slice(0, 2)
-				});
+			// const booksArray = Object.values(books);
+			if (this.cacheManager && data.data && Object.keys(data.data).length > 0) {
+				console.log('💾 [BibleHereReader2031] 將書卷資料存入快取');
+				// data.data.forEach(language => {
+				// 	console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
+				// 		language: language,   // hi books may be in difference languages
+				// 		count: booksArray.length,
+				// 		sample: booksArray.slice(0, 2)
+				// 	});
 				try {
-					await this.cacheManager.cacheBooks(booksArray, this.currentLanguage);
-					console.log('✅ [BibleHereReader] 書卷資料已成功存入快取');
+					this.cacheManager.cacheBooks(data.data);
+					console.log('✅ [BibleHereReader] 書卷資料已開始存入快取');
 				} catch (cacheError) {
 					console.error('❌ [BibleHereReader] 存入快取時發生錯誤:', cacheError);
 				}
+				// })
 			}
 
 			// 渲染書卷列表 - 傳入陣列格式
-			this.renderBooksList(booksArray, booksContent);
+			this.renderBooksList(Object.values(data.data[this.currentLanguage]), booksContent);
 		} catch (error) {
 			console.error('❌ 載入書卷列表時發生錯誤:', error);
 			// 顯示錯誤訊息給用戶
@@ -2057,25 +2059,10 @@ class BibleHereReader {
 	renderBooksList(books, booksContent) {
 		console.log('🎨 開始渲染書卷列表，書卷數量:', books.length);
 		console.log('🌐 [DEBUG] 當前語言參數 (renderBooksList):', this.currentLanguage);
-		
-		// 分離舊約和新約書卷
-		const oldTestament = books.filter(book => {
-			// 如果有 testament 字段，使用它；否則根據 book_number 判斷
-			if (book.testament) {
-				return book.testament === 'old' || book.testament === 'OT';
-			}
-			// 假設舊約書卷編號 1-39
-			return book.book_number && book.book_number <= 39;
-		});
-		
-		const newTestament = books.filter(book => {
-			// 如果有 testament 字段，使用它；否則根據 book_number 判斷
-			if (book.testament) {
-				return book.testament === 'new' || book.testament === 'NT';
-			}
-			// 假設新約書卷編號 40-66
-			return book.book_number && book.book_number >= 40;
-		});
+
+		// 分離舊約和新約書卷, genre_type可能不是英文, 故無法直接使用 genre_type 分離
+		const oldTestament = books.filter(book => book.book_number && book.book_number <= 39);  // 假設舊約書卷編號 1-39
+		const newTestament = books.filter(book => book.book_number && book.book_number >= 40);  // 假設新約書卷編號 40-66
 
 		console.log('📖 舊約書卷數量:', oldTestament.length, '新約書卷數量:', newTestament.length);
 
@@ -2092,16 +2079,15 @@ class BibleHereReader {
 		let oldTestamentHtml = '';
 		oldTestament.forEach(book => {
 			// 使用 book_name 作為 key，如果沒有則使用 book_key
-			const bookKey = book.title_short;
+			// const bookKey = book.title_short;
 			const isActive = book.book_number === this.currentBook;
 			
-			// 使用英文書卷名稱
-			const bookDisplayName = book.book_abbreviation || book.book_name;
-			const bookFullName = book.book_name;
+			// const bookDisplayName = book.book_abbreviation || book.book_name;
+			// const bookFullName = book.book_name;
 			
-			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookDisplayName}" title="${bookFullName}">`;
-			oldTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
-			oldTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
+			oldTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${book.title_short}" title="${book.title_full}">`;
+			oldTestamentHtml += `<span class="book-name">${book.title_short}</span>`;
+			oldTestamentHtml += `<span class="book-full-name">${book.title_full}</span>`;
 			oldTestamentHtml += `</div>`;
 		});
 		
@@ -2109,16 +2095,15 @@ class BibleHereReader {
 		let newTestamentHtml = '';
 		newTestament.forEach(book => {
 			// 使用 book_name 作為 key，如果沒有則使用 book_key
-			const bookKey = book.title_short;
+			// const bookKey = book.title_short;
 			const isActive = book.book_number === this.currentBook;
 			
-			// 使用英文書卷名稱
-			const bookDisplayName = book.book_abbreviation || book.book_name;
-			const bookFullName = book.book_name;
+			// const bookDisplayName = book.book_abbreviation || book.book_name;
+			// const bookFullName = book.book_name;
 			
-			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${bookDisplayName}" title="${bookFullName}">`;
-			newTestamentHtml += `<span class="book-name">${bookDisplayName}</span>`;
-			newTestamentHtml += `<span class="book-full-name">${bookFullName}</span>`;
+			newTestamentHtml += `<div class="book-item ${isActive ? 'active' : ''}" data-book-number=${book.book_number} data-book="${book.title_short}" title="${book.title_full}">`;
+			newTestamentHtml += `<span class="book-name">${book.title_short}</span>`;
+			newTestamentHtml += `<span class="book-full-name">${book.title_full}</span>`;
 			newTestamentHtml += `</div>`;
 		});
 
@@ -2132,11 +2117,11 @@ class BibleHereReader {
 		bookItems.forEach(item => {
 			item.addEventListener('click', () => {
 				// const bookName = item.querySelector('.book-full-name').textContent;
-				console.log('📚 2130 書卷被點擊:', { bookKey: item.dataset.book, item: item, item_dataset_bookNumber: item.dataset.bookNumber});
+				console.log('📚 2120 書卷被點擊:', { bookKey: item.dataset.book, item: item, item_dataset_bookNumber: item.dataset.bookNumber});
 				this.selectBook(item);
 			});
 		});
-		console.log('🔗 2134 書卷點擊事件已綁定，共', bookItems.length, '個書卷');
+		console.log('🔗 2124 書卷點擊事件已綁定，共', bookItems.length, '個書卷');
 	}
 
 	/**

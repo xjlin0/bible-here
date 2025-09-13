@@ -612,6 +612,7 @@ class Bible_Here_Public {
 		$genres_table = $wpdb->prefix . 'bible_here_genres';
 
 		$sql = "SELECT 
+		        b.language,
 				book_number,
 				title_full,
 				title_short,
@@ -623,7 +624,7 @@ class Bible_Here_Public {
 			    ON g.language=b.language
 				  AND g.genre_number=b.genre_number
 			{$where_clause}
-			ORDER BY b.book_number ASC";
+			ORDER BY b.language,b.book_number";
 		
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );
 		
@@ -632,27 +633,30 @@ class Bible_Here_Public {
 			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
 		}
 
-		// Transform results to match original expected format
-		$books = array();
+		$languages_data = [];
 		if ( $results ) {
 			foreach ( $results as $book ) {
-				$book_number = intval( $book['book_number'] );
-				$books[$book_number] = array(
-					'book_number' => $book_number,
+				$language = $book['language'];
+
+				if (!isset($languages_data[$language])) {
+					$languages_data[$language] = [];
+				}  // Initialize the language object if it doesn't exist
+
+				$book_data = array(
+					'book_number' => intval( $book['book_number'] ),
 					'title_full' => $book['title_full'],
 					'title_short' => $book['title_short'],
 					'genre_name' => $book['genre_name'],
 					'genre_type' => $book['genre_type'],
 					'chapters' =>  intval( $book['chapters'] )
-				);
+				);  // Create the book data array
+
+				// Add the book to the current language
+				$languages_data[$language][intval($book['book_number'])] = $book_data;
 			}
 		}
-		
-		$response_data = array(
-			'books' => $books
-		);
-		
-		wp_send_json_success( $response_data );
+
+		wp_send_json_success( $languages_data );
 	}
 
 	/**

@@ -236,7 +236,7 @@ class BibleHereCacheManager {
      * According to technical documentation: load 'en' by default, and 'zh-TW' if browser language includes it
      */
     async loadBooksFromSeedData() {
-        console.log('📚 [BibleHereCacheManager227] 開始載入書卷 Seed Data');
+        console.log('📚 [BibleHereCacheManager239] 開始載入書卷 Seed Data');
         
         try {
             // Check if seed data is available
@@ -251,28 +251,17 @@ class BibleHereCacheManager {
                 return;
             }
             
-            // Transform seed data to match API format
-            const booksData = seedBooks.map(book => ({
-                book_number: book.book_number,
-                book_name: book.title_full,
-                book_key: book.title_full.toLowerCase().replace(/\s+/g, ''),
-                book_abbreviation: book.title_short,
-                testament: book.genre_type === 'Old Testament' ? 'old' : 'new',
-                chapters: book.chapters
-            }));
-            
-            // Load English books only (default)
             console.log('🔍 [Debug] About to call this.cacheBooks with:');
             console.log('  - this:', this);
-            console.log('  - this.cacheBooks:', typeof this.cacheBooks);
-            console.log('  - booksData length:', booksData.length);
+            // console.log('  - this.cacheBooks:', typeof this.cacheBooks);
+            console.log('  - booksData length:', window.BibleHereSeedData.openingBooks.length);
             console.log('  - languageCode: en');
             
-            await this.cacheBooks(booksData, 'en');
-            console.log(`✅ [BibleHereCacheManager256] 已載入英文書卷 Seed Data (${booksData.length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
+            await this.cacheBooks({en: window.BibleHereSeedData.openingBooks});
+            console.log(`✅ [BibleHereCacheManager261] 已載入英文書卷 Seed Data (${window.BibleHereSeedData.openingBooks.length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
             
         } catch (error) {
-            console.error('❌ [BibleHereCacheManager279] 載入書卷 Seed Data 時發生錯誤:', error);
+            console.error('❌ [BibleHereCacheManager264] 載入書卷 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution
         }
     }
@@ -332,35 +321,23 @@ class BibleHereCacheManager {
     /**
      * Cache books data (no expiry for books according to technical document)
      */
-    async cacheBooks(booksData, languageCode) {
+    async cacheBooks(booksData) {
         try {
-            console.log('💾 [CacheManager] Caching books for language:', languageCode, 'Count:', Array.isArray(booksData) ? booksData.length : Object.keys(booksData).length);
-            
-            // Convert array to object with book_number as key if needed
-            let booksObject;
-            if (Array.isArray(booksData)) {
-                booksObject = {};
-                booksData.forEach(book => {
-                    booksObject[book.book_number] = book;
-                });
-            } else {
-                booksObject = booksData; // Already an object
-            }
-            
             const now = Date.now();
-            const booksCacheEntry = {
-                language_code: languageCode,
-                value: {
-                    language_code: languageCode,
-                    books: booksObject
-                },
-                updatedAt: now
-            };
-            
-            await this.db.books.put(booksCacheEntry);
-            console.log('✅ [CacheManager] Successfully cached', Object.keys(booksObject).length, 'books for language:', languageCode);
-            
-            return Object.keys(booksObject).length;
+            const booksCacheEntry = [];
+console.log('💾 [CacheManager339] Caching books for language: ', Object.keys(booksData));
+            Object.keys(booksData).forEach(language => {
+                booksCacheEntry.push({
+                    language_code: language,
+                    value: booksData[language],
+                    updatedAt: now,
+                })
+            })
+
+            await this.db.books.bulkPut(booksCacheEntry);
+            console.log('✅ [CacheManager] Successfully cached many books in ', booksCacheEntry.length, ' languages');
+
+            return Object.keys(booksData);
         } catch (error) {
             console.error('❌ [CacheManager] Failed to cache books:', error);
             throw error;
@@ -484,9 +461,9 @@ class BibleHereCacheManager {
             console.log('🔍 [DEBUG] 快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
-                const booksData = cachedBooks.value.books;
+                const booksData = Object.values(cachedBooks.value);
                 const booksCount = Array.isArray(booksData) ? booksData.length : Object.keys(booksData).length;
-                console.log('📚 [CacheManager506] Found cached books:', booksCount);
+                console.log('📚 [CacheManager466] Found cached books:', booksCount);
                 console.log('🔍 [DEBUG] 書卷資料格式:', {
                     isArray: Array.isArray(booksData),
                     firstBookSample: Array.isArray(booksData) ? booksData[0] : Object.values(booksData)[0]

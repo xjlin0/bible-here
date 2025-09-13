@@ -15,7 +15,7 @@
  * Contains Psalm 117 in English (KJV) and Chinese (CUVT)
  */
 const openingVerses = {
-	en: {
+	"en": {
 		"table_name": "bible_here_en_kjv",
 		"book_number": 19,
 		"book_name": "Psalms",
@@ -33,7 +33,7 @@ const openingVerses = {
 				"verse_id": "19117002"
 			}]
 	},
-	zh: {
+	"zh-TW": {
 		"table_name": "bible_here_zh_tw_cuvt",
 		"book_number": 19,
 		"book_name": "詩篇",
