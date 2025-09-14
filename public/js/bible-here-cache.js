@@ -441,22 +441,6 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             if (cachedBooks && cachedBooks.value) {
                 console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
                 return cachedBooks.value;
-                // const booksData = Object.values(cachedBooks.value);
-                // const booksCount = Array.isArray(booksData) ? booksData.length : Object.keys(booksData).length;
-                // console.log('📚 [CacheManager466] Found cached books:', booksCount);
-                // console.log('🔍 [DEBUG] 書卷資料格式:', {
-                //     isArray: Array.isArray(booksData),
-                //     firstBookSample: Array.isArray(booksData) ? booksData[0] : Object.values(booksData)[0]
-                // });
-                
-                // // Convert object to array if needed for consistent return format
-                // if (!Array.isArray(booksData)) {
-                //     const booksArray = Object.values(booksData);
-                //     console.log('🔄 [DEBUG] 轉換物件為陣列格式，陣列長度:', booksArray.length);
-                //     return booksArray;
-                // }
-                
-                // return booksData;
             }
             
             console.log('📚 [CacheManager] No cached books found for language:', language);

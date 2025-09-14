@@ -201,6 +201,9 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 					</div>
 				</div>
 				<div class="bible-version version-2" style="order: 2;">
+					<button type="button" class="btn-close-version" title="<?php _e( 'Close dual version', 'bible-here' ); ?>">
+						<span class="close-icon">×</span>
+					</button>
 					<div class="verses-container">
 						<!-- Verses will be loaded here -->
 					</div>

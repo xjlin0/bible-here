@@ -331,6 +331,16 @@ class BibleHereReader {
 				this.loadChapter();
 			}
 		});
+
+		// Close version button (for dual version mode)
+		this.container.addEventListener('click', (e) => {
+			if (e.target.classList.contains('btn-close-version') || e.target.classList.contains('close-icon')) {
+				e.preventDefault();
+				e.stopPropagation();
+				console.log('🔄 關閉雙版本模式');
+				this.toggleVersions();
+			}
+		});
 		
 		// Initialize synchronized scrolling for dual version mode
 		this.initializeSynchronizedScrolling();

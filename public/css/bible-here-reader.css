@@ -2063,3 +2063,89 @@
     outline: none !important;
     background: transparent !important;
 }
+
+/* ===== CLOSE VERSION BUTTON ===== */
+.btn-close-version {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-close-version:hover {
+    background: rgba(0, 0, 0, 0.2);
+    transform: scale(1.1);
+}
+
+.btn-close-version:active {
+    background: rgba(0, 0, 0, 0.3);
+    transform: scale(0.95);
+}
+
+.btn-close-version .close-icon {
+    color: #666;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.btn-close-version:hover .close-icon {
+    color: #333;
+}
+
+/* Dark theme styles for close button */
+.bible-here-reader.theme-dark .btn-close-version {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.bible-here-reader.theme-dark .btn-close-version:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.bible-here-reader.theme-dark .btn-close-version:active {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.bible-here-reader.theme-dark .btn-close-version .close-icon {
+    color: #ccc;
+}
+
+.bible-here-reader.theme-dark .btn-close-version:hover .close-icon {
+    color: #fff;
+}
+
+/* Ensure version-2 container has relative positioning */
+.dual-version-mode .bible-version.version-2 {
+    position: relative;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .btn-close-version {
+        width: 32px;
+        height: 32px;
+        top: 6px;
+        right: 6px;
+        font-size: 18px;
+    }
+    
+    .btn-close-version .close-icon {
+        font-size: 20px;
+    }
+}
