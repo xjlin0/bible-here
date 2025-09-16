@@ -48,7 +48,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			
 			<!-- Book and Chapter Button -->
 			<div class="book-chapter-selector1">
-				<button type="button" class="btn-nav btn1-book-chapter" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
+				<button type="button" class="btn-nav btn1-book-chapter" value="1" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
 					<span class="book-chapter-text1" data-version-name-short="KJV" data-book-name-short="Ps">KJV Ps <?php echo esc_html( $default_chapter ); ?></span>
 					<span class="dropdown-arrow">▼</span>
 				</button>
@@ -77,7 +77,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 						<div class="tab-content" data-content="versions">
 							<div class="versions-list">
 							<!-- Versions will be dynamically loaded here -->
-						</div>
+					</div>
 						</div>
 
 						<!-- Books Tab -->
@@ -110,6 +110,14 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			<button type="button" class="btn-nav btn-swap" title="<?php _e( 'Swap Versions', 'bible-here' ); ?>">
 				<span class="swap-icon">⇄</span>
 			</button>
+
+			<!-- Book and Chapter Button for Second Version (Dual Mode Only) -->
+			<div class="book-chapter-selector2" style="display: none;">
+				<button type="button" class="btn-nav btn2-book-chapter" value="2" title="<?php _e( 'Select Version for Second Panel', 'bible-here' ); ?>">
+					<span class="book-chapter-text2" data-version-name-short="" data-book-name-short=""><?php _e( 'Select Version', 'bible-here' ); ?></span>
+					<span class="dropdown-arrow">▼</span>
+				</button>
+			</div>
 
 			<!-- More Versions / Version Toggle Button (moved to middle of navigation group) -->
 			<button type="button" class="btn-nav btn-versions" title="<?php _e( 'More Versions', 'bible-here' ); ?>">

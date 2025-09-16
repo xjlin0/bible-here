@@ -28,22 +28,25 @@ class BibleHereReader {
 		this.readerId = this.container.getAttribute('id');
 		this.currentMode = this.container.dataset.mode || 'single';
 		this.currentLanguage = this.container.dataset.language || 'en';
+		this.currentLanguage1 = this.container.dataset.language || 'en';
+		this.currentLanguage2 = this.container.dataset.language || 'en';
 		this.currentVersion1 = this.container.dataset.version1 || 'bible_here_en_kjv';
-		console.log(`📖 [BibleHereReader32] this.container.dataset.book: ${this.container.dataset.book}, this.container.dataset.chapter: ${this.container.dataset.chapter}`);
+		this.currentVersion2 = this.container.dataset.version2 || 'bible_here_en_kjv';
+		console.log(`📖 [BibleHereReader35] this.container.dataset.book: ${this.container.dataset.book}, this.container.dataset.chapter: ${this.container.dataset.chapter}`);
 		this.currentBook = parseInt(this.container.dataset.book) || 19;
 		this.currentChapter = parseInt(this.container.dataset.chapter) || 117;
 		this.currentVersion1NameShort = this.container.dataset.version1NameShort || 'KJV';
+		this.currentVersion2NameShort = this.container.dataset.version2NameShort || 'KJV';
 		// Initialize dual mode state
 		this.isDualMode = false;
-		
 		// 初始化快取管理器
 		this.cacheManager = null;
 		console.log('📖 [BibleHereReader41] 初始化開始，Reader ID:', this.readerId);
 		console.log('📊 初始狀態:', {
 			mode: this.currentMode,
-			language: this.currentLanguage,
-			version1: this.currentVersion1,
-			currentVersion1NameShort: this.currentVersion1NameShort,
+			language: this.currentLanguage, language1: this.currentLanguage1, language2: this.currentLanguage2,
+			version1: this.currentVersion1, version2: this.currentVersion2,
+			currentVersion1NameShort: this.currentVersion1NameShort, currentVersion2NameShort: this.currentVersion2NameShort,
 			book: this.currentBook,
 			chapter: this.currentChapter
 		});
@@ -56,6 +59,9 @@ class BibleHereReader {
 			bookChapterButton1: this.container.querySelector('.btn1-book-chapter'),
 			bookChapterText1: this.container.querySelector('.book-chapter-text1'),
 			bookChapterMenu: this.container.querySelector('.book-chapter-menu'),
+			bookChapterButton2: this.container.querySelector('.btn2-book-chapter'),
+			bookChapterText2: this.container.querySelector('.book-chapter-text2'),
+			bookChapterSelector2: this.container.querySelector('.book-chapter-selector2'),
 			prevButton: this.container.querySelector('.btn-prev'),
 			nextButton: this.container.querySelector('.btn-next'),
 			searchButton: this.container.querySelector('.btn-search'),
@@ -76,6 +82,13 @@ class BibleHereReader {
 		this.fontSizePreference = localStorage.getItem('bible-here-font-size') || 'base';
 		this.applyFontSize(this.fontSizePreference);
 		this.initializeFontSizeSlider();
+		
+		// Initialize second version properties
+		this.currentVersion2 = null;
+		this.currentVersion2NameShort = null;
+		
+		// Initialize active selector (1 for first version, 2 for second version)
+		this.activeSelector = '1';
 		
 		// console.log('🎨 Prefs:', { theme: this.themePreference, fontSize: this.fontSizePreference});
 
@@ -213,12 +226,24 @@ class BibleHereReader {
 		// Book and Chapter button click
 		if (this.elements.bookChapterButton1) {
 			// console.log('綁定書卷章節按鈕點擊事件');
-			this.elements.bookChapterButton1.addEventListener('click', () => {
-				console.log('書卷章節按鈕被點擊');
+			this.elements.bookChapterButton1.addEventListener('click', (e) => {
+				console.log('第一個書卷章節按鈕被點擊, e.currentTarget.value: ',e.currentTarget.value, typeof e.currentTarget.value);
+				// 設置當前活動的選擇器為第一個
+				this.activeSelector = e.currentTarget.value;
 				this.toggleBookChapterMenu();
 			});
 		} else {
 			console.log('找不到書卷章節按鈕元素');
+		}
+
+		// Second Book and Chapter button click
+		if (this.elements.bookChapterButton2) {
+			this.elements.bookChapterButton2.addEventListener('click', (e) => {
+				console.log('第二個版本選擇按鈕被點擊, e.currentTarget.value: ', e.currentTarget.value, typeof e.currentTarget.value);
+				// 設置當前活動的選擇器為第二個
+				this.activeSelector = e.currentTarget.value;
+				this.toggleBookChapterMenu();
+			});
 		}
 
 		// Book Chapter Menu events
@@ -292,7 +317,8 @@ class BibleHereReader {
 			// Close book chapter menu
 			if (this.elements.bookChapterMenu && 
 				!this.elements.bookChapterMenu.contains(e.target) && 
-				!this.elements.bookChapterButton1.contains(e.target)) {
+				!this.elements.bookChapterButton1.contains(e.target) &&
+				!(this.elements.bookChapterButton2 && this.elements.bookChapterButton2.contains(e.target))) {
 				this.hideBookChapterMenu();
 			}
 		});
@@ -362,7 +388,7 @@ class BibleHereReader {
 	 * Handle language change
 	 */
 	onLanguageChange() {
-		if (!this.currentLanguage) {
+		if (!this.currentLanguage || !this.currentLanguage1	|| !this.currentLanguage1) {
 			this.resetSelectors(['version', 'book', 'chapter']);
 			return;
 		}
@@ -374,7 +400,7 @@ class BibleHereReader {
 	 * Handle version change
 	 */
 	onVersionChange() {
-		if (!this.currentVersion1) {
+		if (!this.currentVersion1 || !this.currentVersion2) {
 			this.resetSelectors(['book', 'chapter']);
 			return;
 		}
@@ -399,12 +425,12 @@ class BibleHereReader {
 	 */
 	loadVersions() {
 		this.showLoading();
-
+		console.log("loadVersions 428", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_versions',
 			language: this.currentLanguage,
 		});
-
+console.log("loadVersions 433, params: ", this.params)
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 			method: 'GET',
 			headers: {
@@ -431,11 +457,11 @@ class BibleHereReader {
 	 * Load available books for selected language
 	 */
 	loadBooks() {
+		console.log("loadBooks 460", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_books',
 			language: this.currentLanguage,
 		});
-
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 			method: 'GET',
 			headers: {
@@ -486,8 +512,9 @@ class BibleHereReader {
 		 * Load chapter content using cache manager or API
 		 */
 	async loadChapter() {
-		console.log('📖 [BibleHereReader479] async loadChapter() 開始載入章節:', {
-			version: this.currentVersion1,
+		console.log('📖 [BibleHereReader512] async loadChapter() 開始載入章節:', {
+			version1: this.currentVersion1,
+			version2: this.currentVersion2,
 			book: this.currentBook,
 			chapter: this.currentChapter
 		});
@@ -518,7 +545,7 @@ class BibleHereReader {
 
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 		if (this.cacheManager) {
-			console.log('🗄️ [BibleHereReader511] async loadChapter() 嘗試從快取獲取章節內容:', {
+			console.log('🗄️ [BibleHereReader544] async loadChapter() 嘗試從快取獲取章節內容:', {
 				table_name: this.currentVersion1,
 				book_number: bookNumber,
 				chapter_number: this.currentChapter
@@ -529,16 +556,16 @@ class BibleHereReader {
 				bookNumber,
 				this.currentChapter
 			);
-			console.log('🗄️ [BibleHereReader522] async loadChapter() chapterContent: ', chapterContent);
+			console.log('🗄️ [BibleHereReader555] async loadChapter() chapterContent: ', chapterContent);
 			if (chapterContent && chapterContent.length > 0) {
-				console.log('✅ [BibleHereReader524] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-				console.log('📖 [BibleHereReader525] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+				console.log('✅ [BibleHereReader557] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+				console.log('📖 [BibleHereReader558] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 				this.hideLoading();
 				this.displayChapterContent({version1: { verses: chapterContent, table_name: this.currentVersion1 }});
 				this.displayDualVersionContent({version1: { verses: chapterContent, table_name: this.currentVersion1}});  // load single and dual data for faster switching
 				return;
 			} else {
-				console.log('⚠️ [BibleHereReader531] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
+				console.log('⚠️ [BibleHereReader564] async loadChapter() 快取中沒有找到章節內容，將從 API 獲取');
 			}
 		}
 			
@@ -553,6 +580,12 @@ class BibleHereReader {
 		url.searchParams.set('chapter_number_start', this.currentChapter);
 		url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 		url.searchParams.set('version1_bible', this.currentVersion1);
+		
+		// 如果是雙版本模式且有第二個版本，添加第二個版本參數
+		if (this.isDualMode && this.currentVersion2) {
+			url.searchParams.set('version2_bible', this.currentVersion2);
+			console.log('🔄 雙版本模式，載入第二個版本:', this.currentVersion2);
+		}
 		
 		const response = await fetch(url, {
 			method: 'GET',
@@ -850,7 +883,7 @@ class BibleHereReader {
 			}
 			versionsByLanguage[lang].push(version);
 		});
-		console.log('🔄 [BibleHereReader839] 按語言分組版本:', versionsByLanguage);
+		console.log('🔄 [BibleHereReader886] 按語言分組版本:', versionsByLanguage);
 		// 生成 HTML
 		let html = '';
 		Object.keys(versionsByLanguage).forEach(language => {
@@ -875,7 +908,7 @@ class BibleHereReader {
 		const versionItems = versionsList.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', (e) => {
-				console.log("🔄 [BibleHereReader] addEventListener at 866");
+				console.log("🔄 [BibleHereReader] addEventListener at 911");
 				this.selectVersionAndLoadBooksTab(e.currentTarget.dataset);
 			});
 		});
@@ -1147,13 +1180,20 @@ class BibleHereReader {
 		// Toggle between single and dual version modes
 		this.isDualMode = !this.isDualMode;
 		
-		// Update button text
+		// Update button text and visibility
 		const versionsButton = this.elements.versionsButton;
 		if (versionsButton) {
 			const versionsText = versionsButton.querySelector('.versions-text');
 			if (versionsText) {
 				versionsText.textContent = this.isDualMode ? '- version' : '+ version';
 			}
+			// Hide the original version button in dual mode
+			versionsButton.style.display = this.isDualMode ? 'none' : 'inline-block';
+		}
+		
+		// Show/hide second version selector
+		if (this.elements.bookChapterSelector2) {
+			this.elements.bookChapterSelector2.style.display = this.isDualMode ? 'block' : 'none';
 		}
 		
 		// Update reader mode
@@ -1183,6 +1223,11 @@ class BibleHereReader {
 		
 		if (this.elements.dualMode) {
 			this.elements.dualMode.style.display = this.isDualMode ? 'block' : 'none';
+		}
+		
+		// Initialize second version if not set
+		if (this.isDualMode && !this.currentVersion2) {
+			this.initializeSecondVersion();
 		}
 		
 		// Load content for the current mode - 載入真實 API 資料
@@ -1279,6 +1324,63 @@ class BibleHereReader {
 		// This will be implemented when API is ready
 		console.log('Loading version data for:', this.currentVersion1);
 	}
+
+	/**
+	 * Initialize second version with default settings
+	 */
+	initializeSecondVersion() {
+		// Set default second version (same as first version)
+		this.currentVersion2 = this.currentVersion1;
+		this.currentVersion2NameShort = this.currentVersion1NameShort;
+		
+		// Update second version selector text
+		this.updateBookChapterText2();
+		
+		console.log('第二個版本初始化為:', this.currentVersion2);
+	}
+
+
+
+
+
+	/**
+	 * Select version for second reader
+	 */
+	async selectVersion2(versionElement) {
+		const version = versionElement.dataset.version;
+		const versionNameShort = versionElement.dataset.versionNameShort;
+		
+		if (version) {
+			this.currentVersion2 = version;
+			this.currentVersion2NameShort = versionNameShort || version;
+			
+			// Update button text
+			this.updateBookChapterText2();
+			
+			// Update version selection state
+			this.updateVersionSelection2();
+			
+			// Close menu
+			this.elements.bookChapterMenu2.classList.remove('book-chapter-menu-visible');
+			
+			// Reload chapter with new version
+			await this.loadChapter(this.currentBook, this.currentChapter);
+			
+			console.log('✅ 第二個版本已切換為:', version, versionNameShort);
+		}
+	}
+
+	/**
+	 * Update second version selector text
+	 */
+	updateBookChapterText2() {
+		if (!this.elements.bookChapterText2) return;
+		
+		const versionText = this.currentVersion2NameShort || this.currentVersion2 || 'NET';
+		this.elements.bookChapterText2.textContent = versionText;
+	}
+
+
 
 	/**
 	 * Toggle theme menu visibility
@@ -1699,7 +1801,7 @@ class BibleHereReader {
 		tabs.forEach(tab => {
 			tab.addEventListener('click', (e) => {
 				e.preventDefault();
-				console.log('1697 Tab clicked:', tab.dataset.tab);
+				console.log('1804 Tab clicked:', tab.dataset.tab);
 				this.switchBookChapterTab(tab.dataset.tab);
 			});
 		});
@@ -1708,7 +1810,7 @@ class BibleHereReader {
 		const versionItems = this.elements.bookChapterMenu.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
-				console.log("🔄 [BibleHereReader1706] addEventListener");
+				console.log("🔄 [BibleHereReader1813] addEventListener");
 				this.selectVersionAndLoadBooksTab(item.dataset);
 			});
 		});
@@ -1717,7 +1819,7 @@ class BibleHereReader {
 		const bookItems = this.elements.bookChapterMenu.querySelectorAll('.book-item');
 		bookItems.forEach(item => {
 			item.addEventListener('click', () => {
-				console.log("1713 book-item 被點擊, here is item:", item);
+				console.log("1822 book-item 被點擊, here is item:", item);
 				this.selectBook(item);
 			});
 		});
@@ -1780,6 +1882,8 @@ class BibleHereReader {
 	hideBookChapterMenu() {
 		if (this.elements.bookChapterMenu) {
 			this.elements.bookChapterMenu.classList.remove('book-chapter-menu-visible');
+			// 重置activeSelector
+			this.activeSelector = null;
 		}
 	}
 
@@ -1954,7 +2058,7 @@ class BibleHereReader {
 		const versionItems = container.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', () => {
-				console.log("🔄 [BibleHereReader] addEventListener at 1952 here is item.dataset: ", item.dataset);
+				console.log("🔄 [BibleHereReader] addEventListener at 2061 here is item.dataset: ", item.dataset);
 				this.currentVersion1NameShort = item.dataset.versionNameShort;
 				this.selectVersionAndLoadBooksTab(item.dataset);
 			});
@@ -1986,13 +2090,13 @@ class BibleHereReader {
 			
 			// 嘗試從快取獲取書卷列表
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader 1984] 嘗試從快取獲取書卷列表');
+				console.log('🗄️ [BibleHereReader 2093] 嘗試從快取獲取書卷列表');
 				console.log('🌐 [DEBUG] 當前語言參數:', this.currentLanguage);
 				books = await this.cacheManager.getCachedBooks(this.currentLanguage);
 				
 				if (books && Object.keys(books).length > 0) {
-					console.log('✅ [BibleHereReader1989] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
-					console.log('📚 [BibleHereReader1990] 快取書卷資料預覽, books:', books[1]);
+					console.log('✅ [BibleHereReader2098] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
+					console.log('📚 [BibleHereReader2099] 快取書卷資料預覽, books:', books[1]);
 					console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
 						firstBookName: books[40]?.title_full,
 						secondBookName: books[41]?.title_full,
@@ -2030,7 +2134,7 @@ class BibleHereReader {
 			}
 
 			// books = data.data.books;
-			console.log('📚 2026 從 API 獲取到書卷資料，當前語言書卷數量:', Object.keys(data.data[this.currentLanguage]).length);
+			console.log('📚 2137 從 API 獲取到書卷資料，當前語言書卷數量:', Object.keys(data.data[this.currentLanguage]).length);
 
 			// 渲染書卷列表 - 傳入陣列格式
 			this.renderBooksList(Object.values(data.data[this.currentLanguage]), booksContent);
@@ -2038,7 +2142,7 @@ class BibleHereReader {
 			// 將書卷資料存入快取 - 轉換物件為陣列格式
 			// const booksArray = Object.values(books);
 			if (this.cacheManager && data.data && Object.keys(data.data).length > 0) {
-				console.log('💾 [BibleHereReader2031] 將書卷資料存入快取');
+				console.log('💾 [BibleHereReader2145] 將書卷資料存入快取');
 				// data.data.forEach(language => {
 				// 	console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
 				// 		language: language,   // hi books may be in difference languages
@@ -2204,13 +2308,26 @@ class BibleHereReader {
 	 * Select version
 	 */
 	selectVersionAndLoadBooksTab(versionDataset) {
-		console.log("📚 2201 selectVersionAndLoadBooksTab(), versionDataset:", versionDataset);
-		this.currentVersion1 = versionDataset.version;
-		this.currentLanguage = versionDataset.versionLanguage;
-		// this.updateBookChapterButton(versionDataset.versionNameShort);
+		console.log("📚 2308 selectVersionAndLoadBooksTab(), versionDataset:", versionDataset);
+		console.log("🎯 當前活動選擇器:", this.activeSelector);
+		
+		// 根據activeSelector更新對應的版本
+		if (this.activeSelector === '2') {
+			// 更新第二版本
+			this.currentVersion2 = versionDataset.version;
+			this.currentVersion2NameShort = versionDataset.versionNameShort;
+			this.updateBookChapterText2();
+			console.log("✅ 第二版本已更新為:", versionDataset.version);
+		} else {
+			// 更新第一版本（默認）
+			this.currentVersion1 = versionDataset.version;
+			this.currentLanguage = versionDataset.versionLanguage;
+			this.loadBooksTabAndUpdateBookChapterButton(versionDataset.versionNameShort);
+			console.log("✅ 第一版本已更新為:", versionDataset.version);
+		}
+		
 		this.hideBookChapterMenu();
 		this.loadChapter();
-		this.loadBooksTabAndUpdateBookChapterButton(versionDataset.versionNameShort);
 	}
 
 	/**
