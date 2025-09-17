@@ -339,8 +339,8 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             const startVerseId = `${chapterPrefix}${verseStart ? String(verseStart).padStart(3, '0') : '000'}`; // 假設註釋在第一節前有整章概論
             const endVerseId = `${chapterPrefix}${verseEnd ? String(verseEnd).padStart(3, '0') : '176'}`;   // 最後一節（假設最多176節）
 
-            // 為每個版本創建一個獨立的查詢 Promise
-            const queryPromises = versionTables.filter(table => typeof table === 'string' && table.length > 0).map(table => {
+            // 為每個版本創建一個獨立的查詢
+            const queryPromises = [...new Set(versionTables)].filter(table => typeof table === 'string' && table.length > 0).map(table => {
                 return this.db.verses
                     .where('[table_name+verse_id]')
                     .between(
@@ -443,14 +443,14 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('🔍 [CacheManager] Searching cached books for language:', language);
             
             const cachedBooks = await this.db.books.get(language);
-            console.log('🔍 [DEBUG] 快取查詢結果:', cachedBooks);
+            console.log('🔍 [DEBUG] getCachedBooks 快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
                 console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
                 return cachedBooks.value;
             }
             
-            console.log('📚 [CacheManager] No cached books found for language:', language);
+            console.log('📚 [CacheManager453] No cached books found for language:', language);
             return {}; // Return empty array for consistency
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached books:', error);
@@ -463,7 +463,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
      */
     async cacheVersions(versions) {
         try {
-            console.log('💾 [CacheManager518] Caching versions::', versions);
+            console.log('💾 [CacheManager466] Caching versions::', versions);
             
             const now = Date.now();
             const versionsToCache = [];
