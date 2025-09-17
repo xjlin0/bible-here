@@ -512,7 +512,7 @@ console.log("loadVersions 433, params: ", this.params)
 		 * Load chapter content using cache manager or API
 		 */
 	async loadChapter() {
-		console.log('📖 [BibleHereReader512] async loadChapter() 開始載入章節:', {
+		console.log('📖 [BibleHereReader515] async loadChapter() 開始載入章節:', {
 			version1: this.currentVersion1,
 			version2: this.currentVersion2,
 			book: this.currentBook,
@@ -536,27 +536,27 @@ console.log("loadVersions 433, params: ", this.params)
 			let chapterContent = null;
 
 			// 獲取當前書卷的 book_number
-			let bookNumber = this.currentBook;
-			const currentBookData = await this.getCurrentBookData();
-			if (currentBookData && currentBookData.book_number) {
-				bookNumber = currentBookData.book_number;
-				console.log('📚 從快取獲取到 book_number:', bookNumber);
-			}
+			// let bookNumber = this.currentBook;
+			// const currentBookData = await this.getCurrentBookData();
+			// if (currentBookData && currentBookData.book_number) {
+			// 	bookNumber = currentBookData.book_number;
+			// 	console.log('📚 543 從快取獲取到 currentBookData:', currentBookData, );
+			// }
 
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 		if (this.cacheManager) {
 			console.log('🗄️ [BibleHereReader548] async loadChapter() 嘗試從快取獲取章節內容:', {
-				table_name: this.currentVersion1,
-				book_number: bookNumber,
+				table_name1: this.currentVersion1, table_name2: this.currentVersion2,
+				book_number: this.currentBook,
 				chapter_number: this.currentChapter
 			});
 			chapterContent = await this.cacheManager.getCachedVerses(
 				this.currentLanguage,
 				this.currentVersion1,
-				bookNumber,
+				this.currentBook,
 				this.currentChapter
 			);
-			console.log('🗄️ [BibleHereReader555] async loadChapter() chapterContent: ', chapterContent);
+			console.log('🗄️ [BibleHereReader559] async loadChapter() chapterContent: ', chapterContent);
 			if (chapterContent && chapterContent.length > 0) {
 				console.log('✅ [BibleHereReader561] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
 				console.log('📖 [BibleHereReader562] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
@@ -582,7 +582,7 @@ console.log("loadVersions 433, params: ", this.params)
 		url.searchParams.set('version1_bible', this.currentVersion1);
 		
 		// 如果是雙版本模式且有第二個版本，添加第二個版本參數
-		if (this.isDualMode && this.currentVersion2) {
+		if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
 			url.searchParams.set('version2_bible', this.currentVersion2);
 			console.log('🔄 雙版本模式，載入第二個版本:', this.currentVersion2);
 		}
@@ -601,7 +601,7 @@ console.log("loadVersions 433, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader561] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader604] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -757,7 +757,7 @@ console.log("loadVersions 433, params: ", this.params)
 			}
 			console.log('✅ version2 內容已處理');
 		} else {
-			console.log('⚠️ 712 沒有 version2 資料，使用 version1 內容');
+			console.log('⚠️ 760 沒有 version2 資料，使用 version1 內容');
 			// 如果沒有 version2，顯示相同的 version1 內容
 			if (data.version1 && data.version1.verses) {
 				let html1 = '';
@@ -1115,7 +1115,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1072, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		console.log("navigateNext() 1118, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
 		const currentBookData = await this.getCurrentBookData(this.currentLanguage);
 		const maxChapters = currentBookData ? currentBookData.chapters : 1;
 		if (this.currentChapter < maxChapters) {

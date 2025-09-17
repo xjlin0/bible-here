@@ -113,7 +113,7 @@
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
 	/* text-transform: uppercase; */
-	letter-spacing: 0.5px;
+	/* letter-spacing: 0.5px; */
 	min-height: 36px;
 	display: flex;
 	align-items: center;
@@ -183,8 +183,8 @@
 
 /* ===== BOOK CHAPTER BUTTON ===== */
 .btn1-book-chapter {
-	min-width: 140px;
-	padding: 8px 20px;
+	/* min-width: 140px; */
+	/* padding: 8px 20px; */
 	font-size: 15px;
 	font-weight: 700;
 	min-height: 36px;
@@ -192,8 +192,8 @@
 }
 
 .btn2-book-chapter {
-	min-width: 140px;
-	padding: 8px 20px;
+	/* min-width: 140px; */
+	/* padding: 8px 20px; */
 	font-size: 15px;
 	font-weight: 700;
 	min-height: 36px;

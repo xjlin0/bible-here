@@ -326,33 +326,40 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
      * Get verses from cache
      * Books and verses do not auto-expire according to technical document
      */
-    async getVerses(languageCode, versionTable, bookNumber, chapterNumber, verseStart = null, verseEnd = null) {
+    async getVerses(languageCode, versionTables, bookNumber, chapterNumber, verseStart = null, verseEnd = null) {
         try {
-            console.log('🔍 [CacheManager399] Searching cached verses:', {
-                version: versionTable,
+            console.log('🔍 [CacheManager331] Searching cached verses:', {
+                versions: versionTables,
                 book: bookNumber, chapter: chapterNumber,
                 verseRange: verseStart && verseEnd ? `${verseStart}-${verseEnd}` : 'all'
             });
-            console.log('📖 [CacheManager404] verseStart: '+verseStart+' verseEnd: '+verseEnd);
+            console.log('📖 [CacheManager336] verseStart: '+verseStart+' verseEnd: '+verseEnd);
             // 構建章節的起始和結束 verse_id
             const chapterPrefix = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}`;
             const startVerseId = `${chapterPrefix}${verseStart ? String(verseStart).padStart(3, '0') : '000'}`; // 假設註釋在第一節前有整章概論
             const endVerseId = `${chapterPrefix}${verseEnd ? String(verseEnd).padStart(3, '0') : '176'}`;   // 最後一節（假設最多176節）
 
-            // 使用範圍查詢取代迴圈
-            const cachedVerses = await this.db.verses
-                .where('[table_name+verse_id]')
-                .between(  // implicitly sort by versionTable and verse_id
-                    [versionTable, startVerseId],
-                    [versionTable, endVerseId],
-                    true,  // inclusive start
-                    true   // inclusive end
-                )
-                .toArray();
-            console.log('📖 [CacheManager420] Found', cachedVerses.length, 'cached verses');
+            // 為每個版本創建一個獨立的查詢 Promise
+            const queryPromises = versionTables.filter(table => typeof table === 'string' && table.length > 0).map(table => {
+                return this.db.verses
+                    .where('[table_name+verse_id]')
+                    .between(
+                        [table, startVerseId],
+                        [table, endVerseId],
+                        true, true
+                    ).toArray();
+            });
+
+            // 平行執行所有查詢並等待結果
+            const allResults = await Promise.all(queryPromises);
+
+            // 將所有查詢結果合併成一個單一陣列
+            const cachedVerses = allResults.flat();
+
+            console.log('📖 [CacheManager359] Found', cachedVerses.length, 'cached verses');
             return cachedVerses;
         } catch (error) {
-            console.error('❌ [CacheManager423] Failed to get cached verses:', error);
+            console.error('❌ [CacheManager362] Failed to get cached verses:', error);
             return [];
         }
     }
@@ -369,7 +376,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
      */
     async getCachedVerses(languageCode, versionTable, bookNumber, chapterNumber, verseStart = null, verseEnd = null) {
         console.log('🔍 [CacheManager] getCachedVerses called - delegating to getVerses');
-        return await this.getVerses(languageCode, versionTable, bookNumber, chapterNumber, verseStart, verseEnd);
+        return await this.getVerses(languageCode, [versionTable], bookNumber, chapterNumber, verseStart, verseEnd);
     }
     
     /**
@@ -402,14 +409,14 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             
             verses.forEach(verse => {
                 // Use verse_id from seed data if available, otherwise construct it
-                const verseId = verse.verse_id || `${verse.book_number}_${verse.chapter_number}_${verse.verse_number}`;
-                
+                const verseId = verse.verse_id || `${String(verse.book_number).padStart(2, '0')}${String(verse.chapter_number).padStart(3, '0')}${String(verse.verse_number).padStart(3, '0')}`;
+
                 versesToCache.push({
                     table_name: versionTable,
                     verse_id: verseId,
                     // version_table: versionTable,
-                    book_number: verse.book_number,
-                    chapter_number: verse.chapter_number,
+                    // book_number: verse.book_number,
+                    // chapter_number: verse.chapter_number,
                     verse_number: verse.verse_number,
                     text: verse.text,
                     // commentary_text: verse.commentary_text || null,
