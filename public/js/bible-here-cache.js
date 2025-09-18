@@ -291,7 +291,7 @@ class BibleHereCacheManager {
             }
             
         } catch (error) {
-            console.error('❌ [BibleHereCacheManager346] 載入經文 Seed Data 時發生錯誤:', error);
+            console.error('❌ [BibleHereCacheManager294] 載入經文 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution
         }
     }
@@ -419,7 +419,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                     // chapter_number: verse.chapter_number,
                     verse_number: verse.verse_number,
                     text: verse.text,
-                    // commentary_text: verse.commentary_text || null,
+                    reference: verse.reference,
                     bookmark: null,  // Add default bookmark value
                     updatedAt: now
                 });

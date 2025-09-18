@@ -658,6 +658,7 @@ console.log("loadVersions 433, params: ", this.params)
 							// chapter_number: this.currentChapter,
 							verse_number: verse.verse_number,
 							text: verse.text,
+							reference: null,
 							verse_id: verse.verse_id
 						}));
 						
@@ -682,6 +683,7 @@ console.log("loadVersions 433, params: ", this.params)
 							// chapter_number: this.currentChapter,
 							verse_number: verse.verse_number,
 							text: verse.text,
+							reference: null,
 							verse_id: verse.verse_id
 						}));
 						
