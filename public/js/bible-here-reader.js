@@ -951,9 +951,9 @@ console.log("loadVersions 433, params: ", this.params)
 	/**
 	 * Update book chapter button text
 	 */
-	updateBookChapterButton(versionLabel, bookLabel) {
-		const targetElement = this.elements['bookChapterText' + this.activeSelector];
-		console.log(`hi updateBookChapterButton() 956, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}`);
+	updateBookChapterButton(versionLabel, bookLabel, selector) {
+		const targetElement = this.elements['bookChapterText' + (selector || this.activeSelector)];
+		console.log(`hi updateBookChapterButton() 956, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
 		console.log(`hi updateBookChapterButton() 957, targetElement: `, targetElement);
 		if (targetElement) {
 			if (versionLabel) {
@@ -966,9 +966,9 @@ console.log("loadVersions 433, params: ", this.params)
 			} else {
 				bookLabel = targetElement.dataset.bookNameShort;
 			}
-			targetElement.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${this.activeSelector === '1' ? this.currentChapter : ''}`.trim();
+			targetElement.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${(selector || this.activeSelector) === '1' ? this.currentChapter : ''}`.trim();
 		}
-		if (this.activeSelector === '2' && this.elements.bookChapterText1) {
+		if ((selector || this.activeSelector) === '2' && this.elements.bookChapterText1) {
 			this.elements.bookChapterText1.textContent = `${this.elements.bookChapterText1.dataset.versionNameShort} ${this.elements.bookChapterText1.dataset.bookNameShort} ${this.currentChapter}`;
 		}  // update chapter number on button 1 only if triggered from button 2
 	}
@@ -1106,21 +1106,23 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to previous chapter
 	 */
 	async navigatePrevious(versionNameShort) {
-		console.log("navigatePrevious() 1108, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		console.log(`navigatePrevious() 1109, versionNameShort: ${versionNameShort}, this.currentLanguage1: ${this.currentLanguage1}, this.currentLanguage2: ${this.currentLanguage2} and this.currentChapter: ${this.currentChapter}`);
 		if (this.currentChapter > 1) {
 			this.currentChapter--;
 			this.updateBookChapterButton();
 			this.loadChapter();
 		} else {
-			const books = await this.getCachedBooks(this.currentLanguage);
-			if (books && this.currentChapter > 0 && this.currentBook > 1) {
-				// if (this.currentChapter > 0 && this.currentBook > 1) {
-					const previousBook = books[this.currentBook - 1];
-					this.currentBook = this.currentBook - 1;
-					this.currentChapter = previousBook.chapters; // 使用書卷的章節數作為最後一章
-					this.updateBookChapterButton(null, books[this.currentBook].title_short);
-					this.loadChapter();
-				// }
+			const books1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
+			if (books1 && this.currentChapter > 0 && this.currentBook > 1) {
+				const previousBook = books1[this.currentBook - 1];
+				this.currentBook = this.currentBook - 1;
+				this.currentChapter = previousBook.chapters; // 使用書卷的章節數作為最後一章
+				if (this.isDualMode) {
+					const books2 = await this.cacheManager.getCachedBooks(this.currentLanguage2);
+					if (books2) {this.updateBookChapterButton(null, books2[this.currentBook].title_short, '2')}
+				}  // updating button 2 will overwrite button 1 with last wrong value, so we update 1 again
+				this.updateBookChapterButton(null, books1[this.currentBook].title_short, '1');
+				this.loadChapter();
 			}
 		}
 	}
@@ -1129,22 +1131,23 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1118, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
-		const currentBookData = await this.getCurrentBookData(this.currentLanguage);
-		const maxChapters = currentBookData ? currentBookData.chapters : 1;
+		console.log("navigateNext() 1134, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		const book1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
+		const maxChapters = book1[this.currentBook] ? book1[this.currentBook].chapters : 1;
 		if (this.currentChapter < maxChapters) {
 			this.currentChapter++;
 			this.updateBookChapterButton();
 			this.loadChapter();
 		} else {
-			const books = await this.getCachedBooks();  // Go to next book's first chapter
-			if (books && this.currentBook >= 0 && this.currentBook < Object.keys(books).length) {
-				// if (this.currentBook >= 0 && this.currentBook < Object.keys(books).length) {
-					this.currentBook++;
-					this.currentChapter = 1;
-					this.updateBookChapterButton(null, books[this.currentBook].title_short);
-					this.loadChapter();
-				// }
+			if (book1 && this.currentBook >= 0 && this.currentBook < Object.keys(book1).length) {
+				this.currentBook++;
+				this.currentChapter = 1;
+				if (this.isDualMode) {
+					const book2 = await this.cacheManager.getCachedBooks(this.currentLanguage2);
+					if (book2) {this.updateBookChapterButton(null, book2[this.currentBook].title_short, '2')}
+				}  // updating button 2 will overwrite button 1 with last wrong value, so we update 1 again
+				this.updateBookChapterButton(null, book1[this.currentBook].title_short, '1');
+				this.loadChapter();
 			}
 		}
 	}
@@ -1177,16 +1180,16 @@ console.log("loadVersions 433, params: ", this.params)
 	/**
 	 * Get cached books
 	 */
-	async getCachedBooks() {
-		if (!this.cacheManager) return null;
+	// async getCachedBooks(language) {
+	// 	if (!this.cacheManager) return null;
 		
-		try {
-			return await this.cacheManager.getCachedBooks(this.currentLanguage);
-		} catch (error) {
-			console.error('❌ [BibleHereReader984] 獲取書卷快取失敗:', error);
-			return null;
-		}
-	}
+	// 	try {
+	// 		return await this.cacheManager.getCachedBooks(language);
+	// 	} catch (error) {
+	// 		console.error('❌ [BibleHereReader1189] 獲取書卷快取失敗:', error);
+	// 		return null;
+	// 	}
+	// }
 
 	/**
 	 * Toggle between single and dual version modes
