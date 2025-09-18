@@ -1610,46 +1610,65 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Initialize synchronized scrolling for dual version mode
 	 */
 	initializeSynchronizedScrolling() {
-		// Flag to prevent infinite scroll loops
 		this.isScrollSyncing = false;
-		
-		// Get dual version containers
+
 		const dualMode = this.container.querySelector('.dual-version-mode');
 		if (!dualMode) return;
-		
+
 		const version1Container = dualMode.querySelector('.version-1 .verses-container');
 		const version2Container = dualMode.querySelector('.version-2 .verses-container');
 		
 		if (!version1Container || !version2Container) return;
-		
-		// Add scroll event listeners
-		version1Container.addEventListener('scroll', () => {
+
+		version1Container.addEventListener('scroll', () => {  // 版本1捲動時同步版本2
 			if (this.isScrollSyncing) return;
-			this.isScrollSyncing = true;
-			
-			// Sync scroll position
-			version2Container.scrollTop = version1Container.scrollTop;
-			
-			// Reset flag after a short delay
-			setTimeout(() => {
-				this.isScrollSyncing = false;
-			}, 10);
+			this.syncScrollByVerse(version1Container, version2Container);
 		});
-		
-		version2Container.addEventListener('scroll', () => {
+
+		version2Container.addEventListener('scroll', () => {  // 版本2捲動時同步版本1  
 			if (this.isScrollSyncing) return;
-			this.isScrollSyncing = true;
-			
-			// Sync scroll position
-			version1Container.scrollTop = version2Container.scrollTop;
-			
-			// Reset flag after a short delay
-			setTimeout(() => {
-				this.isScrollSyncing = false;
-			}, 10);
+			this.syncScrollByVerse(version2Container, version1Container);
 		});
 	}
-	
+
+	syncScrollByVerse(sourceContainer, targetContainer) {
+		this.isScrollSyncing = true;
+
+		try {  // 找到源容器中最頂部可見的經文
+			const topVisibleVerse = this.getTopVisibleVerse(sourceContainer);
+			if (topVisibleVerse) {
+				const verseId = topVisibleVerse.getAttribute('data-verse');
+				const targetVerse = targetContainer.querySelector(`[data-verse="${verseId}"]`);  // 在目標容器中找到相同的經文
+
+				if (targetVerse) {  // 捲動目標容器，使該經文出現在頂部
+					targetContainer.scrollTop = targetVerse.offsetTop;
+				}
+			}
+		} catch (error) {
+			console.error('Verse sync error:', error);
+		} finally {
+			setTimeout(() => {
+				this.isScrollSyncing = false;
+			}, 10);
+		}
+	}
+
+	getTopVisibleVerse(container) {
+		const verses = container.querySelectorAll('[data-verse]');
+		const containerTop = container.scrollTop;
+		const containerHeight = container.clientHeight;
+
+		for (let verse of verses) {
+			const verseTop = verse.offsetTop;
+			const verseBottom = verseTop + verse.offsetHeight;
+
+			if (verseBottom > containerTop && verseTop < containerTop + containerHeight) {  // 如果經文在可見區域內
+				return verse;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Initialize resizable divider for dual version mode
 	 */
