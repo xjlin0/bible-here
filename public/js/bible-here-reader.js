@@ -577,7 +577,7 @@ console.log("loadVersions 433, params: ", this.params)
 						return;
 					}
 				} else {
-					console.log('⚠️ [BibleHereReader572] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
+					console.log('⚠️ [BibleHereReader580] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
 				}
 			}
 				
@@ -680,7 +680,7 @@ console.log("loadVersions 433, params: ", this.params)
 						const versesForCacheV2 = data.data.version2.verses.map(verse => ({
 							// book_number: this.currentBook,
 							// chapter_number: this.currentChapter,
-							verse_number: verse.verse,
+							verse_number: verse.verse_number,
 							text: verse.text,
 							verse_id: verse.verse_id
 						}));
@@ -953,7 +953,8 @@ console.log("loadVersions 433, params: ", this.params)
 	 */
 	updateBookChapterButton(versionLabel, bookLabel) {
 		const targetElement = this.elements['bookChapterText' + this.activeSelector];
-		console.log("hi updateBookChapterButton() 943, targetElement: ", targetElement);
+		console.log(`hi updateBookChapterButton() 956, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}`);
+		console.log(`hi updateBookChapterButton() 957, targetElement: `, targetElement);
 		if (targetElement) {
 			if (versionLabel) {
 				targetElement.dataset.versionNameShort = versionLabel;
@@ -967,8 +968,8 @@ console.log("loadVersions 433, params: ", this.params)
 			}
 			targetElement.textContent = `${versionLabel ? versionLabel + ' ' : ''}${bookLabel ? bookLabel : this.currentBook} ${this.activeSelector === '1' ? this.currentChapter : ''}`.trim();
 		}
-		if (this.activeSelector === 2 && this.elements.bookChapterText1) {
-			this.elements.bookChapterText1.textContent = `${this.elements.bookChapterText1.dataset.versionNameShort} ${this.elements.bookChapterText1.textContent.dataset.bookNameShort} ${this.currentChapter}`;
+		if (this.activeSelector === '2' && this.elements.bookChapterText1) {
+			this.elements.bookChapterText1.textContent = `${this.elements.bookChapterText1.dataset.versionNameShort} ${this.elements.bookChapterText1.dataset.bookNameShort} ${this.currentChapter}`;
 		}  // update chapter number on button 1 only if triggered from button 2
 	}
 
@@ -1105,7 +1106,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to previous chapter
 	 */
 	async navigatePrevious(versionNameShort) {
-		console.log("navigatePrevious() 1049, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		console.log("navigatePrevious() 1108, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
 		if (this.currentChapter > 1) {
 			this.currentChapter--;
 			this.updateBookChapterButton();

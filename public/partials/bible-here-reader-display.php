@@ -50,7 +50,6 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			<div class="book-chapter-selector1">
 				<button type="button" class="btn-nav btn1-book-chapter" value="1" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
 					<span class="book-chapter-text1" data-version-name-short="KJV" data-book-name-short="Ps">KJV Ps <?php echo esc_html( $default_chapter ); ?></span>
-					<span class="dropdown-arrow">▼</span>
 				</button>
 				<!-- Hidden selectors for functionality -->
 				<select id="<?php echo esc_attr( $reader_id ); ?>-book" class="book-select" style="display: none;">
@@ -115,7 +114,6 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			<div class="book-chapter-selector2" style="display: none;">
 				<button type="button" class="btn-nav btn2-book-chapter" value="2" title="<?php _e( 'Select Version for Second Panel', 'bible-here' ); ?>">
 					<span class="book-chapter-text2" data-version-name-short="" data-book-name-short=""><?php _e( 'Select Version', 'bible-here' ); ?></span>
-					<span class="dropdown-arrow">▼</span>
 				</button>
 			</div>
 
