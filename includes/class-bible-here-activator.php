@@ -108,7 +108,8 @@ class Bible_Here_Activator {
 			verse_id INT(8) unsigned zerofill NOT NULL,
 			rank TINYINT(1) unsigned NOT NULL DEFAULT 0,
 			start INT(8) unsigned zerofill NOT NULL,
-			finish INT(8) unsigned zerofill
+			finish INT(8) unsigned zerofill,
+			KEY reference_verse_id (verse_id)
 		) $charset_collate COMMENT='from https://github.com/scrollmapper/bible_databases';";
 		dbDelta( $sql );
 

@@ -1175,12 +1175,16 @@ class Bible_Here_XML_Importer {
 				$rank = intval(trim($data[1], '"'));
 				$start = trim($data[2], '"');
 				$finish = trim($data[3], '"');
-				
+
 				// Skip empty or invalid records
 				if (empty($verse_id) || empty($start)) {
 					continue;
 				}
-				
+
+				if ($finish === '') {
+					$finish = null;
+				}
+
 				$batch_data[] = array(
 					'verse_id' => $verse_id,
 					'rank' => $rank,
@@ -1247,8 +1251,13 @@ class Bible_Here_XML_Importer {
 			$values[] = $record['verse_id'];
 			$values[] = $record['rank'];
 			$values[] = $record['start'];
-			$values[] = $record['finish'];
-			$placeholders[] = '(%s, %d, %s, %s)';
+
+			if (array_key_exists('finish', $record) && $record['finish'] !== null) {
+				$values[] = $record['finish'];
+				$placeholders[] = '(%s, %d, %s, %s)';
+			} else {  // finish is NULL → Directly use SQL NULL
+				$placeholders[] = '(%s, %d, %s, NULL)';
+			}
 		}
 		
 		$sql = "INSERT INTO {$table_name} (verse_id, rank, start, finish) VALUES " . implode(', ', $placeholders);
@@ -1264,79 +1273,6 @@ class Bible_Here_XML_Importer {
 		return array(
 			'success' => true,
 			'imported_count' => $result
-		);
-	}
-	
-	/**
-	 * Import cross references data to database in batches (legacy method)
-	 *
-	 * @since    1.0.0
-	 * @param    array    $cross_references_data    Array of cross references
-	 * @return   array    Result array with success status and message
-	 */
-	private function import_cross_references_data($cross_references_data) {
-		global $wpdb;
-		
-		$table_name = $wpdb->prefix . 'bible_here_cross_references';
-		$total_records = count($cross_references_data);
-		$batch_size = 1000; // Process 1000 records per batch as requested
-		$imported_count = 0;
-		
-		error_log('Bible_Here_XML_Importer: Starting to import cross references data, total ' . $total_records . ' records, batch size: ' . $batch_size);
-		
-		// Clear existing data
-		error_log('Bible_Here_XML_Importer: Clearing existing cross references data');
-		$wpdb->query("TRUNCATE TABLE {$table_name}");
-		
-		if ($wpdb->last_error) {
-			error_log('Bible_Here_XML_Importer: Failed to clear cross references table: ' . $wpdb->last_error);
-			return array('success' => false, 'message' => 'Failed to clear cross references table');
-		}
-		
-		// Process data in batches of 1000
-		for ($i = 0; $i < $total_records; $i += $batch_size) {
-			$batch = array_slice($cross_references_data, $i, $batch_size);
-			$batch_number = floor($i / $batch_size) + 1;
-			$total_batches = ceil($total_records / $batch_size);
-			
-			error_log('Bible_Here_XML_Importer: Processing cross references batch ' . $batch_number . '/' . $total_batches . ', containing ' . count($batch) . ' records');
-			
-			// Build batch insert query
-			$values = array();
-			$placeholders = array();
-			
-			foreach ($batch as $record) {
-				$values[] = $record['verse_id'];
-				$values[] = $record['rank'];
-				$values[] = $record['start'];
-				$values[] = $record['finish'];
-				$placeholders[] = '(%s, %d, %s, %s)';
-			}
-			
-			$sql = "INSERT INTO {$table_name} (verse_id, rank, start, finish) VALUES " . implode(', ', $placeholders);
-			$prepared_sql = $wpdb->prepare($sql, $values);
-			
-			$result = $wpdb->query($prepared_sql);
-			
-			if ($result === false) {
-				error_log('Bible_Here_XML_Importer: Cross references batch ' . $batch_number . ' import failed: ' . $wpdb->last_error);
-				return array('success' => false, 'message' => 'Cross references data import failed: ' . $wpdb->last_error);
-			}
-			
-			$imported_count += $result;
-			error_log('Bible_Here_XML_Importer: Cross references batch ' . $batch_number . ' import successful, imported ' . $result . ' records in this batch, total imported ' . $imported_count . ' records');
-			
-			// Log progress percentage
-			$progress_percentage = round(($imported_count / $total_records) * 100, 1);
-			error_log('Bible_Here_XML_Importer: Cross references import progress: ' . $progress_percentage . '% (' . $imported_count . '/' . $total_records . ')');
-		}
-		
-		error_log('Bible_Here_XML_Importer: Cross references data import completed successfully, total imported: ' . $imported_count . ' records');
-		
-		return array(
-			'success' => true,
-			'message' => 'Cross references import completed',
-			'imported_count' => $imported_count
 		);
 	}
 

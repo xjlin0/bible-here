@@ -368,6 +368,14 @@ class BibleHereReader {
 			}
 		});
 		
+		if (this.container.querySelector('.btn-swap')) {
+			this.container.querySelector('.btn-swap').addEventListener('click', (e) => {
+				e.preventDefault();
+				console.log('🔄 Version switch button clicked!');
+				this.swapVersions();
+			});
+		}
+
 		// Initialize synchronized scrolling for dual version mode
 		this.initializeSynchronizedScrolling();
 		
@@ -2399,13 +2407,102 @@ console.log("loadVersions 433, params: ", this.params)
 		console.log('📚 2238 selectChapter: chapterNumber', chapterNumber);
 		this.loadChapter();
 	}
+
+	swapVersions() {
+    	console.log('🔄 2412 swapVersions() 開始版本切換');
+    	console.log('🔄 切換前狀態:', {
+			language1: this.currentLanguage1,
+			language2: this.currentLanguage2,
+			version1: this.currentVersion1,
+			version2: this.currentVersion2,
+			version1NameShort: this.currentVersion1NameShort,
+			version2NameShort: this.currentVersion2NameShort
+		});
+
+		// 交換語言
+		const tempLanguage = this.currentLanguage1;
+		this.currentLanguage1 = this.currentLanguage2;
+		this.currentLanguage2 = tempLanguage;
+
+		// 交換版本
+		const tempVersion = this.currentVersion1;
+		this.currentVersion1 = this.currentVersion2;
+		this.currentVersion2 = tempVersion;
+
+		// 交換版本簡稱
+		const tempVersionNameShort = this.currentVersion1NameShort;
+		this.currentVersion1NameShort = this.currentVersion2NameShort;
+		this.currentVersion2NameShort = tempVersionNameShort;
+
+		console.log('🔄 切換後狀態:', {
+			language1: this.currentLanguage1,
+			language2: this.currentLanguage2,
+			version1: this.currentVersion1,
+			version2: this.currentVersion2,
+			version1NameShort: this.currentVersion1NameShort,
+			version2NameShort: this.currentVersion2NameShort
+		});
+
+		// 更新容器的 data 屬性
+		this.updateContainerDataAttributes();
+		
+		// 更新UI顯示
+		this.updateVersionSelectors();
+		
+		// 重新載入章節內容（保持當前書卷和章節）
+		// this.loadDualVersionChapter();
+		
+		console.log('✅ 版本切換完成');
+	}
+
+	updateContainerDataAttributes() {
+		// 更新容器的 data 屬性
+		this.container.dataset.language1 = this.currentLanguage1;
+		this.container.dataset.language2 = this.currentLanguage2;
+		this.container.dataset.version1 = this.currentVersion1;
+		this.container.dataset.version2 = this.currentVersion2;
+		this.container.dataset.version1NameShort = this.currentVersion1NameShort;
+		this.container.dataset.version2NameShort = this.currentVersion2NameShort;
+	}
+
+	updateVersionSelectors() {
+		// 更新第一版本的顯示文字
+		const bookChapterText1 = this.container.querySelector('.book-chapter-text1');
+		if (bookChapterText1) {
+			bookChapterText1.textContent = `${this.currentVersion1NameShort}`;
+		}
+		
+		// 更新第二版本的顯示文字  
+		const bookChapterText2 = this.container.querySelector('.book-chapter-text2');
+		if (bookChapterText2) {
+			bookChapterText2.textContent = `${this.currentVersion2NameShort}`;
+		}
+		
+		// 更新版本選擇器的標題或其他UI元素
+		const version1Header = this.container.querySelector('.version-1 .version-header');
+		if (version1Header) {
+			version1Header.textContent = this.currentVersion1NameShort;
+		}
+		
+		const version2Header = this.container.querySelector('.version-2 .version-header');
+		if (version2Header) {
+			version2Header.textContent = this.currentVersion2NameShort;
+		}
+	}
+
+	// loadDualVersionChapter() {  // 確保這個方法使用最新的 this.currentVersion1 和 this.currentVersion2
+	// 	// 載入第一版本
+	// 	this.loadChapterForVersion(this.currentVersion1, '.version-1');
+	// 	// 載入第二版本  
+	// 	this.loadChapterForVersion(this.currentVersion2, '.version-2');
+	// }
 }
 
 /**
  * Initialize all Bible Here Readers on the page
  */
 document.addEventListener('DOMContentLoaded', function() {
-	console.log('🎬 [BibleHereReader2247] DOM loaded, initializing reader system...');
+	console.log('🎬 [BibleHereReader2505] DOM loaded, initializing reader system...');
 	const readers = document.querySelectorAll('.bible-here-reader');
 	readers.forEach(function(element) {
 		new BibleHereReader(element);

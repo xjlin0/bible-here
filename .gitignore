@@ -10,3 +10,6 @@ wp-cli.local.yml
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# other editor
+.vscode/

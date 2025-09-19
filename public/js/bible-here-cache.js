@@ -259,7 +259,7 @@ class BibleHereCacheManager {
             
             await this.cacheBooks({en: window.BibleHereSeedData.openingBooks});
             console.log(`✅ [BibleHereCacheManager261] 已載入英文書卷 Seed Data (${window.BibleHereSeedData.openingBooks.length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
-            
+            delete window.BibleHereSeedData.openingBooks
         } catch (error) {
             console.error('❌ [BibleHereCacheManager264] 載入書卷 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution
@@ -289,7 +289,7 @@ class BibleHereCacheManager {
                 const versesData = seedVerses[language].verses;
                 await this.cacheVerses(versesData, seedVerses[language].table_name);
             }
-            
+            delete window.BibleHereSeedData.openingVerses
         } catch (error) {
             console.error('❌ [BibleHereCacheManager294] 載入經文 Seed Data 時發生錯誤:', error);
             throw error; // Re-throw error to stop execution

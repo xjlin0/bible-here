@@ -293,7 +293,7 @@ class Bible_Here_Public {
 
 		// Get parameters from GET request
 		$version1_bible_raw = sanitize_text_field( $_GET['version1_bible'] ?? '' );
-		$version1_language_raw = sanitize_text_field( $_GET['version1_language'] ?? '' );
+		// $version1_language_raw = sanitize_text_field( $_GET['version1_language'] ?? '' );
 		$version1_commentary_raw = sanitize_text_field( $_GET['version1_commentary'] ?? '' );
 		$version2_bible_raw = sanitize_text_field( $_GET['version2_bible'] ?? '' );
 		$version2_commentary_raw = sanitize_text_field( $_GET['version2_commentary'] ?? '' );
