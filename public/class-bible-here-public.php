@@ -815,11 +815,89 @@ class Bible_Here_Public {
 	}
 
 	/**
-	 * Handle AJAX request for getting cross references.
+	 * Handle AJAX request for getting cross references with verse text.
 	 *
 	 * @since    1.0.0
 	 */
 	public function handle_ajax_get_cross_references() {
+		global $wpdb;
+
+		// Verify nonce
+		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
+			sleep(2);
+			wp_send_json_error( array(
+				'message' => 'Security check failed: Invalid nonce token',
+				'code' => 'invalid_nonce'
+			), 401 );
+		}
+
+		// Get parameters
+		$verse_ids   = isset( $_GET['verse_ids'] ) ? array_map( 'intval', (array) $_GET['verse_ids'] ) : array();
+		$language    = sanitize_text_field( $_GET['language'] ?? '' );
+		$table_param = sanitize_text_field( $_GET['table_name'] ?? '' ); // e.g. bible_here_zh_tw_cuvt
+
+		// Validate required parameters
+		if ( empty( $verse_ids ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: verse_ids or verse_id' ) );
+		}
+		if ( empty( $language ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: language' ) );
+		}
+		if ( empty( $table_param ) ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameter: table_name' ) );
+		}
+
+		// Resolve table names
+		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
+		$bible_table     = $wpdb->prefix . $table_param;
+		$books_table     = $wpdb->prefix . 'bible_here_books';
+
+		// Build IN clause for multiple verse IDs
+		$placeholders = implode( ',', array_fill( 0, count( $verse_ids ), '%d' ) );
+
+		// Main query
+		$sql = "
+			SELECT
+				cr.verse_id,
+				cr.start,
+				cr.finish,
+				book.language,
+				book.title_short AS book_name_short,
+				bible.book_number,
+				bible.chapter_number,
+				bible.verse_number,
+				GROUP_CONCAT(bible.verse_text SEPARATOR '  ') AS verse_texts
+			FROM $cross_ref_table cr
+			  JOIN $bible_table bible
+			    ON bible.verse_id BETWEEN cr.start AND IFNULL(cr.finish, cr.start)
+			  JOIN $books_table book
+			    ON book.language = %s
+			      AND book.book_number = bible.book_number
+			WHERE cr.verse_id IN ($placeholders)
+			GROUP BY cr.verse_id, cr.rank, cr.start, cr.finish
+			ORDER BY cr.verse_id, cr.start, cr.rank
+		";
+
+		// Prepare query
+		$query_args = array_merge( array( $language ), $verse_ids );
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A );
+
+		// Handle database errors
+		if ( $wpdb->last_error ) {
+			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
+		}
+
+		wp_send_json_success( array(
+			'cross_references' => $results ?: array()
+		) );
+	}
+
+	/**
+	 * Handle AJAX request for getting cross references.
+	 *
+	 * @since    1.0.0
+	 */
+	public function handle_ajax_get_cross_references_table() {
 		global $wpdb;
 		
 		// Verify nonce
