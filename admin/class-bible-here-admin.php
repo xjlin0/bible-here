@@ -1383,44 +1383,44 @@ class Bible_Here_Admin {
 			
 			// Start output buffering for progress display
 			ob_start();
-			
+
 			echo '<div class="notice notice-info"><p>Starting cross references import...</p></div>';
 			ob_flush();
 			flush();
-			
+
 			try {
 			// First, check if CSV file exists, if not extract from ZIP
 			$plugin_dir = plugin_dir_path(dirname(__FILE__));
 			$csv_file_path = $plugin_dir . 'data/cross_references.csv';
 			$zip_file_path = $plugin_dir . 'data/cross_references.zip';
-			
+
 			if (!file_exists($csv_file_path)) {
 				if (!file_exists($zip_file_path)) {
 					echo '<div class="notice notice-error"><p>Import failed: cross_references.zip file not found in data directory.</p></div>';
 					ob_end_flush();
 					return;
 				}
-				
+
 				// Extract CSV from ZIP using reflection to access private method
 				$reflection = new ReflectionClass($importer);
 				$extract_method = $reflection->getMethod('extract_csv_from_zip');
 				$extract_method->setAccessible(true);
 				$csv_file_path = $extract_method->invoke($importer, $zip_file_path);
-				
+
 				if (!$csv_file_path) {
 					echo '<div class="notice notice-error"><p>Import failed: Could not extract CSV file from ZIP archive.</p></div>';
 					ob_end_flush();
 					return;
 				}
 			}
-			
+
 			$start_time = microtime(true);
 			$result = $importer->import_cross_references_streaming($csv_file_path);
 			$time_taken = microtime(true) - $start_time;
-			
+
 			if ($result['success']) {
 				echo '<div class="notice notice-success"><p>Cross references imported successfully! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($time_taken, 2) . ' seconds.</p></div>';
-				
+
 				// Clean up extracted CSV file after successful import
 				if (file_exists($csv_file_path) && strpos($csv_file_path, 'cross_references.csv') !== false) {
 					if (unlink($csv_file_path)) {
