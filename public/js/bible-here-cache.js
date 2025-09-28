@@ -338,7 +338,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             const chapterPrefix = `${String(bookNumber).padStart(2, '0')}${String(chapterNumber).padStart(3, '0')}`;
             const startVerseId = `${chapterPrefix}${verseStart ? String(verseStart).padStart(3, '0') : '000'}`; // 假設註釋在第一節前有整章概論
             const endVerseId = `${chapterPrefix}${verseEnd ? String(verseEnd).padStart(3, '0') : '176'}`;   // 最後一節（假設最多176節）
-
+            console.log(`🔍 [CacheManager341] Searching verses between ${startVerseId} and ${endVerseId}`);
             // 為每個版本創建一個獨立的查詢
             const queryPromises = [...new Set(versionTables)].filter(table => typeof table === 'string' && table.length > 0).map(table => {
                 return this.db.verses
@@ -443,10 +443,10 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('🔍 [CacheManager] Searching cached books for language:', language);
             
             const cachedBooks = await this.db.books.get(language);
-            console.log('🔍 [DEBUG] getCachedBooks 快取查詢結果:', cachedBooks);
+            console.log('🔍 [DEBUG446] getCachedBooks 書卷快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
-                console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
+                // console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
                 return cachedBooks.value;
             }
             
