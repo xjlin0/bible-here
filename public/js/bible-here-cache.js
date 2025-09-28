@@ -491,12 +491,15 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
      */
     async getVersions(languages = [], types = []) {
         try {
-            console.log('🔍 [CacheManager] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
-            
-            const now = Date.now();
+            console.log('🔍 [CacheManager494] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
+            languages = languages.flatMap(locale => {
+               const [lang] = locale.split('-');
+               return locale == lang ? [lang] : [locale, lang];
+            });
+            console.log('🔍 [CacheManager499] expand languages: ', languages);
             const allVersions = await this.db.versions.toArray();
             const validVersions = [];
-            console.log('📖 [CacheManager560] allVersions: ', allVersions);
+            console.log('📖 [CacheManager502] allVersions: ', allVersions);
             for (const versionCache of allVersions) {
                 // Check if version has expired (1-hour expiry)
                 // if (now - versionCache.updatedAt > this.versionsExpiry) {
@@ -505,7 +508,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                 // } // should do it after API or loading
                 
                 const version = versionCache.value;
-                console.log('📖 [CacheManager569] version: ', version);
+                console.log('📖 [CacheManager511] version: ', version);
                 // Apply language filter
                 if (languages && !languages.includes(version.language_code)) {
                     continue;
@@ -519,7 +522,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                 validVersions.push(version);
             }
             
-            console.log('📖 [CacheManager583] Found', validVersions.length, 'valid cached versions');
+            console.log('📖 [CacheManager522] Found', validVersions.length, 'valid cached versions');
             return validVersions;
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached versions:', error);

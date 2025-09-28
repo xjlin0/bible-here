@@ -845,13 +845,17 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Load versions after chapter content is displayed
 	 */
 	async loadVersionsAfterChapter() {
-		console.log('📚 [BibleHereReader825] 經文顯示完成，開始載入版本資料.  Todo: check cache data time before AJAX');
-		
+		console.log('📚 [BibleHereReader848] 經文顯示完成，開始載入版本資料.  Todo: check cache data time before AJAX');
+		// const cachedVersions = await this.cacheManager.getVersions(navigator.languages);
+		// if (cachedVersions != null && Array.isArray(cachedVersions) && cachedVersions.length > 0) {
+		// 	console.log('✅ [BibleHereReader851]  loadVersionsAfterChapter found previous cache, skipping loading');
+		// 	return;   // this somehow prevent previously not used languages from loading
+		// }
 		try {
 			// 構建 AJAX URL
 			const url = new URL(bibleHereAjax.ajaxurl);
 			url.searchParams.set('action', 'bible_here_public_get_versions');
-			
+			// console.log('📚 [BibleHereReader858] initiating ajax here is cachedVersions: ', cachedVersions);
 			const response = await fetch(url, {
 				method: 'GET',
 				headers: {
@@ -864,7 +868,7 @@ console.log("loadVersions 433, params: ", this.params)
 			}
 			
 			const data = await response.json();
-			console.log('📚 [BibleHereReader844] 版本資料 API 回應:', data);
+			console.log('📚 [BibleHereReader871] 版本資料 API 回應:', data);
 			
 			if (data.success && data.data) {
 				// 將版本資料載入到快取
