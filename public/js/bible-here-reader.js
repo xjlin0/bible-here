@@ -2450,7 +2450,7 @@ console.log("loadVersions 433, params: ", this.params)
 		this.updateVersionSelectors();
 		
 		// 重新載入章節內容（保持當前書卷和章節）
-		// this.loadDualVersionChapter();
+		this.loadChapter();
 		
 		console.log('✅ 版本切換完成');
 	}
