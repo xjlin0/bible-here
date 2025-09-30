@@ -121,6 +121,17 @@ async init() {
 	if (urlParams && Object.keys(urlParams).length > 0) {
 		console.log('🔗 [init] 發現 URL 參數，應用設定:', urlParams);
 		await this.applyURLParamsToReader(urlParams);
+	} else {
+		// Set initial URL parameters to establish proper history baseline
+		console.log('🔗 [init] 設置初始 URL 參數');
+		this.updateURLParams({
+			version1: this.currentVersion1,
+			version2: this.isDualMode ? this.currentVersion2 : undefined,
+			book: this.currentBook,
+			chapter: this.currentChapter,
+			mode: this.currentMode,
+			language: this.currentLanguage1
+		}, true); // Use replaceState for initial setup
 	}
 
 	this.bindEvents();
@@ -542,14 +553,16 @@ console.log("loadVersions 433, params: ", this.params)
 		// }
 
 		/**
-		 * Load chapter content using cache manager or API
-		 */
-	async loadChapter() {
+	 * Load chapter content using cache manager or API
+	 * @param {boolean} updateURL - Whether to update URL parameters (default: true)
+	 */
+	async loadChapter(updateURL = true) {
 		console.log('📖 [BibleHereReader523] async loadChapter() 開始載入章節:', {
 			version1: this.currentVersion1,
 			version2: this.currentVersion2,
 			book: this.currentBook,
-			chapter: this.currentChapter
+			chapter: this.currentChapter,
+			updateURL
 		});
 		
 		if (!this.currentVersion1 || !this.currentBook || !this.currentChapter) {
@@ -558,15 +571,17 @@ console.log("loadVersions 433, params: ", this.params)
 			return;
 		}
 
-		// Update URL parameters when loading chapter
-		this.updateURLParams({
-			version1: this.currentVersion1,
-			version2: this.isDualMode ? this.currentVersion2 : undefined,
-			book: this.currentBook,
-			chapter: this.currentChapter,
-			mode: this.currentMode,
-			language: this.currentLanguage1
-		});
+		// Update URL parameters when loading chapter (only if not called from applyURLParamsToReader)
+		if (updateURL) {
+			this.updateURLParams({
+				version1: this.currentVersion1,
+				version2: this.isDualMode ? this.currentVersion2 : undefined,
+				book: this.currentBook,
+				chapter: this.currentChapter,
+				mode: this.currentMode,
+				language: this.currentLanguage1
+			});
+		}
 
 		this.showLoading();
 		
@@ -1159,7 +1174,7 @@ console.log("loadVersions 433, params: ", this.params)
 		if (this.currentChapter > 1) {
 			this.currentChapter--;
 			this.updateBookChapterButton();
-			this.loadChapter();
+			this.loadChapter(false); // Don't update URL, we'll do it manually
 		} else {
 			const books1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
 			if (books1 && this.currentChapter > 0 && this.currentBook > 1) {
@@ -1171,7 +1186,7 @@ console.log("loadVersions 433, params: ", this.params)
 					if (books2) {this.updateBookChapterButton(null, books2[this.currentBook].title_short, '2')}
 				}  // updating button 2 will overwrite button 1 with last wrong value, so we update 1 again
 				this.updateBookChapterButton(null, books1[this.currentBook].title_short, '1');
-				this.loadChapter();
+				this.loadChapter(false); // Don't update URL, we'll do it manually
 			}
 		}
 
@@ -1196,7 +1211,7 @@ console.log("loadVersions 433, params: ", this.params)
 		if (this.currentChapter < maxChapters) {
 			this.currentChapter++;
 			this.updateBookChapterButton();
-			this.loadChapter();
+			this.loadChapter(false); // Don't update URL, we'll do it manually
 		} else {
 			if (book1 && this.currentBook >= 0 && this.currentBook < Object.keys(book1).length) {
 				this.currentBook++;
@@ -1206,7 +1221,7 @@ console.log("loadVersions 433, params: ", this.params)
 					if (book2) {this.updateBookChapterButton(null, book2[this.currentBook].title_short, '2')}
 				}  // updating button 2 will overwrite button 1 with last wrong value, so we update 1 again
 				this.updateBookChapterButton(null, book1[this.currentBook].title_short, '1');
-				this.loadChapter();
+				this.loadChapter(false); // Don't update URL, we'll do it manually
 			}
 		}
 		
@@ -2985,17 +3000,17 @@ handlePopState(event) {
 	console.log('⬅️ [handlePopState] 處理瀏覽器導航事件:', event.state);
 
 	try {
-		// Only handle events related to Bible reader
-		if (event.state && event.state.bibleReader) {
+		// Parse current URL parameters
+		const urlParams = this.parseURLParams();
+		console.log('🔍 [handlePopState] 從 URL 解析的參數:', urlParams);
+
+		// Check if URL has Bible reader related parameters
+		const hasBibleParams = urlParams.version1 || urlParams.book || urlParams.chapter;
+		
+		if (hasBibleParams || (event.state && event.state.bibleReader)) {
 			console.log('📖 [handlePopState] 檢測到聖經閱讀器相關的導航事件');
-
-			// Parse current URL parameters
-			const urlParams = this.parseURLParams();
-			console.log('🔍 [handlePopState] 從 URL 解析的參數:', urlParams);
-
 			// Apply URL parameters to reader state
 			this.applyURLParamsToReader(urlParams);
-
 		} else {
 			console.log('ℹ️ [handlePopState] 非聖經閱讀器相關的導航事件，忽略');
 		}
@@ -3081,12 +3096,12 @@ async applyURLParamsToReader(urlParams) {
 			this.updateVersionSelectors();
 			this.updateContainerDataAttributes();
 
-			// Load chapter content
+			// Load chapter content (don't update URL since we're applying URL params)
 			if (this.currentBook && this.currentChapter) {
 				if (this.currentMode === 'dual' && this.currentVersion2) {
 					this.loadDualVersionChapter();
 				} else {
-					this.loadChapter();
+					this.loadChapter(false); // Don't update URL to avoid duplicate updates
 				}
 			}
 		} else {
