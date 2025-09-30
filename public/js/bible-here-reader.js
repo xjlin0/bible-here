@@ -2617,501 +2617,501 @@ console.log("🎯 2366 this.currentVersion1NameShort:", this.currentVersion1Name
 		}
 
 		console.log('✅ [parseShortcodeAttributes] 解析完成:', parsed);
-	return parsed;
-}
-
-/**
- * Validate if version exists in cached versions or fallback to API
- * @param {string} versionTableName - The table name of the version to validate
- * @returns {Promise<boolean>} - True if version exists, false otherwise
- */
-async validateVersionExists(versionTableName) {
-	if (!versionTableName) {
-		console.warn('⚠️ Empty version table name provided');
-		return false;
+		return parsed;
 	}
 
-	try {
-		// First try to get from cache
-		if (this.cacheManager) {
-			console.log('🔍 Checking cached versions for:', versionTableName);
-			const cachedVersions = await this.cacheManager.getVersions();
-			if (cachedVersions && cachedVersions.length > 0) {
-				const versionExists = cachedVersions.some(version => 
+	/**
+	 * Validate if version exists in cached versions or fallback to API
+	 * @param {string} versionTableName - The table name of the version to validate
+	 * @returns {Promise<boolean>} - True if version exists, false otherwise
+	 */
+	async validateVersionExists(versionTableName) {
+		if (!versionTableName) {
+			console.warn('⚠️ Empty version table name provided');
+			return false;
+		}
+
+		try {
+			// First try to get from cache
+			if (this.cacheManager) {
+				console.log('🔍 Checking cached versions for:', versionTableName);
+				const cachedVersions = await this.cacheManager.getVersions();
+				if (cachedVersions && cachedVersions.length > 0) {
+					const versionExists = cachedVersions.some(version => 
+						version.table_name === versionTableName && 
+						version.rank !== null && 
+						version.rank !== undefined
+					);
+					if (versionExists) {
+						console.log('✅ Version found in cache:', versionTableName);
+						return true;
+					}
+				}
+			}
+
+			// If not in cache, try API call
+			console.log('🌐 Checking version via API:', versionTableName);
+			const params = new URLSearchParams({
+				action: 'bible_here_public_get_versions',
+				languages: navigator.languages.join(',')
+			});
+
+			const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+				method: 'GET',
+				headers: {
+					"X-WP-Nonce": bibleHereAjax.nonce
+				}
+			});
+
+			if (!response.ok) {
+				console.error('❌ API request failed:', response.status);
+				return false;
+			}
+
+			const data = await response.json();
+			if (data.success && data.data && data.data.versions) {
+				const versionExists = data.data.versions.some(version => 
 					version.table_name === versionTableName && 
 					version.rank !== null && 
 					version.rank !== undefined
 				);
-				if (versionExists) {
-					console.log('✅ Version found in cache:', versionTableName);
-					return true;
-				}
+				console.log(versionExists ? '✅' : '❌', 'Version validation result:', versionTableName, versionExists);
+				return versionExists;
 			}
-		}
 
-		// If not in cache, try API call
-		console.log('🌐 Checking version via API:', versionTableName);
-		const params = new URLSearchParams({
-			action: 'bible_here_public_get_versions',
-			languages: navigator.languages.join(',')
-		});
+			console.warn('⚠️ Invalid API response format');
+			return false;
 
-		const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
-			method: 'GET',
-			headers: {
-				"X-WP-Nonce": bibleHereAjax.nonce
-			}
-		});
-
-		if (!response.ok) {
-			console.error('❌ API request failed:', response.status);
+		} catch (error) {
+			console.error('❌ Error validating version:', versionTableName, error);
 			return false;
 		}
+	}
 
-		const data = await response.json();
-		if (data.success && data.data && data.data.versions) {
-			const versionExists = data.data.versions.some(version => 
-				version.table_name === versionTableName && 
-				version.rank !== null && 
-				version.rank !== undefined
-			);
-			console.log(versionExists ? '✅' : '❌', 'Version validation result:', versionTableName, versionExists);
-			return versionExists;
+	/**
+	 * Validate book number and chapter number
+	 * @param {number} bookNumber - Book number (1-66)
+	 * @param {number} chapterNumber - Chapter number (must be > 0)
+	 * @param {string} language - Language code for book data lookup
+	 * @returns {Promise<Object>} - Validation result with isValid flag and details
+	 */
+	async validateBookChapter(bookNumber, chapterNumber, language = null) {
+		console.log('🔍 [validateBookChapter2684] 驗證書卷和章節:', { bookNumber, chapterNumber, language });
+
+		// Basic validation
+		if (!bookNumber || bookNumber < 1 || bookNumber > 66) {
+			console.warn('⚠️ [validateBookChapter] 無效的書卷編號:', bookNumber);
+			return { isValid: false, reason: 'invalid_book_number', bookNumber, chapterNumber };
 		}
 
-		console.warn('⚠️ Invalid API response format');
-		return false;
+		if (!chapterNumber || chapterNumber < 1) {
+			console.warn('⚠️ [validateBookChapter] 無效的章節編號:', chapterNumber);
+			return { isValid: false, reason: 'invalid_chapter_number', bookNumber, chapterNumber };
+		}
 
-	} catch (error) {
-		console.error('❌ Error validating version:', versionTableName, error);
-		return false;
-	}
-}
+		try {
+			// Try to get book data from cache to validate chapter count
+			if (this.cacheManager) {
+				const targetLanguage = language || this.currentLanguage1;
+				console.log('🔍 [validateBookChapter] 從快取檢查書卷資料，語言:', targetLanguage);
 
-/**
- * Validate book number and chapter number
- * @param {number} bookNumber - Book number (1-66)
- * @param {number} chapterNumber - Chapter number (must be > 0)
- * @param {string} language - Language code for book data lookup
- * @returns {Promise<Object>} - Validation result with isValid flag and details
- */
-async validateBookChapter(bookNumber, chapterNumber, language = null) {
-	console.log('🔍 [validateBookChapter2684] 驗證書卷和章節:', { bookNumber, chapterNumber, language });
+				const cachedBooks = await this.cacheManager.getCachedBooks(targetLanguage);
+				if (cachedBooks && cachedBooks.length > 0) {
+					const bookData = cachedBooks.find(book => book.book_number === bookNumber);
+					if (bookData) {
+						const maxChapters = bookData.chapter_count || bookData.chapters;
+						if (maxChapters && chapterNumber > maxChapters) {
+							console.warn('⚠️ [validateBookChapter] 章節編號超出範圍:', {
+								bookNumber,
+								chapterNumber,
+								maxChapters,
+								bookName: bookData.book_name
+							});
+							return {
+								isValid: false,
+								reason: 'chapter_out_of_range',
+								bookNumber,
+								chapterNumber,
+								maxChapters,
+								bookName: bookData.book_name
+							};
+						}
 
-	// Basic validation
-	if (!bookNumber || bookNumber < 1 || bookNumber > 66) {
-		console.warn('⚠️ [validateBookChapter] 無效的書卷編號:', bookNumber);
-		return { isValid: false, reason: 'invalid_book_number', bookNumber, chapterNumber };
-	}
-
-	if (!chapterNumber || chapterNumber < 1) {
-		console.warn('⚠️ [validateBookChapter] 無效的章節編號:', chapterNumber);
-		return { isValid: false, reason: 'invalid_chapter_number', bookNumber, chapterNumber };
-	}
-
-	try {
-		// Try to get book data from cache to validate chapter count
-		if (this.cacheManager) {
-			const targetLanguage = language || this.currentLanguage1;
-			console.log('🔍 [validateBookChapter] 從快取檢查書卷資料，語言:', targetLanguage);
-
-			const cachedBooks = await this.cacheManager.getCachedBooks(targetLanguage);
-			if (cachedBooks && cachedBooks.length > 0) {
-				const bookData = cachedBooks.find(book => book.book_number === bookNumber);
-				if (bookData) {
-					const maxChapters = bookData.chapter_count || bookData.chapters;
-					if (maxChapters && chapterNumber > maxChapters) {
-						console.warn('⚠️ [validateBookChapter] 章節編號超出範圍:', {
+						console.log('✅ [validateBookChapter] 書卷和章節驗證通過:', {
 							bookNumber,
 							chapterNumber,
 							maxChapters,
 							bookName: bookData.book_name
 						});
 						return {
-							isValid: false,
-							reason: 'chapter_out_of_range',
+							isValid: true,
 							bookNumber,
 							chapterNumber,
 							maxChapters,
 							bookName: bookData.book_name
 						};
 					}
-
-					console.log('✅ [validateBookChapter] 書卷和章節驗證通過:', {
-						bookNumber,
-						chapterNumber,
-						maxChapters,
-						bookName: bookData.book_name
-					});
-					return {
-						isValid: true,
-						bookNumber,
-						chapterNumber,
-						maxChapters,
-						bookName: bookData.book_name
-					};
 				}
 			}
-		}
 
-		// If no cached data available, assume valid (will be validated when loading)
-		console.log('ℹ️ [validateBookChapter] 無快取資料，假設有效（載入時會再次驗證）');
-		return {
-			isValid: true,
-			bookNumber,
-			chapterNumber,
-			reason: 'no_cache_data_assume_valid'
-		};
-		
-	} catch (error) {
-		console.error('❌ [validateBookChapter] 驗證過程發生錯誤:', error);
-		return {
-			isValid: false,
-			reason: 'validation_error',
-			bookNumber,
-			chapterNumber,
-			error: error.message
-		};
-	}
-}
-
-/**
- * Initialize reader from shortcode attributes with validation
- * @param {Object} attributes - Shortcode attributes from DOM element
- * @returns {Promise<Object>} - Initialization result with success status and applied values
- */
-async initializeFromShortcode(attributes) {
-	console.log('🚀 [initializeFromShortcode] 開始初始化 shortcode 參數:', attributes);
-
-	const result = {
-		success: false,
-		appliedValues: {
-			version1: null,
-			version2: null,
-			book: null,
-			chapter: null,
-			mode: 'single'
-		},
-		errors: []
-	};
-
-	try {
-		// Parse shortcode attributes
-		const parsed = this.parseShortcodeAttributes(attributes);
-		console.log('📋 [initializeFromShortcode] 解析後的參數:', parsed);
-		
-		// Validate and set version1
-		if (parsed.version1) {
-			const version1Valid = await this.validateVersionExists(parsed.version1);
-			if (version1Valid) {
-				result.appliedValues.version1 = parsed.version1;
-				console.log('✅ [initializeFromShortcode] Version1 驗證通過:', parsed.version1);
-			} else {
-				result.errors.push(`無效的 version1: ${parsed.version1}`);
-				console.warn('⚠️ [initializeFromShortcode] Version1 驗證失敗:', parsed.version1);
-			}
-		}
-
-		// Validate and set version2 (for dual mode)
-		if (parsed.version2) {
-			const version2Valid = await this.validateVersionExists(parsed.version2);
-			if (version2Valid) {
-				result.appliedValues.version2 = parsed.version2;
-				result.appliedValues.mode = 'dual';
-				console.log('✅ [initializeFromShortcode] Version2 驗證通過:', parsed.version2);
-			} else {
-				result.errors.push(`無效的 version2: ${parsed.version2}`);
-				console.warn('⚠️ [initializeFromShortcode] Version2 驗證失敗:', parsed.version2);
-			}
-		} else if (parsed.mode === 'dual') {
-			// If mode is dual but no version2, fallback to single mode
-			result.appliedValues.mode = 'single';
-			console.log('ℹ️ [initializeFromShortcode] 雙版本模式但無 version2，回退到單版本模式');
-		}
-
-		// Validate book and chapter if provided
-		if (parsed.book && parsed.chapter) {
-			const bookChapterValidation = await this.validateBookChapter(
-				parsed.book, 
-				parsed.chapter, 
-				this.currentLanguage1
-			);
+			// If no cached data available, assume valid (will be validated when loading)
+			console.log('ℹ️ [validateBookChapter] 無快取資料，假設有效（載入時會再次驗證）');
+			return {
+				isValid: true,
+				bookNumber,
+				chapterNumber,
+				reason: 'no_cache_data_assume_valid'
+			};
 			
-			if (bookChapterValidation.isValid) {
-				result.appliedValues.book = parsed.book;
-				result.appliedValues.chapter = parsed.chapter;
-				console.log('✅ [initializeFromShortcode] 書卷章節驗證通過:', {
-					book: parsed.book,
-					chapter: parsed.chapter,
-					bookName: bookChapterValidation.bookName
-				});
-			} else {
-				result.errors.push(`無效的書卷或章節: ${parsed.book}:${parsed.chapter} (${bookChapterValidation.reason})`);
-				console.warn('⚠️ [initializeFromShortcode] 書卷章節驗證失敗:', bookChapterValidation);
-			}
+		} catch (error) {
+			console.error('❌ [validateBookChapter] 驗證過程發生錯誤:', error);
+			return {
+				isValid: false,
+				reason: 'validation_error',
+				bookNumber,
+				chapterNumber,
+				error: error.message
+			};
 		}
-
-		// Apply valid values to reader
-		if (result.appliedValues.version1) {
-			this.currentVersion1 = result.appliedValues.version1;
-		}
-		if (result.appliedValues.version2) {
-			this.currentVersion2 = result.appliedValues.version2;
-		}
-		if (result.appliedValues.book) {
-			this.currentBook = result.appliedValues.book;
-		}
-		if (result.appliedValues.chapter) {
-			this.currentChapter = result.appliedValues.chapter;
-		}
-
-		// Set mode
-		this.currentMode = result.appliedValues.mode;
-
-		result.success = true;
-		console.log('🎉 [initializeFromShortcode] 初始化完成:', result);
-
-		return result;
-
-	} catch (error) {
-		console.error('❌ [initializeFromShortcode] 初始化過程發生錯誤:', error);
-		result.errors.push(`初始化錯誤: ${error.message}`);
-		return result;
 	}
-}
 
-/**
- * Update URL parameters while preserving existing ones
- * @param {Object} params - Parameters to update in URL
- * @param {boolean} replaceState - Whether to replace current state instead of pushing new state
- */
-updateURLParams(params = {}, replaceState = false) {
-	console.log('🔗 [updateURLParams] 更新 URL 參數:', { params, replaceState });
+	/**
+	 * Initialize reader from shortcode attributes with validation
+	 * @param {Object} attributes - Shortcode attributes from DOM element
+	 * @returns {Promise<Object>} - Initialization result with success status and applied values
+	 */
+	async initializeFromShortcode(attributes) {
+		console.log('🚀 [initializeFromShortcode] 開始初始化 shortcode 參數:', attributes);
 
-	try {
-		// Get current URL and search params
-		const currentUrl = new URL(window.location.href);
-		const searchParams = new URLSearchParams(currentUrl.search);
-
-		// Update parameters
-		Object.keys(params).forEach(key => {
-			const value = params[key];
-			if (value !== null && value !== undefined && value !== '') {
-				searchParams.set(key, value);
-				console.log(`✅ [updateURLParams] 設定參數 ${key} = ${value}`);
-			} else {
-				// Remove parameter if value is null, undefined, or empty
-				searchParams.delete(key);
-				console.log(`🗑️ [updateURLParams] 移除參數 ${key}`);
-			}
-		});
-
-		// Construct new URL
-		const newUrl = `${currentUrl.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}${currentUrl.hash}`;
-
-		// Update browser history
-		if (replaceState) {
-			window.history.replaceState(
-				{ bibleReader: true, timestamp: Date.now() },
-				document.title,
-				newUrl
-			);
-			console.log('🔄 [updateURLParams] 替換瀏覽器歷史狀態:', newUrl);
-		} else {
-			window.history.pushState(
-				{ bibleReader: true, timestamp: Date.now() },
-				document.title,
-				newUrl
-			);
-			console.log('➕ [updateURLParams] 新增瀏覽器歷史狀態:', newUrl);
-		}
-
-		// Dispatch custom event for other components to listen
-		const urlUpdateEvent = new CustomEvent('bibleReaderUrlUpdate', {
-			detail: {
-				params: Object.fromEntries(searchParams),
-				url: newUrl,
-				replaceState
-			}
-		});
-		window.dispatchEvent(urlUpdateEvent);
-
-	} catch (error) {
-		console.error('❌ [updateURLParams] 更新 URL 參數時發生錯誤:', error);
-	}
-}
-
-/**
- * Parse URL parameters and extract Bible reader related parameters
- * @returns {Object} - Parsed parameters object
- */
-parseURLParams() {
-	console.log('🔍 [parseURLParams] 解析 URL 參數');
-
-	try {
-		const urlParams = new URLSearchParams(window.location.search);
-		const params = {
-			version1: urlParams.get('version1') || null,
-			version2: urlParams.get('version2') || null,
-			book: urlParams.get('book') ? parseInt(urlParams.get('book')) : null,
-			chapter: urlParams.get('chapter') ? parseInt(urlParams.get('chapter')) : null,
-			mode: urlParams.get('mode') || null,
-			language: urlParams.get('language') || null
+		const result = {
+			success: false,
+			appliedValues: {
+				version1: null,
+				version2: null,
+				book: null,
+				chapter: null,
+				mode: 'single'
+			},
+			errors: []
 		};
 
-		// Validate parsed parameters
-		if (params.book && (params.book < 1 || params.book > 66)) {
-			console.warn('⚠️ [parseURLParams] 無效的書卷編號:', params.book);
-			params.book = null;
-		}
-
-		if (params.chapter && params.chapter < 1) {
-			console.warn('⚠️ [parseURLParams] 無效的章節編號:', params.chapter);
-			params.chapter = null;
-		}
-
-		if (params.mode && !['single', 'dual'].includes(params.mode)) {
-			console.warn('⚠️ [parseURLParams] 無效的模式:', params.mode);
-			params.mode = null;
-		}
-
-		// Filter out null values for cleaner result
-		const cleanParams = {};
-		Object.keys(params).forEach(key => {
-			if (params[key] !== null) {
-				cleanParams[key] = params[key];
+		try {
+			// Parse shortcode attributes
+			const parsed = this.parseShortcodeAttributes(attributes);
+			console.log('📋 [initializeFromShortcode] 解析後的參數:', parsed);
+			
+			// Validate and set version1
+			if (parsed.version1) {
+				const version1Valid = await this.validateVersionExists(parsed.version1);
+				if (version1Valid) {
+					result.appliedValues.version1 = parsed.version1;
+					console.log('✅ [initializeFromShortcode] Version1 驗證通過:', parsed.version1);
+				} else {
+					result.errors.push(`無效的 version1: ${parsed.version1}`);
+					console.warn('⚠️ [initializeFromShortcode] Version1 驗證失敗:', parsed.version1);
+				}
 			}
-		});
 
-		console.log('✅ [parseURLParams] 解析完成:', cleanParams);
-		return cleanParams;
-
-	} catch (error) {
-		console.error('❌ [parseURLParams] 解析 URL 參數時發生錯誤:', error);
-		return {};
-	}
-}
-
-/**
- * Handle browser back/forward navigation events
- * @param {PopStateEvent} event - The popstate event
- */
-handlePopState(event) {
-	console.log('⬅️ [handlePopState] 處理瀏覽器導航事件:', event.state);
-
-	try {
-		// Parse current URL parameters
-		const urlParams = this.parseURLParams();
-		console.log('🔍 [handlePopState] 從 URL 解析的參數:', urlParams);
-
-		// Check if URL has Bible reader related parameters
-		const hasBibleParams = urlParams.version1 || urlParams.book || urlParams.chapter;
-		
-		if (hasBibleParams || (event.state && event.state.bibleReader)) {
-			console.log('📖 [handlePopState] 檢測到聖經閱讀器相關的導航事件');
-			// Apply URL parameters to reader state
-			this.applyURLParamsToReader(urlParams);
-		} else {
-			console.log('ℹ️ [handlePopState] 非聖經閱讀器相關的導航事件，忽略');
-		}
-
-	} catch (error) {
-		console.error('❌ [handlePopState] 處理導航事件時發生錯誤:', error);
-	}
-}
-
-/**
- * Apply URL parameters to reader state and reload content if necessary
- * @param {Object} urlParams - Parsed URL parameters
- */
-async applyURLParamsToReader(urlParams) {
-	console.log('🔄 [applyURLParamsToReader] 應用 URL 參數到閱讀器:', urlParams);
-
-	try {
-		let needsReload = false;
-
-		// Check if version1 changed
-		if (urlParams.version1 && urlParams.version1 !== this.currentVersion1) {
-			const version1Valid = await this.validateVersionExists(urlParams.version1);
-			if (version1Valid) {
-				this.currentVersion1 = urlParams.version1;
-				needsReload = true;
-				console.log('✅ [applyURLParamsToReader] 更新 version1:', urlParams.version1);
-			} else {
-				console.warn('⚠️ [applyURLParamsToReader] 無效的 version1:', urlParams.version1);
+			// Validate and set version2 (for dual mode)
+			if (parsed.version2) {
+				const version2Valid = await this.validateVersionExists(parsed.version2);
+				if (version2Valid) {
+					result.appliedValues.version2 = parsed.version2;
+					result.appliedValues.mode = 'dual';
+					console.log('✅ [initializeFromShortcode] Version2 驗證通過:', parsed.version2);
+				} else {
+					result.errors.push(`無效的 version2: ${parsed.version2}`);
+					console.warn('⚠️ [initializeFromShortcode] Version2 驗證失敗:', parsed.version2);
+				}
+			} else if (parsed.mode === 'dual') {
+				// If mode is dual but no version2, fallback to single mode
+				result.appliedValues.mode = 'single';
+				console.log('ℹ️ [initializeFromShortcode] 雙版本模式但無 version2，回退到單版本模式');
 			}
-		}
-		
-		// Check if version2 changed
-		if (urlParams.version2 && urlParams.version2 !== this.currentVersion2) {
-			const version2Valid = await this.validateVersionExists(urlParams.version2);
-			if (version2Valid) {
-				this.currentVersion2 = urlParams.version2;
-				needsReload = true;
-				console.log('✅ [applyURLParamsToReader] 更新 version2:', urlParams.version2);
-			} else {
-				console.warn('⚠️ [applyURLParamsToReader] 無效的 version2:', urlParams.version2);
-			}
-		}
-		
-		// Check if book or chapter changed
-		if (urlParams.book && urlParams.chapter) {
-			if (urlParams.book !== this.currentBook || urlParams.chapter !== this.currentChapter) {
+
+			// Validate book and chapter if provided
+			if (parsed.book && parsed.chapter) {
 				const bookChapterValidation = await this.validateBookChapter(
-					urlParams.book,
-					urlParams.chapter,
+					parsed.book, 
+					parsed.chapter, 
 					this.currentLanguage1
 				);
 				
 				if (bookChapterValidation.isValid) {
-					this.currentBook = urlParams.book;
-					this.currentChapter = urlParams.chapter;
-					needsReload = true;
-					console.log('✅ [applyURLParamsToReader] 更新書卷章節:', {
-						book: urlParams.book,
-						chapter: urlParams.chapter
+					result.appliedValues.book = parsed.book;
+					result.appliedValues.chapter = parsed.chapter;
+					console.log('✅ [initializeFromShortcode] 書卷章節驗證通過:', {
+						book: parsed.book,
+						chapter: parsed.chapter,
+						bookName: bookChapterValidation.bookName
 					});
 				} else {
-					console.warn('⚠️ [applyURLParamsToReader] 無效的書卷章節:', {
-						book: urlParams.book,
-						chapter: urlParams.chapter,
-						reason: bookChapterValidation.reason
-					});
+					result.errors.push(`無效的書卷或章節: ${parsed.book}:${parsed.chapter} (${bookChapterValidation.reason})`);
+					console.warn('⚠️ [initializeFromShortcode] 書卷章節驗證失敗:', bookChapterValidation);
 				}
 			}
-		}
 
-		// Check if mode changed
-		if (urlParams.mode && urlParams.mode !== this.currentMode) {
-			this.currentMode = urlParams.mode;
-			needsReload = true;
-			console.log('✅ [applyURLParamsToReader] 更新模式:', urlParams.mode);
-		}
-
-		// Reload content if any parameter changed
-		if (needsReload) {
-			console.log('🔄 [applyURLParamsToReader] 參數已變更，重新載入內容');
-
-			// Update UI elements
-			this.updateVersionSelectors();
-			this.updateContainerDataAttributes();
-
-			// Load chapter content (don't update URL since we're applying URL params)
-			if (this.currentBook && this.currentChapter) {
-				if (this.currentMode === 'dual' && this.currentVersion2) {
-					this.loadDualVersionChapter();
-				} else {
-					this.loadChapter(false); // Don't update URL to avoid duplicate updates
-				}
+			// Apply valid values to reader
+			if (result.appliedValues.version1) {
+				this.currentVersion1 = result.appliedValues.version1;
 			}
-		} else {
-			console.log('ℹ️ [applyURLParamsToReader] 無參數變更，不需重新載入');
-		}
+			if (result.appliedValues.version2) {
+				this.currentVersion2 = result.appliedValues.version2;
+			}
+			if (result.appliedValues.book) {
+				this.currentBook = result.appliedValues.book;
+			}
+			if (result.appliedValues.chapter) {
+				this.currentChapter = result.appliedValues.chapter;
+			}
 
-	} catch (error) {
-		console.error('❌ [applyURLParamsToReader] 應用 URL 參數時發生錯誤:', error);
+			// Set mode
+			this.currentMode = result.appliedValues.mode;
+
+			result.success = true;
+			console.log('🎉 [initializeFromShortcode] 初始化完成:', result);
+
+			return result;
+
+		} catch (error) {
+			console.error('❌ [initializeFromShortcode] 初始化過程發生錯誤:', error);
+			result.errors.push(`初始化錯誤: ${error.message}`);
+			return result;
+		}
 	}
-}
+
+	/**
+	 * Update URL parameters while preserving existing ones
+	 * @param {Object} params - Parameters to update in URL
+	 * @param {boolean} replaceState - Whether to replace current state instead of pushing new state
+	 */
+	updateURLParams(params = {}, replaceState = false) {
+		console.log('🔗 [updateURLParams] 更新 URL 參數:', { params, replaceState });
+
+		try {
+			// Get current URL and search params
+			const currentUrl = new URL(window.location.href);
+			const searchParams = new URLSearchParams(currentUrl.search);
+
+			// Update parameters
+			Object.keys(params).forEach(key => {
+				const value = params[key];
+				if (value !== null && value !== undefined && value !== '') {
+					searchParams.set(key, value);
+					console.log(`✅ [updateURLParams] 設定參數 ${key} = ${value}`);
+				} else {
+					// Remove parameter if value is null, undefined, or empty
+					searchParams.delete(key);
+					console.log(`🗑️ [updateURLParams] 移除參數 ${key}`);
+				}
+			});
+
+			// Construct new URL
+			const newUrl = `${currentUrl.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}${currentUrl.hash}`;
+
+			// Update browser history
+			if (replaceState) {
+				window.history.replaceState(
+					{ bibleReader: true, timestamp: Date.now() },
+					document.title,
+					newUrl
+				);
+				console.log('🔄 [updateURLParams] 替換瀏覽器歷史狀態:', newUrl);
+			} else {
+				window.history.pushState(
+					{ bibleReader: true, timestamp: Date.now() },
+					document.title,
+					newUrl
+				);
+				console.log('➕ [updateURLParams] 新增瀏覽器歷史狀態:', newUrl);
+			}
+
+			// Dispatch custom event for other components to listen
+			const urlUpdateEvent = new CustomEvent('bibleReaderUrlUpdate', {
+				detail: {
+					params: Object.fromEntries(searchParams),
+					url: newUrl,
+					replaceState
+				}
+			});
+			window.dispatchEvent(urlUpdateEvent);
+
+		} catch (error) {
+			console.error('❌ [updateURLParams] 更新 URL 參數時發生錯誤:', error);
+		}
+	}
+
+	/**
+	 * Parse URL parameters and extract Bible reader related parameters
+	 * @returns {Object} - Parsed parameters object
+	 */
+	parseURLParams() {
+		console.log('🔍 [parseURLParams] 解析 URL 參數');
+
+		try {
+			const urlParams = new URLSearchParams(window.location.search);
+			const params = {
+				version1: urlParams.get('version1') || null,
+				version2: urlParams.get('version2') || null,
+				book: urlParams.get('book') ? parseInt(urlParams.get('book')) : null,
+				chapter: urlParams.get('chapter') ? parseInt(urlParams.get('chapter')) : null,
+				mode: urlParams.get('mode') || null,
+				language: urlParams.get('language') || null
+			};
+
+			// Validate parsed parameters
+			if (params.book && (params.book < 1 || params.book > 66)) {
+				console.warn('⚠️ [parseURLParams] 無效的書卷編號:', params.book);
+				params.book = null;
+			}
+
+			if (params.chapter && params.chapter < 1) {
+				console.warn('⚠️ [parseURLParams] 無效的章節編號:', params.chapter);
+				params.chapter = null;
+			}
+
+			if (params.mode && !['single', 'dual'].includes(params.mode)) {
+				console.warn('⚠️ [parseURLParams] 無效的模式:', params.mode);
+				params.mode = null;
+			}
+
+			// Filter out null values for cleaner result
+			const cleanParams = {};
+			Object.keys(params).forEach(key => {
+				if (params[key] !== null) {
+					cleanParams[key] = params[key];
+				}
+			});
+
+			console.log('✅ [parseURLParams] 解析完成:', cleanParams);
+			return cleanParams;
+
+		} catch (error) {
+			console.error('❌ [parseURLParams] 解析 URL 參數時發生錯誤:', error);
+			return {};
+		}
+	}
+
+	/**
+	 * Handle browser back/forward navigation events
+	 * @param {PopStateEvent} event - The popstate event
+	 */
+	handlePopState(event) {
+		console.log('⬅️ [handlePopState] 處理瀏覽器導航事件:', event.state);
+
+		try {
+			// Parse current URL parameters
+			const urlParams = this.parseURLParams();
+			console.log('🔍 [handlePopState] 從 URL 解析的參數:', urlParams);
+
+			// Check if URL has Bible reader related parameters
+			const hasBibleParams = urlParams.version1 || urlParams.book || urlParams.chapter;
+			
+			if (hasBibleParams || (event.state && event.state.bibleReader)) {
+				console.log('📖 [handlePopState] 檢測到聖經閱讀器相關的導航事件');
+				// Apply URL parameters to reader state
+				this.applyURLParamsToReader(urlParams);
+			} else {
+				console.log('ℹ️ [handlePopState] 非聖經閱讀器相關的導航事件，忽略');
+			}
+
+		} catch (error) {
+			console.error('❌ [handlePopState] 處理導航事件時發生錯誤:', error);
+		}
+	}
+
+	/**
+	 * Apply URL parameters to reader state and reload content if necessary
+	 * @param {Object} urlParams - Parsed URL parameters
+	 */
+	async applyURLParamsToReader(urlParams) {
+		console.log('🔄 [applyURLParamsToReader] 應用 URL 參數到閱讀器:', urlParams);
+
+		try {
+			let needsReload = false;
+
+			// Check if version1 changed
+			if (urlParams.version1 && urlParams.version1 !== this.currentVersion1) {
+				const version1Valid = await this.validateVersionExists(urlParams.version1);
+				if (version1Valid) {
+					this.currentVersion1 = urlParams.version1;
+					needsReload = true;
+					console.log('✅ [applyURLParamsToReader] 更新 version1:', urlParams.version1);
+				} else {
+					console.warn('⚠️ [applyURLParamsToReader] 無效的 version1:', urlParams.version1);
+				}
+			}
+			
+			// Check if version2 changed
+			if (urlParams.version2 && urlParams.version2 !== this.currentVersion2) {
+				const version2Valid = await this.validateVersionExists(urlParams.version2);
+				if (version2Valid) {
+					this.currentVersion2 = urlParams.version2;
+					needsReload = true;
+					console.log('✅ [applyURLParamsToReader] 更新 version2:', urlParams.version2);
+				} else {
+					console.warn('⚠️ [applyURLParamsToReader] 無效的 version2:', urlParams.version2);
+				}
+			}
+			
+			// Check if book or chapter changed
+			if (urlParams.book && urlParams.chapter) {
+				if (urlParams.book !== this.currentBook || urlParams.chapter !== this.currentChapter) {
+					const bookChapterValidation = await this.validateBookChapter(
+						urlParams.book,
+						urlParams.chapter,
+						this.currentLanguage1
+					);
+					
+					if (bookChapterValidation.isValid) {
+						this.currentBook = urlParams.book;
+						this.currentChapter = urlParams.chapter;
+						needsReload = true;
+						console.log('✅ [applyURLParamsToReader] 更新書卷章節:', {
+							book: urlParams.book,
+							chapter: urlParams.chapter
+						});
+					} else {
+						console.warn('⚠️ [applyURLParamsToReader] 無效的書卷章節:', {
+							book: urlParams.book,
+							chapter: urlParams.chapter,
+							reason: bookChapterValidation.reason
+						});
+					}
+				}
+			}
+
+			// Check if mode changed
+			if (urlParams.mode && urlParams.mode !== this.currentMode) {
+				this.currentMode = urlParams.mode;
+				needsReload = true;
+				console.log('✅ [applyURLParamsToReader] 更新模式:', urlParams.mode);
+			}
+
+			// Reload content if any parameter changed
+			if (needsReload) {
+				console.log('🔄 [applyURLParamsToReader] 參數已變更，重新載入內容');
+
+				// Update UI elements
+				this.updateVersionSelectors();
+				this.updateContainerDataAttributes();
+
+				// Load chapter content (don't update URL since we're applying URL params)
+				if (this.currentBook && this.currentChapter) {
+					if (this.currentMode === 'dual' && this.currentVersion2) {
+						this.loadDualVersionChapter();
+					} else {
+						this.loadChapter(false); // Don't update URL to avoid duplicate updates
+					}
+				}
+			} else {
+				console.log('ℹ️ [applyURLParamsToReader] 無參數變更，不需重新載入');
+			}
+
+		} catch (error) {
+			console.error('❌ [applyURLParamsToReader] 應用 URL 參數時發生錯誤:', error);
+		}
+	}
 
 // loadDualVersionChapter() {  // 確保這個方法使用最新的 this.currentVersion1 和 this.currentVersion2
 	// 	// 載入第一版本
