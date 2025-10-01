@@ -2590,18 +2590,18 @@ console.log("🎯 2366 this.currentVersion1NameShort:", this.currentVersion1Name
 
 	/**
 	 * Parse shortcode attributes from container dataset
-	 * @param {Object} attributes - Shortcode attributes object
 	 * @returns {Object} Parsed attributes with defaults
 	 */
-	parseShortcodeAttributes(attributes = {}) {
-		console.log('🔍 [parseShortcodeAttributes] 開始解析 shortcode 屬性:', attributes);
+	parseShortcodeAttributes() {
+		console.log('🔍 [parseShortcodeAttributes] 開始解析 shortcode 屬性，從 container.dataset 讀取');
+		console.log('📊 [parseShortcodeAttributes] Container dataset:', this.container.dataset);
 
 		const parsed = {
-			version1: attributes.version1 || null,
-			version2: attributes.version2 || null,
-			book: attributes.book ? parseInt(attributes.book) : null,
-			chapter: attributes.chapter ? parseInt(attributes.chapter) : null,
-			mode: attributes.mode || 'single'
+			version1: this.container.dataset.version1 || null,
+			version2: this.container.dataset.version2 || null,
+			book: this.container.dataset.book ? parseInt(this.container.dataset.book) : null,
+			chapter: this.container.dataset.chapter ? parseInt(this.container.dataset.chapter) : null,
+			mode: this.container.dataset.mode || 'single'
 		};
 
 		// 驗證書卷編號範圍 (1-66)
