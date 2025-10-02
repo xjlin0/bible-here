@@ -24,6 +24,25 @@ $default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 117
 $default_language = !empty( $atts['language'] ) ? sanitize_text_field( $atts['language'] ) : 'en';
 $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['version'] ) : 'bible_here_en_kjv';
 
+// Book number to short name mapping for initial display
+$book_short_names = array(
+	1 => 'Gen', 2 => 'Exod', 3 => 'Lev', 4 => 'Num', 5 => 'Deut',
+	6 => 'Josh', 7 => 'Judg', 8 => 'Ruth', 9 => '1Sam', 10 => '2Sam',
+	11 => '1Kgs', 12 => '2Kgs', 13 => '1Chr', 14 => '2Chr', 15 => 'Ezra',
+	16 => 'Neh', 17 => 'Esth', 18 => 'Job', 19 => 'Ps', 20 => 'Prov',
+	21 => 'Eccl', 22 => 'Song', 23 => 'Isa', 24 => 'Jer', 25 => 'Lam',
+	26 => 'Ezek', 27 => 'Dan', 28 => 'Hos', 29 => 'Joel', 30 => 'Amos',
+	31 => 'Obad', 32 => 'Jonah', 33 => 'Mic', 34 => 'Nah', 35 => 'Hab',
+	36 => 'Zeph', 37 => 'Hag', 38 => 'Zech', 39 => 'Mal', 40 => 'Matt',
+	41 => 'Mark', 42 => 'Luke', 43 => 'John', 44 => 'Acts', 45 => 'Rom',
+	46 => '1Cor', 47 => '2Cor', 48 => 'Gal', 49 => 'Eph', 50 => 'Phil',
+	51 => 'Col', 52 => '1Thess', 53 => '2Thess', 54 => '1Tim', 55 => '2Tim',
+	56 => 'Titus', 57 => 'Phlm', 58 => 'Heb', 59 => 'Jas', 60 => '1Pet',
+	61 => '2Pet', 62 => '1John', 63 => '2John', 64 => '3John', 65 => 'Jude', 66 => 'Rev'
+);
+
+$default_book_short = isset($book_short_names[$default_book]) ? $book_short_names[$default_book] : 'Ps';
+
 ?>
 
 <div id="<?php echo esc_attr( $reader_id ); ?>" class="bible-here-reader" 
@@ -49,7 +68,7 @@ $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['vers
 			<!-- Book and Chapter Button -->
 			<div class="book-chapter-selector1">
 				<button type="button" class="btn-nav btn1-book-chapter" value="1" title="<?php _e( 'Select Book and Chapter', 'bible-here' ); ?>">
-					<span class="book-chapter-text1" data-version-name-short="KJV" data-book-name-short="Ps">KJV Ps <?php echo esc_html( $default_chapter ); ?></span>
+					<span class="book-chapter-text1" data-version-name-short="KJV" data-book-name-short="<?php echo esc_attr( $default_book_short ); ?>">KJV <?php echo esc_html( $default_book_short ); ?> <?php echo esc_html( $default_chapter ); ?></span>
 				</button>
 				<!-- Hidden selectors for functionality -->
 				<select id="<?php echo esc_attr( $reader_id ); ?>-book" class="book-select" style="display: none;">
