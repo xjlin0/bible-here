@@ -800,7 +800,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html1 += `<span class="verse-number">${verse.verse_number}</span>`;
+				html1 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
 				html1 += `<span class="verse-text">${verse.text}</span>`;
 				html1 += `</p>`;
 			});
@@ -820,7 +820,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html2 += `<span class="verse-number">${verse.verse_number}</span>`;
+				html2 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
 				html2 += `<span class="verse-text">${verse.text}</span>`;
 				html2 += `</p>`;
 			});
@@ -836,7 +836,7 @@ console.log("loadVersions 433, params: ", this.params)
 				let html1 = '';
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-					html1 += `<span class="verse-number">${verse.verse_number}</span>`;
+					html1 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
 					html1 += `<span class="verse-text">${verse.text}</span>`;
 					html1 += `</p>`;
 				});
@@ -880,7 +880,7 @@ console.log("loadVersions 433, params: ", this.params)
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
-			html += `<span class="verse-number">${verse.verse_number}</span>`;
+			html += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
 			html += `<span class="verse-text">${verse.text}</span>`;
 			html += `</p>`;
 		});

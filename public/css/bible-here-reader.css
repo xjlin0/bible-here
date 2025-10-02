@@ -100,6 +100,14 @@
 	flex: none;
 }
 
+.unselectable-list {
+  /* This applies the property to the list container */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Standard syntax */
+}
+
 /* ===== UNIFIED BUTTON STYLES ===== */
 .btn-nav {
 	padding: 8px 16px;
