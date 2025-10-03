@@ -146,6 +146,9 @@ async init() {
 	// 初始化快取管理器
 	await this.initializeCacheManager();
 
+	// Initialize cross reference modal
+	this.initializeCrossReferenceModal();
+
 	// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
 	if (this.currentMode === 'single') {
 		this.loadChapter();
@@ -190,6 +193,18 @@ async init() {
 		} catch (error) {
 			console.error('❌ [BibleHereReader] 快取管理器初始化失敗:', error);
 			console.warn('⚠️ [BibleHereReader] 將直接使用 API 獲取資料');
+		}
+	}
+
+	/**
+	 * Initialize cross reference modal
+	 */
+	initializeCrossReferenceModal() {
+		try {
+			this.crossReferenceModal = new CrossReferenceModal(this);
+			console.log('✅ [BibleHereReader] Cross reference modal initialized');
+		} catch (error) {
+			console.warn('⚠️ [BibleHereReader] Failed to initialize cross reference modal:', error);
 		}
 	}
 
@@ -3243,13 +3258,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Cross Reference Modal functionality
 class CrossReferenceModal {
-	constructor() {
+	constructor(readerInstance) {
 		this.modal = document.getElementById('cross-reference-modal');
 		this.modalTitle = this.modal.querySelector('.modal-title');
 		this.modalContent = this.modal.querySelector('.cross-references-list');
 		this.closeBtn = this.modal.querySelector('.modal-close');
 		this.overlay = this.modal.querySelector('.modal-overlay');
-		this.reader = document.querySelector('div#bible-here-reader-1');
+		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
 		this.bindEvents();
 	}
 	
@@ -3298,11 +3313,39 @@ class CrossReferenceModal {
 	}
 	
 	async fetchCrossReferences(book, chapter, verse) {
+		const verseId = `${book.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`;
+		
+		// Check cache first if cacheManager is available
+		if (this.readerInstance.cacheManager) {
+			try {
+				// Get current version table name
+				const currentVersion = this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
+				
+				// Check if cross references are cached for this verse
+				const cachedVerses = await this.readerInstance.cacheManager.getVerses(
+					this.readerInstance.currentLanguage1,
+					[currentVersion],
+					book,
+					chapter,
+					verse,
+					verse
+				);
+				
+				if (cachedVerses && cachedVerses.length > 0 && cachedVerses[0].reference) {
+					console.log('📖 [CrossReferenceModal] Using cached cross references for verse:', verseId);
+					return cachedVerses[0].reference;
+				}
+			} catch (error) {
+				console.warn('⚠️ [CrossReferenceModal] Cache check failed, falling back to API:', error);
+			}
+		}
+		
+		// Fetch from API if not in cache
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_cross_references',
-			language: this.reader.dataset.language,
-			table_name: this.reader.dataset.version1 || this.reader.dataset.version2,
-			verse_ids: [`${book.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`],
+			language: this.readerInstance.currentLanguage1,
+			table_name: this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2,
+			verse_ids: [verseId],
 		});
 		
 		const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
@@ -3318,9 +3361,57 @@ class CrossReferenceModal {
 		
 		const data = await response.json();
 		if (data.success && data.data) {
+			// Cache the result if cacheManager is available
+			if (this.readerInstance.cacheManager) {
+				try {
+					// Update the verse cache with cross reference data
+					await this.cacheCrossReference(verseId, data.data);
+				} catch (error) {
+					console.warn('⚠️ [CrossReferenceModal] Failed to cache cross references:', error);
+				}
+			}
 			return data.data;
 		} else {
 			throw new Error(data.message || 'Failed to fetch cross references');
+		}
+	}
+	
+	/**
+	 * Cache cross reference data for a verse
+	 */
+	async cacheCrossReference(verseId, crossRefData) {
+		try {
+			const currentVersion = this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
+			const book = parseInt(verseId.substring(0, 2));
+			const chapter = parseInt(verseId.substring(2, 5));
+			const verse = parseInt(verseId.substring(5, 8));
+			
+			// Get existing verse from cache
+			const existingVerses = await this.readerInstance.cacheManager.getVerses(
+				this.readerInstance.currentLanguage1,
+				[currentVersion],
+				book,
+				chapter,
+				verse,
+				verse
+			);
+			
+			if (existingVerses && existingVerses.length > 0) {
+				// Update existing verse with cross reference data
+				const updatedVerse = {
+					...existingVerses[0],
+					reference: crossRefData
+				};
+				
+				// Cache the updated verse
+				await this.readerInstance.cacheManager.cacheVerses([updatedVerse], currentVersion);
+				console.log('💾 [CrossReferenceModal] Cached cross references for verse:', verseId);
+			} else {
+				console.warn('⚠️ [CrossReferenceModal] No existing verse found to update with cross references:', verseId);
+			}
+		} catch (error) {
+			console.error('❌ [CrossReferenceModal] Error caching cross references:', error);
+			throw error;
 		}
 	}
 	
@@ -3360,10 +3451,7 @@ class CrossReferenceModal {
 	}
 }
 
-// Initialize cross reference modal when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-	new CrossReferenceModal();
-});
+// Note: CrossReferenceModal is now initialized by each BibleHereReader instance
 
 // Expose BibleHereReader to global scope for external initialization
 window.BibleHereReader = BibleHereReader;
