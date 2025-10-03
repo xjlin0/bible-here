@@ -2166,3 +2166,273 @@
         font-size: 20px;
     }
 }
+
+/* ===== CROSS REFERENCE MODAL ===== */
+.cross-reference-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    /* backdrop-filter: blur(4px); */
+}
+
+.modal-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 80vw;
+    max-height: 80vh;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+}
+
+.modal-close:active {
+    background: #e5e7eb;
+    transform: scale(0.95);
+}
+
+.modal-close .close-icon {
+    font-size: 20px;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.modal-close:hover .close-icon {
+    color: #374151;
+}
+
+.modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+}
+
+.cross-references-list {
+    padding: 20px 24px;
+}
+
+.loading-cross-refs,
+.error-cross-refs,
+.no-cross-refs {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 16px;
+}
+
+.error-cross-refs {
+    color: #dc2626;
+}
+
+.cross-refs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cross-ref-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.cross-ref-item:hover {
+    border-color: #007cba;
+    box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+}
+
+.cross-ref-link {
+    display: block;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.cross-ref-link:hover {
+    background: #f8fafc;
+    text-decoration: none;
+    color: inherit;
+}
+
+.cross-ref-reference {
+    display: block;
+    font-weight: 600;
+    color: #007cba;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.cross-ref-text {
+    display: block;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Verse number clickable styling */
+.verse-number.cross-reference-link {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 3px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.verse-number.cross-reference-link:hover {
+    background: rgba(0, 124, 186, 0.1);
+    color: #007cba;
+    text-decoration: underline;
+}
+
+/* Dark theme styles for modal */
+.bible-here-reader.theme-dark .modal-container {
+    background: #1f2937;
+    border: 1px solid #374151;
+}
+
+.bible-here-reader.theme-dark .modal-header {
+    border-bottom-color: #374151;
+}
+
+.bible-here-reader.theme-dark .modal-title {
+    color: #f9fafb;
+}
+
+.bible-here-reader.theme-dark .modal-close:hover {
+    background: #374151;
+}
+
+.bible-here-reader.theme-dark .modal-close:active {
+    background: #4b5563;
+}
+
+.bible-here-reader.theme-dark .modal-close .close-icon {
+    color: #9ca3af;
+}
+
+.bible-here-reader.theme-dark .modal-close:hover .close-icon {
+    color: #d1d5db;
+}
+
+.bible-here-reader.theme-dark .cross-ref-item {
+    border-color: #374151;
+    background: #111827;
+}
+
+.bible-here-reader.theme-dark .cross-ref-item:hover {
+    border-color: #007cba;
+    background: #1f2937;
+}
+
+.bible-here-reader.theme-dark .cross-ref-link:hover {
+    background: #374151;
+}
+
+.bible-here-reader.theme-dark .cross-ref-text {
+    color: #d1d5db;
+}
+
+.bible-here-reader.theme-dark .loading-cross-refs,
+.bible-here-reader.theme-dark .no-cross-refs {
+    color: #9ca3af;
+}
+
+.bible-here-reader.theme-dark .error-cross-refs {
+    color: #f87171;
+}
+
+.bible-here-reader.theme-dark .verse-number.cross-reference-link:hover {
+    background: rgba(0, 124, 186, 0.2);
+    color: #60a5fa;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .modal-container {
+        width: 95%;
+        max-height: 85vh;
+        border-radius: 8px;
+    }
+    
+    .modal-header {
+        padding: 16px 20px 12px;
+    }
+    
+    .modal-title {
+        font-size: 16px;
+    }
+    
+    .cross-references-list {
+        padding: 16px 20px;
+    }
+    
+    .cross-ref-link {
+        padding: 12px;
+    }
+    
+    .cross-ref-reference {
+        font-size: 13px;
+    }
+    
+    .cross-ref-text {
+        font-size: 13px;
+    }
+}

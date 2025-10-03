@@ -24,7 +24,7 @@ $default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 117
 $default_language = !empty( $atts['language'] ) ? sanitize_text_field( $atts['language'] ) : 'en';
 $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['version'] ) : 'bible_here_en_kjv';
 
-// Book number to short name mapping for initial display
+// Book number to short name mapping for initial display.  Todo: replace with db values
 $book_short_names = array(
 	1 => 'Gen', 2 => 'Exod', 3 => 'Lev', 4 => 'Num', 5 => 'Deut',
 	6 => 'Josh', 7 => 'Judg', 8 => 'Ruth', 9 => '1Sam', 10 => '2Sam',
@@ -232,6 +232,24 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
 					<div class="verses-container">
 						<!-- Verses will be loaded here -->
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Cross Reference Modal -->
+	<div id="cross-reference-modal" class="cross-reference-modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-container">
+			<div class="modal-header">
+				<h3 class="modal-title"></h3>
+				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
+					<span class="close-icon">×</span>
+				</button>
+			</div>
+			<div class="modal-content">
+				<div class="cross-references-list">
+					<!-- Cross references will be loaded here -->
 				</div>
 			</div>
 		</div>

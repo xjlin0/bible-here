@@ -92,6 +92,7 @@ class Bible_Here_Activator {
 			name_short VARCHAR(12),
 			type VARCHAR(20) NOT NULL DEFAULT 'Bible' COMMENT 'Bible/Bible+Strong/Commentary',
 			table_name VARCHAR(50) NOT NULL COMMENT 'ascii English only for database table names',
+			format VARCHAR(20) NOT NULL DEFAULT 'Zefania' COMMENT 'for choosing import processor',
 			name VARCHAR(100) NOT NULL,
 			publisher VARCHAR(100),
 			copyright VARCHAR(100),
@@ -443,10 +444,14 @@ class Bible_Here_Activator {
 						// Seed field
 						$sql_parts[] = '%d';
 						$sql_values[] = $seed;
+
+						// Format field
+						$sql_parts[] = '%s';
+						$sql_values[] = $version['format'] ?? 'Zefania';
 						
 						$sql_placeholders = implode(', ', $sql_parts);
 						
-						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, type, name_short, info_url, publisher, copyright, download_url, rank, trim, for_login, seed) 
+						$sql = "INSERT INTO $versions_table (table_name, language, abbreviation, name, type, name_short, info_url, publisher, copyright, download_url, rank, trim, for_login, seed, format) 
 								VALUES ($sql_placeholders) 
 								ON DUPLICATE KEY UPDATE 
 									table_name = VALUES(table_name), 
@@ -460,7 +465,8 @@ class Bible_Here_Activator {
 									rank = COALESCE(rank, VALUES(rank)), 
 									trim = VALUES(trim), 
 									for_login = VALUES(for_login), 
-									seed = VALUES(seed)";
+									seed = VALUES(seed),
+									format = VALUES(format)";
 
 						if (!empty($sql_values)) {
 							$sql = $wpdb->prepare($sql, $sql_values);

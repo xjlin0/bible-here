@@ -800,7 +800,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html1 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
+				html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
 				html1 += `<span class="verse-text">${verse.text}</span>`;
 				html1 += `</p>`;
 			});
@@ -820,7 +820,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html2 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
+				html2 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
 				html2 += `<span class="verse-text">${verse.text}</span>`;
 				html2 += `</p>`;
 			});
@@ -836,7 +836,7 @@ console.log("loadVersions 433, params: ", this.params)
 				let html1 = '';
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-					html1 += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
+					html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
 					html1 += `<span class="verse-text">${verse.text}</span>`;
 					html1 += `</p>`;
 				});
@@ -880,7 +880,7 @@ console.log("loadVersions 433, params: ", this.params)
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
-			html += `<span class="verse-number unselectable-list">${verse.verse_number}</span>`;
+			html += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
 			html += `<span class="verse-text">${verse.text}</span>`;
 			html += `</p>`;
 		});
@@ -1059,7 +1059,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 */
 	formatVerseId(book, chapter, verse) {
 		// This is a simplified version - actual implementation will use proper book numbers
-		const bookNumber = 1; // Placeholder
+		const bookNumber = book || 1; // Placeholder
 		return `${bookNumber.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`;
 	}
 
@@ -3239,6 +3239,130 @@ document.addEventListener('DOMContentLoaded', function() {
 	readers.forEach(function(element) {
 		new BibleHereReader(element);
 	});
+});
+
+// Cross Reference Modal functionality
+class CrossReferenceModal {
+	constructor() {
+		this.modal = document.getElementById('cross-reference-modal');
+		this.modalTitle = this.modal.querySelector('.modal-title');
+		this.modalContent = this.modal.querySelector('.cross-references-list');
+		this.closeBtn = this.modal.querySelector('.modal-close');
+		this.overlay = this.modal.querySelector('.modal-overlay');
+		this.reader = document.querySelector('div#bible-here-reader-1');
+		this.bindEvents();
+	}
+	
+	bindEvents() {
+		// Close modal events
+		this.closeBtn.addEventListener('click', () => this.close());
+		this.overlay.addEventListener('click', () => this.close());
+		
+		// ESC key to close
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && this.modal.style.display !== 'none') {
+				this.close();
+			}
+		});
+		
+		// Delegate click events for cross-reference links
+		document.addEventListener('click', (e) => {
+			if (e.target.classList.contains('cross-reference-link')) {
+				e.preventDefault();
+				this.handleCrossReferenceClick(e.target);
+			}
+		});
+	}
+	
+	async handleCrossReferenceClick(element) {
+		const book = element.dataset.book;
+		const chapter = element.dataset.chapter;
+		const verse = element.dataset.verse;
+		const verseText = element.dataset.verseText;
+		
+		// Set modal title
+		this.modalTitle.textContent = `${book} ${chapter}:${verse} - ${verseText}`;
+		
+		// Show loading state
+		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
+		this.show();
+		
+		try {
+			// Call API to get cross references
+			const crossRefs = await this.fetchCrossReferences(book, chapter, verse);
+			this.displayCrossReferences(crossRefs);
+		} catch (error) {
+			console.error('Error fetching cross references:', error);
+			this.modalContent.innerHTML = '<div class="error-cross-refs">Error loading cross references. Please try again.</div>';
+		}
+	}
+	
+	async fetchCrossReferences(book, chapter, verse) {
+		const params = new URLSearchParams({
+			action: 'bible_here_public_get_cross_references',
+			language: this.reader.dataset.language,
+			table_name: this.reader.dataset.version1 || this.reader.dataset.version2,
+			verse_ids: [`${book.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`],
+		});
+		
+		const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+			method: 'GET',
+			headers: {
+				"X-WP-Nonce": bibleHereAjax.nonce
+			}
+		});
+		
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		
+		const data = await response.json();
+		if (data.success && data.data) {
+			return data.data;
+		} else {
+			throw new Error(data.message || 'Failed to fetch cross references');
+		}
+	}
+	
+	displayCrossReferences(crossRefs) {
+		if (!crossRefs || crossRefs.cross_references.length === 0) {
+			this.modalContent.innerHTML = '<div class="no-cross-refs">No cross references found for this verse.</div>';
+			return;
+		}
+		console.log("hi CrossReferenceModal.displayCrossReferences() here is crossRefs: ", crossRefs);
+		let html = '<div class="cross-refs-container">';
+		crossRefs.cross_references.forEach(ref => {
+			const url = new URL(window.location.href);
+			url.searchParams.set('book', ref.book_number);
+			url.searchParams.set('chapter', ref.chapter_number);
+			url.searchParams.set('verse', ref.verse_number);
+			
+			html += `<div class="cross-ref-item">`;
+			html += `<a href="${url.href}" class="cross-ref-link">`;
+			html += `<span class="cross-ref-reference">${ref.book_name_short} ${ref.chapter_number}:${ref.verse_number}</span>`;
+			html += `<span class="cross-ref-text">${ref.verse_texts}</span>`;
+			html += `</a>`;
+			html += `</div>`;
+		});
+		html += '</div>';
+		
+		this.modalContent.innerHTML = html;
+	}
+	
+	show() {
+		this.modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+	}
+	
+	close() {
+		this.modal.style.display = 'none';
+		document.body.style.overflow = '';
+	}
+}
+
+// Initialize cross reference modal when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+	new CrossReferenceModal();
 });
 
 // Expose BibleHereReader to global scope for external initialization
