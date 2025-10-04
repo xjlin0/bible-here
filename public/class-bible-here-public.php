@@ -834,10 +834,16 @@ class Bible_Here_Public {
 		// Get parameters
 		$verse_ids   = isset( $_GET['verse_ids'] ) ? array_map( 'intval', (array) $_GET['verse_ids'] ) : array();
 		$table_param = sanitize_text_field( $_GET['table_name'] ?? '' ); // e.g. bible_here_zh_tw_cuvt
+		$start_verse = sanitize_text_field( $_GET['start_verse'] ?? '' ); 
+		$end_verse = sanitize_text_field( $_GET['end_verse'] ?? '' ); 
+		$has_start_end = !empty( $start_verse ) && !empty( $end_verse );
 
 		// Validate required parameters
-		if ( empty( $verse_ids ) ) {
-			wp_send_json_error( array( 'message' => 'Missing required parameter: verse_ids' ) );
+		if ( empty( $verse_ids ) && !$has_start_end ) {
+			wp_send_json_error( array( 'message' => 'Missing required parameters: verse_ids or (start_verse+end_verse)' ) );
+		}
+		if ( !empty( $verse_ids ) && $has_start_end ) {
+			wp_send_json_error( array( 'message' => 'Too many parameters: please give either verse_ids or only (start_verse+end_verse)' ) );
 		}
 		if ( empty( $table_param ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: table_name' ) );
@@ -848,9 +854,13 @@ class Bible_Here_Public {
 		$bible_table     = $wpdb->prefix . $table_param;
 		$books_table     = $wpdb->prefix . 'bible_here_books';
 		$versions_table  = $wpdb->prefix . 'bible_here_versions'; // New table for language lookup
-
-		// Build IN clause for multiple verse IDs
-		$placeholders = implode( ',', array_fill( 0, count( $verse_ids ), '%d' ) );
+		$verse_filter = '';
+		if ( $has_start_end ) {
+			$verse_filter = " BETWEEN $start_verse AND $end_verse ";
+		} else if ( !empty( $verse_ids )) {
+			$verse_numbers = implode( ',', array_fill( 0, count( $verse_ids ), '%d' ) );
+			$verse_filter = " IN ($verse_numbers) ";
+		}
 
 		// Main query
 		// The JOIN with books_table now uses a subquery to get the language from the versions table.
@@ -871,7 +881,7 @@ class Bible_Here_Public {
 			JOIN $books_table book
 				ON book.language = (SELECT language FROM $versions_table WHERE table_name = %s LIMIT 1)
 				  AND book.book_number = bible.book_number
-			WHERE cr.verse_id IN ($placeholders)
+			WHERE cr.verse_id $verse_filter
 			GROUP BY cr.verse_id, cr.rank, cr.start, cr.finish
 			ORDER BY cr.verse_id, cr.start, cr.rank
 		";

@@ -618,7 +618,7 @@ console.log("loadVersions 433, params: ", this.params)
 
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader556] async loadChapter() 嘗試從快取獲取章節內容:', {
+				console.log('🗄️ [BibleHereReader621] async loadChapter() 嘗試從快取獲取章節內容:', {
 					table_name1: this.currentVersion1, table_name2: this.currentVersion2,
 					book_number: this.currentBook,
 					chapter_number: this.currentChapter
@@ -631,8 +631,8 @@ console.log("loadVersions 433, params: ", this.params)
 				);
 				console.log('🗄️ [BibleHereReader567] async loadChapter() chapterContent: ', chapterContent);
 				if (chapterContent && chapterContent.length > 0) {
-					console.log('✅ [BibleHereReader569] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-					console.log('📖 [BibleHereReader570] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+					console.log('✅ [BibleHereReader634] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+					console.log('📖 [BibleHereReader635] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 					const displayContent = {version1: { verses: chapterContent.filter(item => item.table_name === this.currentVersion1), table_name: this.currentVersion1 }};
 					if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
 						const verse2Content = chapterContent.filter(item => item.table_name === this.currentVersion2);
@@ -650,7 +650,7 @@ console.log("loadVersions 433, params: ", this.params)
 						return;
 					}
 				} else {
-					console.log('⚠️ [BibleHereReader588] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
+					console.log('⚠️ [BibleHereReader653] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
 				}
 			}
 				
@@ -1052,7 +1052,7 @@ console.log("loadVersions 433, params: ", this.params)
 			this.elements.bookChapterText1.textContent = `${this.elements.bookChapterText1.dataset.versionNameShort} ${this.elements.bookChapterText1.dataset.bookNameShort} ${this.currentChapter}`;
 		}  // update chapter number on button 1 only if triggered from button 2
 		if ((selector || this.activeSelector) === '1' && this.currentVersion2NameShort && this.elements.bookChapterText2) {
-			console.log(`hi updateBookChapterButton() 1040, triggered by button1 updating button2`);
+			console.log(`hi updateBookChapterButton() 1055, triggered by button1 updating button2`);
 			this.elements.bookChapterText2.textContent = `${this.elements.bookChapterText2.dataset.versionNameShort} ${this.elements.bookChapterText2.dataset.bookNameShort}`;
 		}
 	}
@@ -2516,12 +2516,12 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 		this.currentChapter = chapterNumber;
 		this.updateBookChapterButton();
 		this.hideBookChapterMenu();
-		console.log('📚 2504 selectChapter: chapterNumber', chapterNumber);
+		console.log('📚 2519 selectChapter: chapterNumber', chapterNumber);
 		this.loadChapter();
 	}
 
 	swapVersions() {
-    	console.log('🔄 2509 swapVersions() 開始版本切換');
+    	console.log('🔄 2524 swapVersions() 開始版本切換');
 		const version1BookNameShort = this.elements.bookChapterText1.dataset.bookNameShort;
 		const version2BookNameShort = this.elements.bookChapterText2.dataset.bookNameShort;
 
