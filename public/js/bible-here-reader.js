@@ -150,9 +150,9 @@ async init() {
 	this.initializeCrossReferenceModal();
 
 	// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
-	if (this.currentMode === 'single') {
-		this.loadChapter();
-	}
+	// Show loading indicator for initial page load
+	this.showLoading();
+	this.loadChapter();
 
 	console.log('✅ BibleHereReader init() 完成');
 }
@@ -411,7 +411,11 @@ async init() {
 
 		// Close version button (for dual version mode)
 		this.container.addEventListener('click', (e) => {
-			if (e.target.classList.contains('btn-close-version') || e.target.classList.contains('close-icon')) {
+			// Only trigger version toggle for dual version close button, not modal close buttons
+			// Ensure we're not inside a modal by checking for modal containers
+			if ((e.target.classList.contains('btn-close-version') || 
+				 (e.target.classList.contains('close-icon') && e.target.closest('.btn-close-version'))) &&
+				 !e.target.closest('.cross-reference-modal')) {
 				e.preventDefault();
 				e.stopPropagation();
 				console.log('🔄 關閉雙版本模式');
@@ -572,7 +576,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * @param {boolean} updateURL - Whether to update URL parameters (default: true)
 	 */
 	async loadChapter(updateURL = true) {
-		console.log('📖 [BibleHereReader575] async loadChapter() 開始載入章節:', {
+		console.log('📖 [BibleHereReader579] async loadChapter() 開始載入章節:', {
 			version1: this.currentVersion1,
 			version2: this.currentVersion2,
 			book: this.currentBook,
@@ -629,7 +633,7 @@ console.log("loadVersions 433, params: ", this.params)
 					this.currentBook,
 					this.currentChapter
 				);
-				console.log('🗄️ [BibleHereReader567] async loadChapter() chapterContent: ', chapterContent);
+				console.log('🗄️ [BibleHereReader636] async loadChapter() chapterContent: ', chapterContent);
 				if (chapterContent && chapterContent.length > 0) {
 					console.log('✅ [BibleHereReader634] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
 					console.log('📖 [BibleHereReader635] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
@@ -1225,7 +1229,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1228, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		console.log(`navigateNext() 1232, versionNameShort: ${versionNameShort}, this.currentLanguage2: ${this.currentLanguage2} and this.currentChapter: ${this.currentChapter}`);
 		const book1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
 		const maxChapters = book1[this.currentBook] ? book1[this.currentBook].chapters : 1;
 		if (this.currentChapter < maxChapters) {
@@ -1236,7 +1240,7 @@ console.log("loadVersions 433, params: ", this.params)
 			if (book1 && this.currentBook >= 0 && this.currentBook < Object.keys(book1).length) {
 				this.currentBook++;
 				this.currentChapter = 1;
-				if (this.isDualMode) {
+				if (this.currentLanguage2) {
 					const book2 = await this.cacheManager.getCachedBooks(this.currentLanguage2);
 					if (book2) {this.updateBookChapterButton(null, book2[this.currentBook].title_short, '2')}
 				}  // updating button 2 will overwrite button 1 with last wrong value, so we update 1 again
