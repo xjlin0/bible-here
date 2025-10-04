@@ -833,15 +833,11 @@ class Bible_Here_Public {
 
 		// Get parameters
 		$verse_ids   = isset( $_GET['verse_ids'] ) ? array_map( 'intval', (array) $_GET['verse_ids'] ) : array();
-		$language    = sanitize_text_field( $_GET['language'] ?? '' );
 		$table_param = sanitize_text_field( $_GET['table_name'] ?? '' ); // e.g. bible_here_zh_tw_cuvt
 
 		// Validate required parameters
 		if ( empty( $verse_ids ) ) {
-			wp_send_json_error( array( 'message' => 'Missing required parameter: verse_ids or verse_id' ) );
-		}
-		if ( empty( $language ) ) {
-			wp_send_json_error( array( 'message' => 'Missing required parameter: language' ) );
+			wp_send_json_error( array( 'message' => 'Missing required parameter: verse_ids' ) );
 		}
 		if ( empty( $table_param ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: table_name' ) );
@@ -851,11 +847,13 @@ class Bible_Here_Public {
 		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
 		$bible_table     = $wpdb->prefix . $table_param;
 		$books_table     = $wpdb->prefix . 'bible_here_books';
+		$versions_table  = $wpdb->prefix . 'bible_here_versions'; // New table for language lookup
 
 		// Build IN clause for multiple verse IDs
 		$placeholders = implode( ',', array_fill( 0, count( $verse_ids ), '%d' ) );
 
 		// Main query
+		// The JOIN with books_table now uses a subquery to get the language from the versions table.
 		$sql = "
 			SELECT
 				cr.verse_id,
@@ -868,18 +866,18 @@ class Bible_Here_Public {
 				bible.verse_number,
 				GROUP_CONCAT(bible.verse_text SEPARATOR '  ') AS verse_texts
 			FROM $cross_ref_table cr
-			  JOIN $bible_table bible
-			    ON bible.verse_id BETWEEN cr.start AND IFNULL(cr.finish, cr.start)
-			  JOIN $books_table book
-			    ON book.language = %s
-			      AND book.book_number = bible.book_number
+			JOIN $bible_table bible
+				ON bible.verse_id BETWEEN cr.start AND IFNULL(cr.finish, cr.start)
+			JOIN $books_table book
+				ON book.language = (SELECT language FROM $versions_table WHERE table_name = %s LIMIT 1)
+				  AND book.book_number = bible.book_number
 			WHERE cr.verse_id IN ($placeholders)
 			GROUP BY cr.verse_id, cr.rank, cr.start, cr.finish
 			ORDER BY cr.verse_id, cr.start, cr.rank
 		";
 
 		// Prepare query
-		$query_args = array_merge( array( $language ), $verse_ids );
+		$query_args = array_merge( array( $table_param ), $verse_ids );
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $query_args ), ARRAY_A );
 
 		// Handle database errors

@@ -572,7 +572,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * @param {boolean} updateURL - Whether to update URL parameters (default: true)
 	 */
 	async loadChapter(updateURL = true) {
-		console.log('📖 [BibleHereReader523] async loadChapter() 開始載入章節:', {
+		console.log('📖 [BibleHereReader575] async loadChapter() 開始載入章節:', {
 			version1: this.currentVersion1,
 			version2: this.currentVersion2,
 			book: this.currentBook,
@@ -655,7 +655,7 @@ console.log("loadVersions 433, params: ", this.params)
 			}
 				
 				// 從 API 獲取
-			console.log('🌐 585 async loadChapter() 從 API 獲取章節內容');
+			console.log('🌐 658 async loadChapter() 從 API 獲取章節內容');
 			
 			// 構建 URL 參數
 			const url = new URL(bibleHereAjax.ajaxurl);
@@ -665,7 +665,7 @@ console.log("loadVersions 433, params: ", this.params)
 			url.searchParams.set('chapter_number_start', this.currentChapter);
 			url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 			url.searchParams.set('version1_bible', this.currentVersion1);
-			console.log(`🌐 595 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
+			console.log(`🌐 668 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
 			// 如果是雙版本模式且有第二個版本，添加第二個版本參數
 			if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
 				url.searchParams.set('version2_bible', this.currentVersion2);
@@ -686,7 +686,7 @@ console.log("loadVersions 433, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader616] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader689] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -815,7 +815,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
+				html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion1}">${verse.verse_number}</span>`;
 				html1 += `<span class="verse-text">${verse.text}</span>`;
 				html1 += `</p>`;
 			});
@@ -835,7 +835,7 @@ console.log("loadVersions 433, params: ", this.params)
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html2 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
+				html2 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion2}">${verse.verse_number}</span>`;
 				html2 += `<span class="verse-text">${verse.text}</span>`;
 				html2 += `</p>`;
 			});
@@ -851,7 +851,7 @@ console.log("loadVersions 433, params: ", this.params)
 				let html1 = '';
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-					html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
+					html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion2 || this.currentVersion1}">${verse.verse_number}</span>`;
 					html1 += `<span class="verse-text">${verse.text}</span>`;
 					html1 += `</p>`;
 				});
@@ -895,7 +895,7 @@ console.log("loadVersions 433, params: ", this.params)
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
-			html += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}">${verse.verse_number}</span>`;
+			html += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion1}">${verse.verse_number}</span>`;
 			html += `<span class="verse-text">${verse.text}</span>`;
 			html += `</p>`;
 		});
@@ -1032,8 +1032,8 @@ console.log("loadVersions 433, params: ", this.params)
 	 */
 	updateBookChapterButton(versionLabel, bookLabel, selector) {
 		const targetElement = this.elements['bookChapterText' + (selector || this.activeSelector)];
-		console.log(`hi updateBookChapterButton() 1020, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
-		console.log(`hi updateBookChapterButton() 1021, targetElement: ${targetElement}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
+		console.log(`hi updateBookChapterButton() 1035, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
+		console.log(`hi updateBookChapterButton() 1036, targetElement: ${targetElement}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
 		if (targetElement) {
 			if (versionLabel) {
 				targetElement.dataset.versionNameShort = versionLabel;
@@ -1225,7 +1225,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Navigate to next chapter
 	 */
 	async navigateNext(versionNameShort) {
-		console.log("navigateNext() 1134, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
+		console.log("navigateNext() 1228, versionNameShort, this.currentLanguage and this.currentChapter:", versionNameShort, this.currentLanguage, this.currentChapter);
 		const book1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
 		const maxChapters = book1[this.currentBook] ? book1[this.currentBook].chapters : 1;
 		if (this.currentChapter < maxChapters) {
@@ -3294,17 +3294,18 @@ class CrossReferenceModal {
 		const chapter = element.dataset.chapter;
 		const verse = element.dataset.verse;
 		const verseText = element.dataset.verseText;
+		const version = element.dataset.version; // Get the version from the clicked element
 		
 		// Set modal title
 		this.modalTitle.textContent = `${book} ${chapter}:${verse} - ${verseText}`;
-		
+
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
 		this.show();
-		
+
 		try {
-			// Call API to get cross references
-			const crossRefs = await this.fetchCrossReferences(book, chapter, verse);
+			// Call API to get cross references with the specific version
+			const crossRefs = await this.fetchCrossReferences(book, chapter, verse, version);
 			this.displayCrossReferences(crossRefs);
 		} catch (error) {
 			console.error('Error fetching cross references:', error);
@@ -3312,19 +3313,19 @@ class CrossReferenceModal {
 		}
 	}
 	
-	async fetchCrossReferences(book, chapter, verse) {
+	async fetchCrossReferences(book, chapter, verse, version) {
 		const verseId = `${book.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`;
+		
+		// Use the provided version or fall back to current versions
+		const targetVersion = version || this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
 		
 		// Check cache first if cacheManager is available
 		if (this.readerInstance.cacheManager) {
 			try {
-				// Get current version table name
-				const currentVersion = this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
-				
-				// Check if cross references are cached for this verse
+				// Check if cross references are cached for this verse with the specific version
 				const cachedVerses = await this.readerInstance.cacheManager.getVerses(
 					this.readerInstance.currentLanguage1,
-					[currentVersion],
+					[targetVersion],
 					book,
 					chapter,
 					verse,
@@ -3343,8 +3344,7 @@ class CrossReferenceModal {
 		// Fetch from API if not in cache
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_cross_references',
-			language: this.readerInstance.currentLanguage1,
-			table_name: this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2,
+			table_name: targetVersion,
 			verse_ids: [verseId],
 		});
 		
@@ -3365,7 +3365,7 @@ class CrossReferenceModal {
 			if (this.readerInstance.cacheManager) {
 				try {
 					// Update the verse cache with cross reference data
-					await this.cacheCrossReference(verseId, data.data);
+					await this.cacheCrossReference(verseId, data.data, targetVersion);
 				} catch (error) {
 					console.warn('⚠️ [CrossReferenceModal] Failed to cache cross references:', error);
 				}
@@ -3379,9 +3379,9 @@ class CrossReferenceModal {
 	/**
 	 * Cache cross reference data for a verse
 	 */
-	async cacheCrossReference(verseId, crossRefData) {
+	async cacheCrossReference(verseId, crossRefData, version) {
 		try {
-			const currentVersion = this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
+			const targetVersion = version || this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
 			const book = parseInt(verseId.substring(0, 2));
 			const chapter = parseInt(verseId.substring(2, 5));
 			const verse = parseInt(verseId.substring(5, 8));
@@ -3389,7 +3389,7 @@ class CrossReferenceModal {
 			// Get existing verse from cache
 			const existingVerses = await this.readerInstance.cacheManager.getVerses(
 				this.readerInstance.currentLanguage1,
-				[currentVersion],
+				[targetVersion],
 				book,
 				chapter,
 				verse,
@@ -3404,7 +3404,7 @@ class CrossReferenceModal {
 				};
 				
 				// Cache the updated verse
-				await this.readerInstance.cacheManager.cacheVerses([updatedVerse], currentVersion);
+				await this.readerInstance.cacheManager.cacheVerses([updatedVerse], targetVersion);
 				console.log('💾 [CrossReferenceModal] Cached cross references for verse:', verseId);
 			} else {
 				console.warn('⚠️ [CrossReferenceModal] No existing verse found to update with cross references:', verseId);
