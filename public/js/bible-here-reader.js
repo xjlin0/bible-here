@@ -12,8 +12,8 @@
  * Bible Here Reader Class
  */
 class BibleHereReader {
-	constructor(container) {
-		// Handle both string ID and DOM element
+		constructor(container) {
+		console.log("📖 [BibleHereReader16] constructor() 開始初始化");
 		if (typeof container === 'string') {
 			console.log("18 container: "+container);
 			this.container = document.getElementById(container);
@@ -41,7 +41,7 @@ class BibleHereReader {
 		this.isDualMode = false;
 		// 初始化快取管理器
 		this.cacheManager = null;
-		console.log('📖 [BibleHereReader41] 初始化開始，Reader ID:', this.readerId);
+		console.log('📖 [BibleHereReader44] 初始化開始，Reader ID:', this.readerId);
 		console.log('📊 初始狀態:', {
 			mode: this.currentMode,
 			language: this.currentLanguage, language1: this.currentLanguage1, language2: this.currentLanguage2,
@@ -99,13 +99,13 @@ class BibleHereReader {
 	 * Initialize the reader
 	 */
 async init() {
-	console.log('🚀 BibleHereReader init() just triggered.');
-
+	console.log('🚀 BibleHereReader 102 async init() just triggered.');
+	this.showLoading();  // Show loading indicator for initial page load
 	// Set initial data-mode attribute based on isDualMode
 	this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
-
 	// Parse shortcode attributes from container
 	const shortcodeAttributes = this.parseShortcodeAttributes();
+	console.log('🔧 [init] 108 shortcodeAttributes:', shortcodeAttributes);
 	if (shortcodeAttributes && Object.keys(shortcodeAttributes).length > 0) {
 		console.log('🔧 [init] 發現 shortcode 屬性，開始初始化:', shortcodeAttributes);
 		const initResult = await this.initializeFromShortcode(shortcodeAttributes);
@@ -115,6 +115,8 @@ async init() {
 			console.warn('⚠️ [init] Shortcode 初始化失敗，使用預設值:', initResult.errors);
 		}
 	}
+
+	await this.initializeCacheManager(); // 初始化快取管理器
 
 	// Parse URL parameters and apply if present
 	const urlParams = this.parseURLParams();
@@ -143,15 +145,11 @@ async init() {
 		this.handlePopState(event);
 	});
 
-	// 初始化快取管理器
-	await this.initializeCacheManager();
 
 	// Initialize cross reference modal
 	this.initializeCrossReferenceModal();
 
 	// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
-	// Show loading indicator for initial page load
-	this.showLoading();
 	this.loadChapter();
 
 	console.log('✅ BibleHereReader init() 完成');
@@ -161,7 +159,7 @@ async init() {
 	 * Initialize cache manager
 	 */
 	async initializeCacheManager() {
-		console.log('🗄️ [BibleHereReader111] 初始化快取管理器開始');
+		console.log('🗄️ [BibleHereReader162] 初始化快取管理器開始');
 		
 		try {
 			// 等待全域快取管理器可用
@@ -241,7 +239,7 @@ async init() {
 			const checkStatus = () => {
 				// Check if cache manager is initialized
 				if (this.cacheManager && this.cacheManager.isInitialized) {
-					console.log('✅ [BibleHereReader181] 快取管理器初始化完成');
+					console.log('✅ [BibleHereReader242] 快取管理器初始化完成');
 					clearInterval(checkIntervalId);  // 清除檢查狀態的計時器
 					clearTimeout(timeoutId);  // 清除超時計時器
 					resolve();
@@ -263,7 +261,7 @@ async init() {
 			checkIntervalId = setInterval(checkStatus, 50);  // 每 50ms 檢查一次狀態
 
 			timeoutId = setTimeout(() => {
-				console.warn('⚠️ [BibleHereReader203] 等待快取管理器初始化超時');
+				console.warn('⚠️ [BibleHereReader264] 等待快取管理器初始化超時');
 				clearInterval(checkIntervalId);  // 清除檢查狀態的計時器
 				resolve();
 			}, 15000);  // Timeout after 15 seconds
@@ -493,7 +491,7 @@ async init() {
 			action: 'bible_here_public_get_versions',
 			language: this.currentLanguage,
 		});
-console.log("loadVersions 433, params: ", this.params)
+console.log("loadVersions() 494, params: ", this.params)
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 			method: 'GET',
 			headers: {
@@ -520,7 +518,7 @@ console.log("loadVersions 433, params: ", this.params)
 	 * Load available books for selected language
 	 */
 	loadBooks() {
-		console.log("loadBooks 460", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
+		console.log("loadBooks 521", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_books',
 			language: this.currentLanguage,
@@ -622,7 +620,7 @@ console.log("loadVersions 433, params: ", this.params)
 
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader621] async loadChapter() 嘗試從快取獲取章節內容:', {
+				console.log('🗄️ [BibleHereReader623] async loadChapter() 嘗試從快取獲取章節內容:', {
 					table_name1: this.currentVersion1, table_name2: this.currentVersion2,
 					book_number: this.currentBook,
 					chapter_number: this.currentChapter
@@ -633,10 +631,10 @@ console.log("loadVersions 433, params: ", this.params)
 					this.currentBook,
 					this.currentChapter
 				);
-				console.log('🗄️ [BibleHereReader636] async loadChapter() chapterContent: ', chapterContent);
+				console.log('🗄️ [BibleHereReader634] async loadChapter() chapterContent: ', chapterContent);
 				if (chapterContent && chapterContent.length > 0) {
-					console.log('✅ [BibleHereReader634] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-					console.log('📖 [BibleHereReader635] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+					console.log('✅ [BibleHereReader636] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+					console.log('📖 [BibleHereReader637] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 					const displayContent = {version1: { verses: chapterContent.filter(item => item.table_name === this.currentVersion1), table_name: this.currentVersion1 }};
 					if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
 						const verse2Content = chapterContent.filter(item => item.table_name === this.currentVersion2);
@@ -1674,8 +1672,8 @@ console.log("loadVersions 433, params: ", this.params)
 		const verseTexts = this.container.querySelectorAll('.verse-text');
 		const verseNumbers = this.container.querySelectorAll('.verse_number');
 		
-		console.log('📝 [BibleHereReader1293] Found verse texts:', verseTexts.length);
-		console.log('🔢 [BibleHereReader1294] Found verse numbers:', verseNumbers.length);
+		console.log('📝 [BibleHereReader1675] applyFontSize() Found verse texts:', verseTexts.length);
+		console.log('🔢 [BibleHereReader1676] applyFontSize() Found verse numbers:', verseNumbers.length);
 		
 		if (verseTexts.length > 0) {
 			const firstVerseText = verseTexts[0];
@@ -2988,10 +2986,10 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 	 * @returns {Object} - Parsed parameters object
 	 */
 	parseURLParams() {
-		console.log('🔍 [parseURLParams] 解析 URL 參數');
-
+		console.log('🔍 [parseURLParams] 解析 URL 參數 urlParams:');
 		try {
 			const urlParams = new URLSearchParams(window.location.search);
+			console.log(Object.fromEntries(urlParams));
 			const params = {
 				version1: urlParams.get('version1') || null,
 				version2: urlParams.get('version2') || null,
