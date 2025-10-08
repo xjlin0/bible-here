@@ -126,14 +126,14 @@ class BibleHereReader {
 			}
 
 			// Set initial URL parameters to establish proper history baseline
-			console.log('🔗 [init] 設置初始 URL 參數');
+			console.log('🔗 [init] 設置初始 URL 參數, this.currentVersion2: ', this.currentVersion2);
 			this.updateURLParams({
 				version1: this.currentVersion1,
 				version2: this.isDualMode ? this.currentVersion2 : undefined,
 				book: this.currentBook,
 				chapter: this.currentChapter,
 				mode: this.currentMode,
-				language: this.currentLanguage1
+				language1: this.currentLanguage1
 			}, true); // Use replaceState for initial setup
 		}
 
@@ -1669,12 +1669,12 @@ console.log("loadVersions() 494, params: ", this.params)
 		// Log current classes for debugging
 		// console.log('📋 Current container classes:', Array.from(this.container.classList));
 		
-		// Check if verse elements exist and log their computed styles
+		// Check if verse elements exist and log their computed styles  Todo: change querySelectorAll to querySelector since we only need the first one.
 		const verseTexts = this.container.querySelectorAll('.verse-text');
 		const verseNumbers = this.container.querySelectorAll('.verse_number');
 		
-		console.log('📝 [BibleHereReader1675] applyFontSize() Found verse texts:', verseTexts.length);
-		console.log('🔢 [BibleHereReader1676] applyFontSize() Found verse numbers:', verseNumbers.length);
+		console.log('📝 [BibleHereReader1676] applyFontSize() Found verse texts:', verseTexts.length);
+		console.log('🔢 [BibleHereReader1677] applyFontSize() Found verse numbers:', verseNumbers.length);
 		
 		if (verseTexts.length > 0) {
 			const firstVerseText = verseTexts[0];
@@ -3020,7 +3020,8 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 				book: urlParams.get('book') ? parseInt(urlParams.get('book')) : null,
 				chapter: urlParams.get('chapter') ? parseInt(urlParams.get('chapter')) : null,
 				mode: urlParams.get('mode') || null,
-				language: urlParams.get('language') || null
+				language1: urlParams.get('language1') || null,
+				language2: urlParams.get('language2') || null
 			};
 
 			// Validate parsed parameters
@@ -3029,7 +3030,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 				params.book = null;
 			}
 
-			if (params.chapter && params.chapter < 1) {
+			if (params.chapter && (params.chapter < 1 || params.chapter > 150)) {
 				console.warn('⚠️ [parseURLParams] 無效的章節編號:', params.chapter);
 				params.chapter = null;
 			}
