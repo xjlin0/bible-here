@@ -98,62 +98,63 @@ class BibleHereReader {
 		/**
 	 * Initialize the reader
 	 */
-async init() {
-	console.log('🚀 BibleHereReader 102 async init() just triggered.');
-	this.showLoading();  // Show loading indicator for initial page load
-	// Set initial data-mode attribute based on isDualMode
-	this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
-	// Parse shortcode attributes from container
-	const shortcodeAttributes = this.parseShortcodeAttributes();
-	console.log('🔧 [init] 108 shortcodeAttributes:', shortcodeAttributes);
-	if (shortcodeAttributes && Object.keys(shortcodeAttributes).length > 0) {
-		console.log('🔧 [init] 發現 shortcode 屬性，開始初始化:', shortcodeAttributes);
-		const initResult = await this.initializeFromShortcode(shortcodeAttributes);
-		if (initResult.success) {
-			console.log('✅ [init] Shortcode 初始化成功');
-		} else {
-			console.warn('⚠️ [init] Shortcode 初始化失敗，使用預設值:', initResult.errors);
+	async init() {
+		console.log('🚀 BibleHereReader 102 async init() just triggered.');
+		this.showLoading();  // Show loading indicator for initial page load
+		// Set initial data-mode attribute based on isDualMode
+		// this.elements.reader.setAttribute('data-mode', this.isDualMode ? 'dual' : 'single');
+		await this.initializeCacheManager(); // 初始化快取管理器
+		// Parse URL parameters and apply if present
+		const urlParams = this.parseURLParams();
+		if (urlParams && Object.keys(urlParams).length > 0) {
+			console.log('🔗 [init] 發現 URL 參數，應用設定:', urlParams);
+			// this.elements.reader.setAttribute('data-mode', urlParams.get('version2') ? 'dual' : 'single');
+			this.initFromParams(urlParams);
+			await this.applyURLParamsToReader(urlParams);
+		} else {  // Parse shortcode attributes from container
+			const shortcodeAttributes = this.parseShortcodeAttributes();
+			this.elements.reader.setAttribute('data-mode', shortcodeAttributes.version2 ? 'dual' : 'single');
+			console.log('🔧 [init] 116 shortcodeAttributes:', shortcodeAttributes);
+			if (shortcodeAttributes && Object.keys(shortcodeAttributes).length > 0) {
+				console.log('🔧 [init] 發現 shortcode 屬性，開始初始化:', shortcodeAttributes);
+				const initResult = await this.initializeFromShortcode(shortcodeAttributes);
+				if (initResult.success) {
+					console.log('✅ [init] Shortcode 初始化成功');
+				} else {
+					console.warn('⚠️ [init] Shortcode 初始化失敗，使用預設值:', initResult.errors);
+				}
+			}
+
+			// Set initial URL parameters to establish proper history baseline
+			console.log('🔗 [init] 設置初始 URL 參數');
+			this.updateURLParams({
+				version1: this.currentVersion1,
+				version2: this.isDualMode ? this.currentVersion2 : undefined,
+				book: this.currentBook,
+				chapter: this.currentChapter,
+				mode: this.currentMode,
+				language: this.currentLanguage1
+			}, true); // Use replaceState for initial setup
 		}
+
+		this.bindEvents();
+		// this.initializeSelectors();
+
+		// Set up popstate event listener for browser navigation
+		window.addEventListener('popstate', (event) => {
+			console.log('🔄 [init] Popstate 事件觸發');
+			this.handlePopState(event);
+		});
+
+
+		// Initialize cross reference modal
+		this.initializeCrossReferenceModal();
+
+		// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
+		this.loadChapter();
+
+		console.log('✅ BibleHereReader init() 完成');
 	}
-
-	await this.initializeCacheManager(); // 初始化快取管理器
-
-	// Parse URL parameters and apply if present
-	const urlParams = this.parseURLParams();
-	if (urlParams && Object.keys(urlParams).length > 0) {
-		console.log('🔗 [init] 發現 URL 參數，應用設定:', urlParams);
-		await this.applyURLParamsToReader(urlParams);
-	} else {
-		// Set initial URL parameters to establish proper history baseline
-		console.log('🔗 [init] 設置初始 URL 參數');
-		this.updateURLParams({
-			version1: this.currentVersion1,
-			version2: this.isDualMode ? this.currentVersion2 : undefined,
-			book: this.currentBook,
-			chapter: this.currentChapter,
-			mode: this.currentMode,
-			language: this.currentLanguage1
-		}, true); // Use replaceState for initial setup
-	}
-
-	this.bindEvents();
-	// this.initializeSelectors();
-
-	// Set up popstate event listener for browser navigation
-	window.addEventListener('popstate', (event) => {
-		console.log('🔄 [init] Popstate 事件觸發');
-		this.handlePopState(event);
-	});
-
-
-	// Initialize cross reference modal
-	this.initializeCrossReferenceModal();
-
-	// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
-	this.loadChapter();
-
-	console.log('✅ BibleHereReader init() 完成');
-}
 
 		/**
 	 * Initialize cache manager
@@ -810,15 +811,15 @@ console.log("loadVersions() 494, params: ", this.params)
 			return;
 		}
 		console.log('✅ 找到雙版本容器，開始處理內容');
-		console.log(`hi 746 this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
+		console.log(`hi 814 this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
 		// 顯示 version1 內容
 		if (data.version1 && data.version1.verses) {
 			console.log('📖 顯示 version1 內容，經文數量:', data.version1.verses.length);
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion1}">${verse.verse_number}</span>`;
-				html1 += `<span class="verse-text">${verse.text}</span>`;
+				html1 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+				html1 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html1 += `</p>`;
 			});
 			version1Container.innerHTML = html1;
@@ -837,8 +838,8 @@ console.log("loadVersions() 494, params: ", this.params)
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html2 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion2}">${verse.verse_number}</span>`;
-				html2 += `<span class="verse-text">${verse.text}</span>`;
+				html2 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+				html2 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
@@ -847,14 +848,14 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 			console.log('✅ version2 內容已處理');
 		} else {
-			console.log('⚠️ 760 沒有 version2 資料，使用 version1 內容');
+			console.log('⚠️ 851 沒有 version2 資料，使用 version1 內容');
 			// 如果沒有 version2，顯示相同的 version1 內容
 			if (data.version1 && data.version1.verses) {
 				let html1 = '';
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-					html1 += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion2 || this.currentVersion1}">${verse.verse_number}</span>`;
-					html1 += `<span class="verse-text">${verse.text}</span>`;
+					html1 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+					html1 += `<span class="verse-text">${verse.text}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
@@ -897,8 +898,8 @@ console.log("loadVersions() 494, params: ", this.params)
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
-			html += `<span class="verse-number unselectable-list cross-reference-link" data-book="${this.currentBook}" data-chapter="${this.currentChapter}" data-verse="${verse.verse_number}" data-verse-text="${verse.text.replace(/"/g, '&quot;')}" data-version="${this.currentVersion1}">${verse.verse_number}</span>`;
-			html += `<span class="verse-text">${verse.text}</span>`;
+			html += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+			html += `<span class="verse-text">${verse.text}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 			html += `</p>`;
 		});
 
@@ -2920,6 +2921,29 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 		}
 	}
 
+	initFromParams(urlParams) {
+		this.elements.reader.setAttribute('data-mode', urlParams.version2 ? 'dual' : 'single');
+		if (urlParams.version1) {
+			this.currentVersion1 = urlParams.version1;
+		}
+		if (urlParams.version2) {
+			this.isDualMode = true;
+			this.currentVersion2 = urlParams.version2;
+		}
+		if (urlParams.language1) {
+			this.currentLanguage1 = urlParams.language1;
+		}
+		if (urlParams.language2) {
+			this.currentLanguage2 = urlParams.language2;
+		}
+		if (urlParams.book) {
+			this.currentBook = parseInt(urlParams.book);
+		}
+		if (urlParams.chapter) {
+			this.currentChapter = parseInt(urlParams.chapter);
+		}
+	}  // do we need to set this.currentVersion1NameShort?
+
 	/**
 	 * Update URL parameters while preserving existing ones
 	 * @param {Object} params - Parameters to update in URL
@@ -3251,7 +3275,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
  * Initialize all Bible Here Readers on the page
  */
 document.addEventListener('DOMContentLoaded', function() {
-	console.log('🎬 [BibleHereReader2505] DOM loaded, initializing reader system...');
+	console.log('🎬 [BibleHereReader3278] DOM loaded, initializing reader system...');
 	const readers = document.querySelectorAll('.bible-here-reader');
 	readers.forEach(function(element) {
 		new BibleHereReader(element);
@@ -3292,12 +3316,14 @@ class CrossReferenceModal {
 	}
 	
 	async handleCrossReferenceClick(element) {
-		const book = element.dataset.book;
-		const chapter = element.dataset.chapter;
-		const verse = element.dataset.verse;
-		const verseText = element.dataset.verseText;
-		const version = element.dataset.version; // Get the version from the clicked element
-		
+		const parentNodeP = element.parentNode;
+		const verseId = parentNodeP.dataset.verse;
+		const book = parseInt(verseId.slice(0, 2));
+		const chapter = parseInt(verseId.slice(2, 5));
+		const verse = parseInt(verseId.slice(5, 8));
+		const verseText = element.nextElementSibling.textContent.trim();
+		const version = parentNodeP.dataset.tableName; // Get the version from the parent of the clicked element
+		console.log('📖 [handleCrossReferenceClick 3326] 點擊的交叉引用, please check version:: ', element.dataset);
 		// Set modal title
 		this.modalTitle.textContent = `${book} ${chapter}:${verse} - ${verseText}`;
 
@@ -3305,9 +3331,9 @@ class CrossReferenceModal {
 		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
 		this.show();
 
-		try {
-			// Call API to get cross references with the specific version
+		try {  // Call API to get cross references with the specific version
 			const crossRefs = await this.fetchCrossReferences(book, chapter, verse, version);
+			console.log('📖 [handleCrossReferenceClick 3336] 獲取到的交叉引用:', crossRefs);
 			this.displayCrossReferences(crossRefs);
 		} catch (error) {
 			console.error('Error fetching cross references:', error);
