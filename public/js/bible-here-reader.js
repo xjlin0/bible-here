@@ -589,7 +589,6 @@ console.log("loadVersions() 494, params: ", this.params)
 			this.showError('Please select version, book, and chapter');
 			return;
 		}
-
 		// Update URL parameters when loading chapter (only if not called from applyURLParamsToReader)
 		if (updateURL) {
 			this.updateURLParams({
@@ -598,7 +597,8 @@ console.log("loadVersions() 494, params: ", this.params)
 				book: this.currentBook,
 				chapter: this.currentChapter,
 				mode: this.currentMode,
-				language1: this.currentLanguage1
+				language1: this.currentLanguage1,
+				language2: this.currentLanguage2,
 			});
 		}
 		
@@ -657,7 +657,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 				
 				// 從 API 獲取
-			console.log('🌐 658 async loadChapter() 從 API 獲取章節內容');
+			console.log('🌐 660 async loadChapter() 從 API 獲取章節內容');
 			
 			// 構建 URL 參數
 			const url = new URL(bibleHereAjax.ajaxurl);
@@ -667,11 +667,16 @@ console.log("loadVersions() 494, params: ", this.params)
 			url.searchParams.set('chapter_number_start', this.currentChapter);
 			url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 			url.searchParams.set('version1_bible', this.currentVersion1);
-			console.log(`🌐 668 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
-			// 如果是雙版本模式且有第二個版本，添加第二個版本參數
-			if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
+			console.log(`🌐 670 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
+
+			if (this.currentVersion2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
 				url.searchParams.set('version2_bible', this.currentVersion2);
 				console.log('🔄 雙版本模式，載入第二個版本:', this.currentVersion2);
+			}
+
+			if (this.currentLanguage2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
+				url.searchParams.set('language2', this.currentLanguage2);
+				console.log('🔄 雙版本模式，載入第二個語言:', this.currentLanguage2);
 			}
 			
 			const response = await fetch(url, {
@@ -688,7 +693,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader689] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader691] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -915,7 +920,7 @@ console.log("loadVersions() 494, params: ", this.params)
 		console.log('📚 [BibleHereReader848] 經文顯示完成，開始載入版本資料.  Todo: check cache data time before AJAX');
 		// const cachedVersions = await this.cacheManager.getVersions(navigator.languages);
 		// if (cachedVersions != null && Array.isArray(cachedVersions) && cachedVersions.length > 0) {
-		// 	console.log('✅ [BibleHereReader851]  loadVersionsAfterChapter found previous cache, skipping loading');
+		// 	console.log('✅ [BibleHereReader923]  loadVersionsAfterChapter found previous cache, skipping loading');
 		// 	return;   // this somehow prevent previously not used languages from loading
 		// }
 		try {
@@ -935,13 +940,13 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 			
 			const data = await response.json();
-			console.log('📚 [BibleHereReader871] 版本資料 API 回應:', data);
+			console.log('📚 [BibleHereReader943] 版本資料 API 回應:', data);
 			
 			if (data.success && data.data) {
 				// 將版本資料載入到快取
 				if (this.cacheManager) {
 					await this.cacheManager.cacheVersions(data.data.versions);
-					console.log('✅ [BibleHereReader] 版本資料已載入快取');
+					console.log('✅ [BibleHereReader949] 版本資料已載入快取');
 				}
 				
 				// 更新版本列表顯示
@@ -977,7 +982,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 			versionsByLanguage[lang].push(version);
 		});
-		console.log('🔄 [BibleHereReader886] 按語言分組版本:', versionsByLanguage);
+		console.log('🔄 [BibleHereReader985] 按語言分組版本:', versionsByLanguage);
 		// 生成 HTML
 		let html = '';
 		Object.keys(versionsByLanguage).forEach(language => {
@@ -1002,7 +1007,7 @@ console.log("loadVersions() 494, params: ", this.params)
 		const versionItems = versionsList.querySelectorAll('.version-item');
 		versionItems.forEach(item => {
 			item.addEventListener('click', (e) => {
-				console.log("🔄 [BibleHereReader] addEventListener at 916");
+				console.log("🔄 [BibleHereReader] addEventListener at 1010");
 				this.selectVersionAndLoadBooksTab(e.currentTarget.dataset);
 			});
 		});
@@ -1034,8 +1039,8 @@ console.log("loadVersions() 494, params: ", this.params)
 	 */
 	updateBookChapterButton(versionLabel, bookLabel, selector) {
 		const targetElement = this.elements['bookChapterText' + (selector || this.activeSelector)];
-		console.log(`hi updateBookChapterButton() 1035, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
-		console.log(`hi updateBookChapterButton() 1036, targetElement: ${targetElement}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
+		console.log(`hi updateBookChapterButton() 1042, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
+		console.log(`hi updateBookChapterButton() 1043, targetElement: ${targetElement}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
 		if (targetElement) {
 			if (versionLabel) {
 				targetElement.dataset.versionNameShort = versionLabel;
@@ -1301,7 +1306,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Toggle between single and dual version modes
 	 */
 	async toggleVersions() {
-		console.log(`1208 Version toggle clicked - switching modes here is this.currentVersion2NameShort: ${this.currentVersion2NameShort}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}`);
+		console.log(`1309 Version toggle clicked - switching modes here is this.currentVersion2NameShort: ${this.currentVersion2NameShort}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}`);
 		// if (!this.currentVersion2NameShort && this.currentVersion1NameShort) {
 		// 	this.currentVersion2NameShort = this.currentVersion1NameShort;
 		// }
@@ -1457,14 +1462,14 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Initialize second version with default settings
 	 */
 	initializeSecondVersion() {
-		// Set default second version (same as first version)
+		// Set default second version (same as first version), will be updated from cookie later
 		this.currentVersion2 = this.currentVersion1;
 		this.currentVersion2NameShort = this.currentVersion1NameShort;
-		
+		this.currentLanguage2 = this.currentLanguage1;
 		// Update second version selector text
 		this.updateBookChapterText2();
 		
-		console.log(`1371 第二個版本初始化為: ${this.currentVersion2}, this.currentVersion2NameShort : ${this.currentVersion2NameShort}`);
+		console.log(`1472 第二個版本初始化為: ${this.currentVersion2}, this.currentVersion2NameShort : ${this.currentVersion2NameShort}`);
 	}
 
 
@@ -1477,7 +1482,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	async selectVersion2(versionElement) {
 		const version = versionElement.dataset.version;
 		const versionNameShort = versionElement.dataset.versionNameShort;
-		
+		console.log(`1485 selectVersion2(), version: ${version}, versionNameShort: ${versionNameShort}`);
 		if (version) {
 			this.currentVersion2 = version;
 			this.currentVersion2NameShort = versionNameShort || version;
@@ -1492,7 +1497,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			this.elements.bookChapterMenu2.classList.remove('book-chapter-menu-visible');
 			
 			// Reload chapter with new version
-			await this.loadChapter(this.currentBook, this.currentChapter);
+			await this.loadChapter();
 			
 			console.log('✅ 第二個版本已切換為:', version, versionNameShort);
 		}
@@ -3322,18 +3327,18 @@ class CrossReferenceModal {
 		const chapter = parseInt(verseId.slice(2, 5));
 		const verse = parseInt(verseId.slice(5, 8));
 		const verseText = element.nextElementSibling.textContent.trim();
-		const version = parentNodeP.dataset.tableName; // Get the version from the parent of the clicked element
-		console.log('📖 [handleCrossReferenceClick 3326] 點擊的交叉引用, please check version:: ', element.dataset);
-		// Set modal title
-		this.modalTitle.textContent = `${book} ${chapter}:${verse} - ${verseText}`;
-
+		const version = element.closest("div.version-container").dataset.tableName; // Get the version from the parent of the clicked element
+		const languageNumber = element.closest("div.bible-version").dataset.languageNumber;
+		const bookNameShort = this.readerInstance.elements['bookChapterText'+languageNumber].dataset.bookNameShort;
+		console.log('📖 [handleCrossReferenceClick 3333] 點擊的交叉引用 by language: ', language, ' version: ', version, ' please check version: ', element.dataset);
+		this.modalTitle.textContent = `${bookNameShort} ${chapter}:${verse} - ${verseText}`;
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
 		this.show();
 
 		try {  // Call API to get cross references with the specific version
 			const crossRefs = await this.fetchCrossReferences(book, chapter, verse, version);
-			console.log('📖 [handleCrossReferenceClick 3336] 獲取到的交叉引用:', crossRefs);
+			console.log('📖 [handleCrossReferenceClick 3341] 獲取到的交叉引用:', crossRefs);
 			this.displayCrossReferences(crossRefs);
 		} catch (error) {
 			console.error('Error fetching cross references:', error);
@@ -3345,15 +3350,15 @@ class CrossReferenceModal {
 		const verseId = `${book.toString().padStart(2, '0')}${chapter.toString().padStart(3, '0')}${verse.toString().padStart(3, '0')}`;
 		
 		// Use the provided version or fall back to current versions
-		const targetVersion = version || this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
+		// const targetVersion = version || this.readerInstance.currentVersion1 || this.readerInstance.currentVersion2;
 		
 		// Check cache first if cacheManager is available
 		if (this.readerInstance.cacheManager) {
 			try {
 				// Check if cross references are cached for this verse with the specific version
 				const cachedVerses = await this.readerInstance.cacheManager.getVerses(
-					this.readerInstance.currentLanguage1,
-					[targetVersion],
+					null,
+					[version],
 					book,
 					chapter,
 					verse,

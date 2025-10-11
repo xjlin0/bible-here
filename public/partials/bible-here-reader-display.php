@@ -204,7 +204,7 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
 		</div>
 		<!-- Single Version Mode (Default) -->
 		<div class="single-version-mode">
-			<div class="bible-version version-1">
+			<div class="bible-version version-1" data-language-number="1">
 				<div class="verses-container">
 					<!-- Verses will be loaded here -->
 				</div>
@@ -214,7 +214,7 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
 		<!-- Dual Version Mode -->
 		<div class="dual-version-mode" style="display: none;">
 			<div class="versions-container">
-				<div class="bible-version version-1" style="order: 0;">
+				<div class="bible-version version-1" style="order: 0;" data-language-number="1">
 					<div class="verses-container">
 						<!-- Verses will be loaded here -->
 					</div>
@@ -225,7 +225,7 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
 						<div class="divider-grip"></div>
 					</div>
 				</div>
-				<div class="bible-version version-2" style="order: 2;">
+				<div class="bible-version version-2" style="order: 2;" data-language-number="2">
 					<button type="button" class="btn-close-version" title="<?php _e( 'Close dual version', 'bible-here' ); ?>">
 						<span class="close-icon">×</span>
 					</button>

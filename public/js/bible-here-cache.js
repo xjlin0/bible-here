@@ -208,15 +208,15 @@ class BibleHereCacheManager {
             const booksCount = await this.db.books.count();
             const versesCount = await this.db.verses.count();
             
-            console.log('📊 [CacheManager199] Current cache counts:', { books: booksCount, verses: versesCount });
+            console.log('📊 [CacheManager211] Current cache counts:', { books: booksCount, verses: versesCount });
             
             // Load seed data if cache is empty
             if (booksCount === 0 || versesCount === 0) {
-                console.log('📥 [CacheManager203] Cache is empty, loading seed data...');
+                console.log('📥 [CacheManager215] Cache is empty, loading seed data...');
                 
                 // Load books first - MUST succeed before proceeding
                 await this.loadBooksFromSeedData();
-                console.log('✅ [CacheManager207] Books seed data loaded successfully');
+                console.log('✅ [CacheManager219] Books seed data loaded successfully');
                 
                 // Load verses only after books loading succeeded
                 await this.loadSeedVerses();
@@ -253,8 +253,8 @@ class BibleHereCacheManager {
             
             console.log('🔍 [Debug] About to call this.cacheBooks with:');
             console.log('  - this:', this);
-            // console.log('  - this.cacheBooks:', typeof this.cacheBooks);
-            console.log('  - booksData length:', window.BibleHereSeedData.openingBooks.length);
+            // console.log('  - window.BibleHereSeedData.openingBooks:', window.BibleHereSeedData.openingBooks);
+            console.log('  - booksData length:', Object.keys(window.BibleHereSeedData.openingBooks).length);
             console.log('  - languageCode: en');
             
             await this.cacheBooks({en: window.BibleHereSeedData.openingBooks});
@@ -270,7 +270,7 @@ class BibleHereCacheManager {
      * Load seed verses data
      */
     async loadSeedVerses() {
-        console.log('📖 [BibleHereCacheManager273] 開始載入經文 Seed Data');
+        console.log('📖 [BibleHereCacheManager273] 開始載入經文 Seed Data window.BibleHereSeedData.openingVerses: ', window.BibleHereSeedData.openingVerses);
         
         try {
             if (typeof window.BibleHereSeedData === 'undefined') {
