@@ -49,8 +49,8 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
      data-mode="<?php echo esc_attr( $initial_mode ); ?>"
      data-book="<?php echo esc_attr( $default_book ); ?>"
      data-chapter="<?php echo esc_attr( $default_chapter ); ?>"
-     data-language="<?php echo esc_attr( $default_language ); ?>"
-     data-version="<?php echo esc_attr( $default_version ); ?>">
+     data-language1="<?php echo esc_attr( $default_language ); ?>"
+     data-version1="<?php echo esc_attr( $default_version ); ?>">
 
 	<!-- Navigation Bar (All buttons in single row) -->
 	<div class="bible-reader-nav">

@@ -27,7 +27,7 @@ class BibleHereReader {
 		console.log('📖 [BibleHereReader27] this.container:', this.container);
 		this.readerId = this.container.getAttribute('id');
 		this.currentMode = this.container.dataset.mode || 'single';
-		this.currentLanguage = this.container.dataset.language || 'en';
+		// this.currentLanguage = this.container.dataset.language || 'en';
 		this.currentLanguage1 = this.container.dataset.language || 'en';
 		this.currentLanguage2 = this.container.dataset.language || 'en';
 		this.currentVersion1 = this.container.dataset.version1 || 'bible_here_en_kjv';
@@ -44,7 +44,8 @@ class BibleHereReader {
 		console.log('📖 [BibleHereReader44] 初始化開始，Reader ID:', this.readerId);
 		console.log('📊 初始狀態:', {
 			mode: this.currentMode,
-			language: this.currentLanguage, language1: this.currentLanguage1, language2: this.currentLanguage2,
+			// language: this.currentLanguage,
+			language1: this.currentLanguage1, language2: this.currentLanguage2,
 			version1: this.currentVersion1, version2: this.currentVersion2,
 			currentVersion1NameShort: this.currentVersion1NameShort, currentVersion2NameShort: this.currentVersion2NameShort,
 			book: this.currentBook,
@@ -89,13 +90,12 @@ class BibleHereReader {
 		
 		// Initialize active selector (1 for first version, 2 for second version)
 		this.activeSelector = '1';
-		
 		// console.log('🎨 Prefs:', { theme: this.themePreference, fontSize: this.fontSizePreference});
 
 		this.init();
 	}
 
-		/**
+	/**
 	 * Initialize the reader
 	 */
 	async init() {
@@ -487,10 +487,10 @@ class BibleHereReader {
 	 */
 	loadVersions() {
 		this.showLoading();
-		console.log("loadVersions 428", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
+		console.log("loadVersions 490", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_versions',
-			language: this.currentLanguage,
+			language: this.currentLanguage1 || this.currentLanguage2,
 		});
 console.log("loadVersions() 494, params: ", this.params)
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
@@ -519,10 +519,10 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Load available books for selected language
 	 */
 	loadBooks() {
-		console.log("loadBooks 521", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
+		console.log("loadBooks 522", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_books',
-			language: this.currentLanguage,
+			language: this.currentLanguage1 || this.currentLanguage2,
 		});
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 			method: 'GET',
@@ -575,6 +575,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * @param {boolean} updateURL - Whether to update URL parameters (default: true)
 	 */
 	async loadChapter(updateURL = true) {
+		this.showLoading();
 		console.log('📖 [BibleHereReader579] async loadChapter() 開始載入章節:', {
 			version1: this.currentVersion1,
 			version2: this.currentVersion2,
@@ -597,11 +598,9 @@ console.log("loadVersions() 494, params: ", this.params)
 				book: this.currentBook,
 				chapter: this.currentChapter,
 				mode: this.currentMode,
-				language: this.currentLanguage1
+				language1: this.currentLanguage1
 			});
 		}
-
-		this.showLoading();
 		
 		// Switch to single version mode if in zero mode
 		if (this.currentMode === 'zero') {
@@ -1216,11 +1215,11 @@ console.log("loadVersions() 494, params: ", this.params)
 		// Update URL parameters after navigation
 		this.updateURLParams({
 			version1: this.currentVersion1,
-			version2: this.isDualMode ? this.currentVersion2 : undefined,
+			version2: this.currentVersion2 ? this.currentVersion2 : undefined,
 			book: this.currentBook,
 			chapter: this.currentChapter,
 			mode: this.currentMode,
-			language: this.currentLanguage1
+			language1: this.currentLanguage1
 		});
 	}
 
@@ -1251,11 +1250,11 @@ console.log("loadVersions() 494, params: ", this.params)
 		// Update URL parameters after navigation
 		this.updateURLParams({
 			version1: this.currentVersion1,
-			version2: this.isDualMode ? this.currentVersion2 : undefined,
+			version2: this.currentVersion2  ? this.currentVersion2 : undefined,
 			book: this.currentBook,
 			chapter: this.currentChapter,
 			mode: this.currentMode,
-			language: this.currentLanguage1
+			language1: this.currentLanguage1
 		});
 	}
 
@@ -2140,7 +2139,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			if (this.cacheManager) {
 				console.log('💾 [BibleHereReader] 將版本列表存入快取');
 				console.log('📊 [BibleHereReader] 準備快取的版本資料:', {
-					language: this.currentLanguage,
+					// language: this.currentLanguage,
 					count: data.data.versions.length,
 					sample: data.data.versions.slice(0, 2)
 				});
@@ -2239,12 +2238,12 @@ console.log("loadVersions() 494, params: ", this.params)
 			let books = null;
 			// 嘗試從快取獲取書卷列表
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader 2224] 嘗試從快取獲取書卷列表, currentLanguage: ', currentLanguage);
+				console.log('🗄️ [BibleHereReader 2241] 嘗試從快取獲取書卷列表, currentLanguage: ', currentLanguage);
 				console.log('🌐 [DEBUG] 當前語言參數 this[currentLanguageVariable]:', this[currentLanguageVariable]);
 				books = await this.cacheManager.getCachedBooks(this['currentLanguage' + this.activeSelector]);
 				if (books && Object.keys(books).length > 0) {
-					console.log('✅ [BibleHereReader2228] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
-					console.log('📚 [BibleHereReader2229] 快取書卷資料預覽, books:', books[1]);
+					console.log('✅ [BibleHereReader2245] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
+					console.log('📚 [BibleHereReader2246] 快取書卷資料預覽, books:', books[1]);
 					console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
 						firstBookName: books[40]?.title_full,
 						secondBookName: books[41]?.title_full,
@@ -2676,7 +2675,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 			// First try to get from cache
 			if (this.cacheManager) {
 				console.log('🔍 Checking cached versions for:', versionTableName);
-				const cachedVersions = await this.cacheManager.getVersions();
+				const cachedVersions = await this.cacheManager.getVersions(navigator.languages);
 				if (cachedVersions && cachedVersions.length > 0) {
 					const versionExists = cachedVersions.some(version => 
 						version.table_name === versionTableName && 

@@ -492,10 +492,10 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
     async getVersions(languages = [], types = []) {
         try {
             console.log('🔍 [CacheManager494] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
-            languages = languages.flatMap(locale => {
+            languages = [...new Set(languages.flatMap(locale => {
                const [lang] = locale.split('-');
                return locale == lang ? [lang] : [locale, lang];
-            });
+            }))];
             console.log('🔍 [CacheManager499] expand languages: ', languages);
             const allVersions = await this.db.versions.toArray();
             const validVersions = [];
