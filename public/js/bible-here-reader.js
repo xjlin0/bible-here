@@ -3327,10 +3327,10 @@ class CrossReferenceModal {
 		const chapter = parseInt(verseId.slice(2, 5));
 		const verse = parseInt(verseId.slice(5, 8));
 		const verseText = element.nextElementSibling.textContent.trim();
-		const version = element.closest("div.version-container").dataset.tableName; // Get the version from the parent of the clicked element
+		const version = element.closest("div.verses-container").dataset.tableName; // Get the version from the parent of the clicked element
 		const languageNumber = element.closest("div.bible-version").dataset.languageNumber;
 		const bookNameShort = this.readerInstance.elements['bookChapterText'+languageNumber].dataset.bookNameShort;
-		console.log('📖 [handleCrossReferenceClick 3333] 點擊的交叉引用 by language: ', language, ' version: ', version, ' please check version: ', element.dataset);
+		console.log('📖 [handleCrossReferenceClick 3333] 點擊的交叉引用 by languageNumber: ', languageNumber, ' version: ', version, ' please check version: ', element.dataset);
 		this.modalTitle.textContent = `${bookNameShort} ${chapter}:${verse} - ${verseText}`;
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
@@ -3377,7 +3377,7 @@ class CrossReferenceModal {
 		// Fetch from API if not in cache
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_cross_references',
-			table_name: targetVersion,
+			table_name: version,
 			verse_ids: [verseId],
 		});
 		
@@ -3398,7 +3398,7 @@ class CrossReferenceModal {
 			if (this.readerInstance.cacheManager) {
 				try {
 					// Update the verse cache with cross reference data
-					await this.cacheCrossReference(verseId, data.data, targetVersion);
+					await this.cacheCrossReference(verseId, data.data, version);
 				} catch (error) {
 					console.warn('⚠️ [CrossReferenceModal] Failed to cache cross references:', error);
 				}
