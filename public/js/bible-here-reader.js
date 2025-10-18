@@ -652,7 +652,7 @@ console.log("loadVersions() 494, params: ", this.params)
 						return;
 					}
 				} else {
-					console.log('⚠️ [BibleHereReader653] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
+					console.log('⚠️ [BibleHereReader655] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
 				}
 			}
 				
@@ -693,7 +693,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader691] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader696] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -805,7 +805,7 @@ console.log("loadVersions() 494, params: ", this.params)
 		// 獲取雙版本模式的容器
 		const version1Container = this.elements.dualMode.querySelector('.version-1 .verses-container');
 		const version2Container = this.elements.dualMode.querySelector('.version-2 .verses-container');
-		
+		const referenceInstalled = "0" !=this.elements.reader.dataset.referenceInstalled;
 		if (!version1Container || !version2Container) {
 			console.error('❌ 找不到雙版本容器:', {
 				version1Container: !!version1Container,
@@ -815,14 +815,14 @@ console.log("loadVersions() 494, params: ", this.params)
 			return;
 		}
 		console.log('✅ 找到雙版本容器，開始處理內容');
-		console.log(`hi 814 this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
-		// 顯示 version1 內容
+		console.log(`hi 818 this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
+		console.log("hi 819 referenceInstalled: ", referenceInstalled);
 		if (data.version1 && data.version1.verses) {
 			console.log('📖 顯示 version1 內容，經文數量:', data.version1.verses.length);
 			let html1 = '';
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html1 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+				html1 += `<span class="verse-number unselectable-list  ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
 				html1 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html1 += `</p>`;
 			});
@@ -842,7 +842,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			let html2 = '';
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
-				html2 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+				html2 += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
 				html2 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html2 += `</p>`;
 			});
@@ -893,16 +893,16 @@ console.log("loadVersions() 494, params: ", this.params)
 			container.className = 'verses-container';
 			versionContainer.appendChild(container);
 		}
-
+		const referenceInstalled = "0" !=this.elements.reader.dataset.referenceInstalled;
 		if (!chapterData || !chapterData.verses || chapterData.verses.length === 0) {
 			container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			return;
 		}
-
+		console.log("hi 901 here is referenceInstalled: ", referenceInstalled);
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
-			html += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
+			html += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
 			html += `<span class="verse-text">${verse.text}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 			html += `</p>`;
 		});

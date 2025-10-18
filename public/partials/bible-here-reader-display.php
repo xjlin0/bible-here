@@ -43,6 +43,10 @@ $book_short_names = array(
 
 $default_book_short = isset($book_short_names[$default_book]) ? $book_short_names[$default_book] : 'Ps';
 
+// Check if cross references are installed
+global $wpdb;
+$reference_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}bible_here_cross_references LIMIT 1)");
+
 ?>
 
 <div id="<?php echo esc_attr( $reader_id ); ?>" class="bible-here-reader" 
@@ -50,7 +54,8 @@ $default_book_short = isset($book_short_names[$default_book]) ? $book_short_name
      data-book="<?php echo esc_attr( $default_book ); ?>"
      data-chapter="<?php echo esc_attr( $default_chapter ); ?>"
      data-language1="<?php echo esc_attr( $default_language ); ?>"
-     data-version1="<?php echo esc_attr( $default_version ); ?>">
+     data-version1="<?php echo esc_attr( $default_version ); ?>"
+     data-reference-installed="<?php echo esc_attr( $reference_installed ? '1' : '0' ); ?>">
 
 	<!-- Navigation Bar (All buttons in single row) -->
 	<div class="bible-reader-nav">
