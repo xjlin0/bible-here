@@ -948,51 +948,113 @@ class Bible_Here_XML_Importer {
 	}
 
 	/**
+	 * Download file from remote URL
+	 *
+	 * @since    1.0.0
+	 * @param    string    $url           Remote URL to download from
+	 * @param    string    $local_path    Local path to save the file
+	 * @return   array     Result array with success status and message
+	 */
+	private function download_remote_file($url, $local_path) {
+		error_log('Bible_Here_XML_Importer: Downloading file from: ' . $url);
+		
+		try {
+			// Create directory if it doesn't exist
+			$dir = dirname($local_path);
+			if (!file_exists($dir)) {
+				wp_mkdir_p($dir);
+			}
+			
+			// Download file using WordPress HTTP API
+			$response = wp_remote_get($url, array(
+				'timeout' => 300, // 5 minutes timeout
+				'stream' => true,
+				'filename' => $local_path
+			));
+			
+			if (is_wp_error($response)) {
+				$error_msg = 'Failed to download file: ' . $response->get_error_message();
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			$response_code = wp_remote_retrieve_response_code($response);
+			if ($response_code !== 200) {
+				$error_msg = 'HTTP error ' . $response_code . ' when downloading file';
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			if (!file_exists($local_path)) {
+				$error_msg = 'Downloaded file not found at expected location: ' . $local_path;
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			$file_size = filesize($local_path);
+			error_log('Bible_Here_XML_Importer: Successfully downloaded file (' . number_format($file_size) . ' bytes) to: ' . $local_path);
+			
+			return array('success' => true, 'message' => 'File downloaded successfully', 'file_size' => $file_size);
+			
+		} catch (Exception $e) {
+			$error_msg = 'Exception during file download: ' . $e->getMessage();
+			error_log('Bible_Here_XML_Importer: ' . $error_msg);
+			return array('success' => false, 'message' => $error_msg);
+		}
+	}
+
+	/**
 	 * Import cross references data from CSV file
 	 *
 	 * @since    1.0.0
 	 * @return   array    Result array with success status and message
 	 */
 	public function import_cross_references() {
-		error_log('Bible_Here_XML_Importer: Starting cross references import');
+		error_log('Bible_Here_XML_Importer: Starting cross references import from remote source');
 		
 		$start_time = microtime(true);
 		
 		try {
-			// Step 1: Check if cross_references.csv exists in data directory
+			// Step 1: Download cross_references.zip from remote URL
 			$plugin_dir = plugin_dir_path(dirname(__FILE__));
-			$csv_file_path = $plugin_dir . 'data/cross_references.csv';
+			$remote_url = 'https://github.com/xjlin0/bible-here.data/raw/refs/heads/main/reference/cross_references.zip';
+			$zip_file_path = $plugin_dir . 'data/cross_references.zip';
 			
-			if (!file_exists($csv_file_path)) {
-				// Try to extract from ZIP if CSV doesn't exist
-				$zip_file_path = $plugin_dir . 'data/cross_references.zip';
-				
-				if (!file_exists($zip_file_path)) {
-					$error_msg = 'Cross references ZIP file not found: ' . $zip_file_path;
-					error_log('Bible_Here_XML_Importer: ' . $error_msg);
-					return array('success' => false, 'message' => $error_msg);
-				}
-				
-				// Extract CSV from ZIP
-				$csv_file_path = $this->extract_csv_from_zip($zip_file_path);
-				if (!$csv_file_path) {
-					$error_msg = 'Failed to extract CSV from cross references ZIP';
-					error_log('Bible_Here_XML_Importer: ' . $error_msg);
-					return array('success' => false, 'message' => $error_msg);
-				}
+			// Download the file from remote URL
+			$download_result = $this->download_remote_file($remote_url, $zip_file_path);
+			if (!$download_result['success']) {
+				return array('success' => false, 'message' => 'Failed to download cross references data: ' . $download_result['message']);
 			}
 			
-			// Step 2: Import data directly from CSV to database (streaming approach)
+			// Step 2: Extract CSV from downloaded ZIP
+			$csv_file_path = $this->extract_csv_from_zip($zip_file_path);
+			if (!$csv_file_path) {
+				$error_msg = 'Failed to extract CSV from downloaded cross references ZIP';
+				error_log('Bible_Here_XML_Importer: ' . $error_msg);
+				return array('success' => false, 'message' => $error_msg);
+			}
+			
+			// Step 3: Import data directly from CSV to database (streaming approach)
 			$import_result = $this->import_cross_references_streaming($csv_file_path);
 			if (!$import_result['success']) {
 				error_log('Bible_Here_XML_Importer: Cross references data import failed: ' . $import_result['message']);
 				return $import_result;
 			}
 			
+			// Step 4: Clean up downloaded and extracted files
+			if (file_exists($zip_file_path)) {
+				unlink($zip_file_path);
+				error_log('Bible_Here_XML_Importer: Cleaned up downloaded ZIP file');
+			}
+			if (file_exists($csv_file_path)) {
+				unlink($csv_file_path);
+				error_log('Bible_Here_XML_Importer: Cleaned up extracted CSV file');
+			}
+			
 			$end_time = microtime(true);
 			$execution_time = round($end_time - $start_time, 2);
 			
-			$success_msg = 'Successfully imported cross references - ' . $import_result['imported_count'] . ' records in ' . $execution_time . ' seconds';
+			$success_msg = 'Successfully imported cross references from remote source - ' . $import_result['imported_count'] . ' records in ' . $execution_time . ' seconds';
 			error_log('Bible_Here_XML_Importer: ' . $success_msg);
 			
 			return array(

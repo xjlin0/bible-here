@@ -1370,6 +1370,16 @@ class Bible_Here_Admin {
 		global $wpdb;
 		$cross_ref_table = $wpdb->prefix . 'bible_here_cross_references';
 		
+		// Handle uninstall request
+		if (isset($_POST['uninstall_cross_references']) && wp_verify_nonce($_POST['_wpnonce'], 'uninstall_cross_references')) {
+			try {
+				$wpdb->query("TRUNCATE TABLE {$cross_ref_table}");
+				echo '<div class="notice notice-success"><p>Cross references data has been successfully removed.</p></div>';
+			} catch (Exception $e) {
+				echo '<div class="notice notice-error"><p>Failed to remove cross references data: ' . esc_html($e->getMessage()) . '</p></div>';
+			}
+		}
+		
 		// Handle import request
 		if (isset($_POST['import_cross_references']) && wp_verify_nonce($_POST['_wpnonce'], 'import_cross_references')) {
 			// Load the importer class
@@ -1384,57 +1394,23 @@ class Bible_Here_Admin {
 			// Start output buffering for progress display
 			ob_start();
 
-			echo '<div class="notice notice-info"><p>Starting cross references import...</p></div>';
+			echo '<div class="notice notice-info"><p>Starting cross references import from remote source...</p></div>';
 			ob_flush();
 			flush();
 
 			try {
-			// First, check if CSV file exists, if not extract from ZIP
-			$plugin_dir = plugin_dir_path(dirname(__FILE__));
-			$csv_file_path = $plugin_dir . 'data/cross_references.csv';
-			$zip_file_path = $plugin_dir . 'data/cross_references.zip';
+				$start_time = microtime(true);
+				$result = $importer->import_cross_references();
+				$time_taken = microtime(true) - $start_time;
 
-			if (!file_exists($csv_file_path)) {
-				if (!file_exists($zip_file_path)) {
-					echo '<div class="notice notice-error"><p>Import failed: cross_references.zip file not found in data directory.</p></div>';
-					ob_end_flush();
-					return;
+				if ($result['success']) {
+					echo '<div class="notice notice-success"><p>Cross references imported successfully from remote source! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($time_taken, 2) . ' seconds.</p></div>';
+				} else {
+					echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['message']) . '</p></div>';
 				}
-
-				// Extract CSV from ZIP using reflection to access private method
-				$reflection = new ReflectionClass($importer);
-				$extract_method = $reflection->getMethod('extract_csv_from_zip');
-				$extract_method->setAccessible(true);
-				$csv_file_path = $extract_method->invoke($importer, $zip_file_path);
-
-				if (!$csv_file_path) {
-					echo '<div class="notice notice-error"><p>Import failed: Could not extract CSV file from ZIP archive.</p></div>';
-					ob_end_flush();
-					return;
-				}
+			} catch (Exception $e) {
+				echo '<div class="notice notice-error"><p>Import failed in Bible_Here_Admin::display_cross_references_page() with exception: ' . esc_html($e->getMessage()) . '</p></div>';
 			}
-
-			$start_time = microtime(true);
-			$result = $importer->import_cross_references_streaming($csv_file_path);
-			$time_taken = microtime(true) - $start_time;
-
-			if ($result['success']) {
-				echo '<div class="notice notice-success"><p>Cross references imported successfully! ' . number_format($result['imported_count']) . ' records imported in ' . number_format($time_taken, 2) . ' seconds.</p></div>';
-
-				// Clean up extracted CSV file after successful import
-				if (file_exists($csv_file_path) && strpos($csv_file_path, 'cross_references.csv') !== false) {
-					if (unlink($csv_file_path)) {
-						echo '<div class="notice notice-info"><p>Temporary CSV file cleaned up successfully.</p></div>';
-					} else {
-						echo '<div class="notice notice-warning"><p>Warning: Could not remove temporary CSV file. You may delete it manually: ' . esc_html($csv_file_path) . '</p></div>';
-					}
-				}
-			} else {
-				echo '<div class="notice notice-error"><p>Import failed: ' . esc_html($result['message']) . '</p></div>';
-			}
-		} catch (Exception $e) {
-			echo '<div class="notice notice-error"><p>Import failed in Bible_Here_Admin::display_cross_references_page() with exception: ' . esc_html($e->getMessage()) . '</p></div>';
-		}
 			
 			ob_end_flush();
 		}
@@ -1468,22 +1444,34 @@ class Bible_Here_Admin {
 		echo '</div>';
 		
 		echo '<div class="cross-references-import">';
-		echo '<h2>Import Cross References</h2>';
-		echo '<p>Import cross reference data from the data/cross_references.zip file.</p>';
+		echo '<h2>Cross References Management</h2>';
+		echo '<p>Manage cross reference data from remote source.</p>';
 		
-		// Check if zip file exists
-		$zip_path = plugin_dir_path(dirname(__FILE__)) . 'data/cross_references.zip';
-		if (file_exists($zip_path)) {
-			echo '<p><strong>Status:</strong> <span style="color: green;">✓ cross_references.zip file found</span></p>';
+		// Check current database status
+		if ($cross_ref_count > 0) {
+			echo '<p><strong>Status:</strong> <span style="color: green;">✓ 已安裝 ' . number_format($cross_ref_count) . ' 筆交叉引用記錄</span></p>';
+			
+			// Show uninstall form
+			echo '<form method="post" action="" style="display: inline-block; margin-right: 10px;">';
+			wp_nonce_field('uninstall_cross_references');
+			echo '<input type="submit" name="uninstall_cross_references" class="button" value="Uninstall Cross References" onclick="return confirm(\'This will remove all cross reference data. Are you sure?\');" />';
+			echo '</form>';
+			
+			// Show reinstall form
+			echo '<form method="post" action="" style="display: inline-block;">';
+			wp_nonce_field('import_cross_references');
+			echo '<input type="submit" name="import_cross_references" class="button-primary" value="Reinstall Cross References" onclick="return confirm(\'This will replace all existing cross reference data. Are you sure?\');" />';
+			echo '</form>';
+		} else {
+			echo '<p><strong>Status:</strong> <span style="color: red;">✗ 尚未安裝交叉引用資料</span></p>';
+			
+			// Show install form
 			echo '<form method="post" action="">';
 			wp_nonce_field('import_cross_references');
 			echo '<p class="submit">';
-			echo '<input type="submit" name="import_cross_references" class="button-primary" value="Import Cross References" onclick="return confirm(\'This will replace all existing cross reference data. Are you sure?\');" />';
+			echo '<input type="submit" name="import_cross_references" class="button-primary" value="Install Cross References" />';
 			echo '</p>';
 			echo '</form>';
-		} else {
-			echo '<p><strong>Status:</strong> <span style="color: red;">✗ cross_references.zip file not found</span></p>';
-			echo '<p>Please ensure the cross_references.zip file is placed in the plugin\'s data/ directory.</p>';
 		}
 		echo '</div>';
 		
