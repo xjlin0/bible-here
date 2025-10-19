@@ -24,29 +24,45 @@ $default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 117
 $default_language = !empty( $atts['language'] ) ? sanitize_text_field( $atts['language'] ) : 'en';
 $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['version'] ) : 'bible_here_en_kjv';
 
-// Book number to short name mapping for initial display.  Todo: replace with db values
-$book_short_names = array(
-	1 => 'Gen', 2 => 'Exod', 3 => 'Lev', 4 => 'Num', 5 => 'Deut',
-	6 => 'Josh', 7 => 'Judg', 8 => 'Ruth', 9 => '1Sam', 10 => '2Sam',
-	11 => '1Kgs', 12 => '2Kgs', 13 => '1Chr', 14 => '2Chr', 15 => 'Ezra',
-	16 => 'Neh', 17 => 'Esth', 18 => 'Job', 19 => 'Ps', 20 => 'Prov',
-	21 => 'Eccl', 22 => 'Song', 23 => 'Isa', 24 => 'Jer', 25 => 'Lam',
-	26 => 'Ezek', 27 => 'Dan', 28 => 'Hos', 29 => 'Joel', 30 => 'Amos',
-	31 => 'Obad', 32 => 'Jonah', 33 => 'Mic', 34 => 'Nah', 35 => 'Hab',
-	36 => 'Zeph', 37 => 'Hag', 38 => 'Zech', 39 => 'Mal', 40 => 'Matt',
-	41 => 'Mark', 42 => 'Luke', 43 => 'John', 44 => 'Acts', 45 => 'Rom',
-	46 => '1Cor', 47 => '2Cor', 48 => 'Gal', 49 => 'Eph', 50 => 'Phil',
-	51 => 'Col', 52 => '1Thess', 53 => '2Thess', 54 => '1Tim', 55 => '2Tim',
-	56 => 'Titus', 57 => 'Phlm', 58 => 'Heb', 59 => 'Jas', 60 => '1Pet',
-	61 => '2Pet', 62 => '1John', 63 => '2John', 64 => '3John', 65 => 'Jude', 66 => 'Rev'
+// Book number to short name mapping for initial display - loaded from database
+global $wpdb;
+$book_short_names_results = $wpdb->get_results(
+	"SELECT book_number, title_short FROM {$wpdb->prefix}bible_here_books WHERE language='" . esc_sql( $default_language ) . "'",
+	ARRAY_A
 );
+
+// Convert results to associative array with book_number as key and title_short as value
+$book_short_names = array();
+if ($book_short_names_results) {
+	foreach ($book_short_names_results as $row) {
+		$book_short_names[intval($row['book_number'])] = $row['title_short'];
+	}
+}
+
+// Fallback to hardcoded values if database query fails
+// if (empty($book_short_names)) {
+// 	$book_short_names = array(
+// 		1 => 'Gen', 2 => 'Exod', 3 => 'Lev', 4 => 'Num', 5 => 'Deut',
+// 		6 => 'Josh', 7 => 'Judg', 8 => 'Ruth', 9 => '1Sam', 10 => '2Sam',
+// 		11 => '1Kgs', 12 => '2Kgs', 13 => '1Chr', 14 => '2Chr', 15 => 'Ezra',
+// 		16 => 'Neh', 17 => 'Esth', 18 => 'Job', 19 => 'Ps', 20 => 'Prov',
+// 		21 => 'Eccl', 22 => 'Song', 23 => 'Isa', 24 => 'Jer', 25 => 'Lam',
+// 		26 => 'Ezek', 27 => 'Dan', 28 => 'Hos', 29 => 'Joel', 30 => 'Amos',
+// 		31 => 'Obad', 32 => 'Jonah', 33 => 'Mic', 34 => 'Nah', 35 => 'Hab',
+// 		36 => 'Zeph', 37 => 'Hag', 38 => 'Zech', 39 => 'Mal', 40 => 'Matt',
+// 		41 => 'Mark', 42 => 'Luke', 43 => 'John', 44 => 'Acts', 45 => 'Rom',
+// 		46 => '1Cor', 47 => '2Cor', 48 => 'Gal', 49 => 'Eph', 50 => 'Phil',
+// 		51 => 'Col', 52 => '1Thess', 53 => '2Thess', 54 => '1Tim', 55 => '2Tim',
+// 		56 => 'Titus', 57 => 'Phlm', 58 => 'Heb', 59 => 'Jas', 60 => '1Pet',
+// 		61 => '2Pet', 62 => '1John', 63 => '2John', 64 => '3John', 65 => 'Jude', 66 => 'Rev'
+// 	);
+// }
 
 $default_book_short = isset($book_short_names[$default_book]) ? $book_short_names[$default_book] : 'Ps';
 
 // Check if cross references are installed
-global $wpdb;
 $reference_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}bible_here_cross_references LIMIT 1)");
-
+$strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}bible_here_strong_dictionary LIMIT 1)");
 ?>
 
 <div id="<?php echo esc_attr( $reader_id ); ?>" class="bible-here-reader" 
@@ -55,7 +71,8 @@ $reference_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefi
      data-chapter="<?php echo esc_attr( $default_chapter ); ?>"
      data-language1="<?php echo esc_attr( $default_language ); ?>"
      data-version1="<?php echo esc_attr( $default_version ); ?>"
-     data-reference-installed="<?php echo esc_attr( $reference_installed ? '1' : '0' ); ?>">
+     data-reference-installed="<?php echo esc_attr( $reference_installed ? '1' : '0' ); ?>"
+	 data-strong-installed="<?php echo esc_attr( $strong_installed ? '1' : '0' ); ?>">
 
 	<!-- Navigation Bar (All buttons in single row) -->
 	<div class="bible-reader-nav">

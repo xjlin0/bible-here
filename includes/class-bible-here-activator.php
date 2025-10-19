@@ -192,6 +192,57 @@ class Bible_Here_Activator {
 	}
 
 	/**
+	 * Download a file from remote URL and save it locally.
+	 *
+	 * @since    1.0.0
+	 * @param    string    $url         Remote URL to download from
+	 * @param    string    $local_path  Local path to save the file
+	 * @return   bool      True on success, false on failure
+	 */
+	private static function download_remote_file($url, $local_path) {
+		// Create directory if it doesn't exist
+		$dir = dirname($local_path);
+		if (!file_exists($dir)) {
+			if (!wp_mkdir_p($dir)) {
+				error_log('[Bible Here] ERROR: Failed to create directory: ' . $dir);
+				return false;
+			}
+		}
+
+		// Check if file already exists
+		if (file_exists($local_path)) {
+			error_log('[Bible Here] INFO: File already exists, skipping download: ' . $local_path);
+			return true;
+		}
+
+		// Download file using WordPress HTTP API
+		$response = wp_remote_get($url, array(
+			'timeout' => 300, // 5 minutes timeout for large files
+			'stream' => true,
+			'filename' => $local_path
+		));
+
+		if (is_wp_error($response)) {
+			error_log('[Bible Here] ERROR: Failed to download file from ' . $url . ': ' . $response->get_error_message());
+			return false;
+		}
+
+		$response_code = wp_remote_retrieve_response_code($response);
+		if ($response_code !== 200) {
+			error_log('[Bible Here] ERROR: HTTP error ' . $response_code . ' when downloading from ' . $url);
+			return false;
+		}
+
+		if (!file_exists($local_path)) {
+			error_log('[Bible Here] ERROR: Downloaded file not found at expected location: ' . $local_path);
+			return false;
+		}
+
+		error_log('[Bible Here] INFO: Successfully downloaded file from ' . $url . ' to ' . $local_path);
+		return true;
+	}
+
+	/**
 	 * Insert initial data into database tables.
 	 *
 	 * @since    1.0.0
@@ -551,16 +602,17 @@ class Bible_Here_Activator {
 			$success = false;
 		}
 
-		// Load Strong Dictionary data from CSV or ZIP
+		// Load Strong Dictionary data from remote ZIP file
 		$strong_dictionary_table = $wpdb->prefix . 'bible_here_strong_dictionary';
 		$strong_dictionary_zip = $data_dir . 'wp_bible_here_strong_dictionary.zip';
 		$strong_dictionary_csv = $data_dir . 'wp_bible_here_strong_dictionary.csv';
+		$remote_url = 'https://github.com/xjlin0/bible-here.data/raw/refs/heads/main/dictionary/wp_bible_here_strong_dictionary.zip';
 		
 		$csv_file_to_process = null;
 		$temp_dir = null;
 		
-		// Check if ZIP file exists
-		if (file_exists($strong_dictionary_zip)) {
+		// Download Strong Dictionary ZIP file from remote URL
+		if (self::download_remote_file($remote_url, $strong_dictionary_zip)) {
 			// Create temporary directory for extraction
 			$temp_dir = $data_dir . 'temp_strong_' . time() . '/';
 			if (!wp_mkdir_p($temp_dir)) {
@@ -585,9 +637,9 @@ class Bible_Here_Activator {
 					$success = false;
 				}
 			}
-		} elseif (file_exists($strong_dictionary_csv)) {
-			// Use CSV file directly
-			$csv_file_to_process = $strong_dictionary_csv;
+		} else {
+			error_log('[Bible Here] ERROR: Failed to download Strong Dictionary from remote source');
+			$success = false;
 		}
 		
 		// Process CSV file if found
@@ -692,13 +744,19 @@ class Bible_Here_Activator {
 				}
 			}
 		} else {
-			// Strong Dictionary file not found, but this is not a critical error
+			// Strong Dictionary download failed, but this is not a critical error
 			// since it's optional data
+			error_log('[Bible Here] INFO: Strong Dictionary not loaded - download failed or file not available');
 		}
 
-		// Clean up temporary directory if created
+		// Clean up temporary directory and downloaded ZIP file if created
 		if ($temp_dir && is_dir($temp_dir)) {
 			self::recursive_rmdir($temp_dir);
+		}
+		// Clean up downloaded ZIP file
+		if (file_exists($strong_dictionary_zip)) {
+			unlink($strong_dictionary_zip);
+			error_log('[Bible Here] INFO: Cleaned up downloaded Strong Dictionary ZIP file');
 		}
 
 		// Load languages data from CSV
