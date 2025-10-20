@@ -1449,21 +1449,21 @@ class Bible_Here_Admin {
 		
 		// Check current database status
 		if ($cross_ref_count > 0) {
-			echo '<p><strong>Status:</strong> <span style="color: green;">✓ 已安裝 ' . number_format($cross_ref_count) . ' 筆交叉引用記錄</span></p>';
+			echo '<p><strong>Status:</strong> <span style="color: green;">✓ Installed ' . number_format($cross_ref_count) . ' 筆交叉引用記錄</span></p>';
 			
 			// Show uninstall form
 			echo '<form method="post" action="" style="display: inline-block; margin-right: 10px;">';
 			wp_nonce_field('uninstall_cross_references');
 			echo '<input type="submit" name="uninstall_cross_references" class="button" value="Uninstall Cross References" onclick="return confirm(\'This will remove all cross reference data. Are you sure?\');" />';
 			echo '</form>';
-			
+
 			// Show reinstall form
-			echo '<form method="post" action="" style="display: inline-block;">';
-			wp_nonce_field('import_cross_references');
-			echo '<input type="submit" name="import_cross_references" class="button-primary" value="Reinstall Cross References" onclick="return confirm(\'This will replace all existing cross reference data. Are you sure?\');" />';
-			echo '</form>';
+			// echo '<form method="post" action="" style="display: inline-block;">';
+			// wp_nonce_field('import_cross_references');
+			// echo '<input type="submit" name="import_cross_references" class="button-primary" value="Reinstall Cross References" onclick="return confirm(\'This will replace all existing cross reference data. Are you sure?\');" />';
+			// echo '</form>';
 		} else {
-			echo '<p><strong>Status:</strong> <span style="color: red;">✗ 尚未安裝交叉引用資料</span></p>';
+			echo '<p><strong>Status:</strong> <span style="color: red;">✗ No cross reference data installed yet</span></p>';
 			
 			// Show install form
 			echo '<form method="post" action="">';

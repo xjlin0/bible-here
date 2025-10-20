@@ -150,6 +150,9 @@ class BibleHereReader {
 		// Initialize cross reference modal
 		this.initializeCrossReferenceModal();
 
+		// Initialize strong number modal
+		this.initializeStrongNumberModal();
+
 		// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
 		this.loadChapter();
 
@@ -204,6 +207,18 @@ class BibleHereReader {
 			console.log('✅ [BibleHereReader] Cross reference modal initialized');
 		} catch (error) {
 			console.warn('⚠️ [BibleHereReader] Failed to initialize cross reference modal:', error);
+		}
+	}
+
+	/**
+	 * Initialize strong number modal
+	 */
+	initializeStrongNumberModal() {
+		try {
+			this.strongNumberModal = new StrongNumberModal(this);
+			console.log('✅ [BibleHereReader] Strong number modal initialized');
+		} catch (error) {
+			console.warn('⚠️ [BibleHereReader] Failed to initialize strong number modal:', error);
 		}
 	}
 
@@ -435,6 +450,14 @@ class BibleHereReader {
 		
 		// Initialize resizable divider for dual version mode
 		this.initializeResizableDivider();
+		
+		// Strong Number click events (using event delegation)
+		this.container.addEventListener('click', (e) => {
+			if (e.target.classList.contains('strong-number-link')) {
+				e.preventDefault();
+				this.strongNumberModal.handleStrongNumberClick(e.target);
+			}
+		});
 	}
 
 		/**
@@ -898,12 +921,12 @@ console.log("loadVersions() 494, params: ", this.params)
 			container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			return;
 		}
-		console.log("hi 901 here is referenceInstalled: ", referenceInstalled);
+		console.log("hi 924 here is referenceInstalled: ", referenceInstalled);
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
 			html += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-			html += `<span class="verse-text">${verse.text}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
+			html += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 			html += `</p>`;
 		});
 
@@ -912,6 +935,30 @@ console.log("loadVersions() 494, params: ", this.params)
 		// 經文顯示完成後，載入版本資料
 		this.loadVersionsAfterChapter();
 	}
+
+	/**
+	 * Process Strong Numbers in verse text
+	 */
+	processStrongNumbers(text) {
+		if (!text) return text;
+		
+		// 正則表達式匹配 Strong Numbers: 詞語後面跟著 {H123} 或 {G456}
+		// 匹配模式：任何非空白字符 + 一個或多個 {H/G數字} 標記
+		const strongNumberRegex = /(\S+?)((?:\{[HG]\d{1,5}\})+)/g;
+		
+		return text.replace(strongNumberRegex, (match, word, strongNumbers) => {
+			// 提取所有 Strong Numbers，移除大括號
+			const numbers = strongNumbers.match(/\{([HG]\d{1,5})\}/g) || [];
+			const cleanNumbers = numbers.map(num => num.slice(1, -1)); // 移除 {}
+			
+			// 創建帶有虛線底線的鏈接，只顯示詞語本身
+			return `<span class="strong-number-link" data-strong-numbers="${cleanNumbers.join(',')}" title="Strong Numbers: ${cleanNumbers.join(', ')}">${word}</span>`;
+		});
+	}
+
+	// Strong Number click handling is now managed by StrongNumberModal class
+
+
 
 	/**
 	 * Load versions after chapter content is displayed
@@ -2243,12 +2290,12 @@ console.log("loadVersions() 494, params: ", this.params)
 			let books = null;
 			// 嘗試從快取獲取書卷列表
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader 2241] 嘗試從快取獲取書卷列表, currentLanguage: ', currentLanguage);
+				console.log('🗄️ [BibleHereReader 2334] 嘗試從快取獲取書卷列表, currentLanguage: ', currentLanguage);
 				console.log('🌐 [DEBUG] 當前語言參數 this[currentLanguageVariable]:', this[currentLanguageVariable]);
 				books = await this.cacheManager.getCachedBooks(this['currentLanguage' + this.activeSelector]);
 				if (books && Object.keys(books).length > 0) {
-					console.log('✅ [BibleHereReader2245] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
-					console.log('📚 [BibleHereReader2246] 快取書卷資料預覽, books:', books[1]);
+					console.log('✅ [BibleHereReader2337] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
+					console.log('📚 [BibleHereReader2338] 快取書卷資料預覽, books:', books[1]);
 					console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
 						firstBookName: books[40]?.title_full,
 						secondBookName: books[41]?.title_full,
@@ -3485,6 +3532,127 @@ class CrossReferenceModal {
 }
 
 // Note: CrossReferenceModal is now initialized by each BibleHereReader instance
+
+// Strong Number Modal functionality
+class StrongNumberModal {
+	constructor(readerInstance) {
+		this.modal = document.getElementById('strong-number-modal');
+		this.modalTitle = this.modal.querySelector('.modal-title');
+		this.modalContent = this.modal.querySelector('.strong-numbers-list');
+		this.closeBtn = this.modal.querySelector('.modal-close');
+		this.overlay = this.modal.querySelector('.modal-overlay');
+		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
+		this.bindEvents();
+	}
+	
+	bindEvents() {
+		// Close modal events
+		this.closeBtn.addEventListener('click', () => this.close());
+		this.overlay.addEventListener('click', () => this.close());
+		
+		// ESC key to close
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && this.modal.style.display !== 'none') {
+				this.close();
+			}
+		});
+		
+		// Delegate click events for strong-number links
+		document.addEventListener('click', (e) => {
+			if (e.target.classList.contains('strong-number-link')) {
+				e.preventDefault();
+				this.handleStrongNumberClick(e.target);
+			}
+		});
+	}
+	
+	async handleStrongNumberClick(element) {
+		const strongNumbers = element.dataset.strongNumbers;
+		if (!strongNumbers) return;
+		
+		// 獲取當前經文語言
+		const verseContainer = element.closest('.verses-container');
+		const language = verseContainer ? verseContainer.dataset.language || 'en' : 'en';
+		
+		this.modalTitle.textContent = `Strong Numbers: ${strongNumbers}`;
+		// Show loading state
+		this.modalContent.innerHTML = '<div class="loading-strong-numbers">Loading Strong Numbers...</div>';
+		this.show();
+		// console
+		try {
+// console.log("3583 bibleHereAjax.nonce: ", bibleHereAjax.nonce);
+			const strongData = await this.fetchStrongNumbers(strongNumbers, language);
+			console.log('📖 [handleStrongNumberClick] 獲取到的 Strong Numbers:', strongData);
+			this.displayStrongNumbers(strongData.strong_dictionary);
+		} catch (error) {
+			console.error('Error fetching Strong Numbers:', error);
+			this.modalContent.innerHTML = '<div class="error-strong-numbers">Error loading Strong Numbers. Please try again.</div>';
+		}
+	}
+	
+	async fetchStrongNumbers(strongNumbers, language) {
+// console.log("3594 bibleHereAjax.nonce: ", bibleHereAjax.nonce);
+		const params = new URLSearchParams({
+			action: 'bible_here_public_get_strong_dictionary',
+			strong_numbers: strongNumbers,
+			language: language
+		});
+		
+		const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+			method: 'GET',
+			headers: {
+				"X-WP-Nonce": bibleHereAjax.nonce
+			}
+		});
+		
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		console.log("3612 data: ", data);
+		if (data.success && data.data) {
+			return data.data;
+		} else {
+			throw new Error(data.message || 'Failed to fetch Strong Numbers');
+		}
+	}
+	
+	displayStrongNumbers(strongData) {
+		if (!strongData || strongData.length === 0) {
+			this.modalContent.innerHTML = '<div class="no-strong-numbers">No Strong Numbers found.</div>';
+			return;
+		}
+console.log("3625 strongData: ", strongData);
+		console.log("StrongNumberModal.displayStrongNumbers() here is strongData: ", strongData);
+		let html = '<div class="strong-numbers-container">';
+		strongData.forEach(item => {
+			html += `<div class="strong-number-item">`;
+			html += `<div class="strong-number-header">`;
+			html += `<span class="strong-number-code">${item.strong_number}</span>`;
+			if (item.original) {
+				html += `<span class="strong-number-original">${item.original}</span>`;
+			}
+			html += `</div>`;
+			if (item.definition) {
+				html += `<div class="strong-number-definition">${item.definition}</div>`;
+			}
+			html += `</div>`;
+		});
+		html += '</div>';
+		
+		this.modalContent.innerHTML = html;
+	}
+	
+	show() {
+		this.modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+	}
+	
+	close() {
+		this.modal.style.display = 'none';
+		document.body.style.overflow = '';
+	}
+}
 
 // Expose BibleHereReader to global scope for external initialization
 window.BibleHereReader = BibleHereReader;

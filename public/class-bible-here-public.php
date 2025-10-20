@@ -666,7 +666,7 @@ class Bible_Here_Public {
 	 */
 	public function handle_ajax_get_strong_dictionary() {
 		global $wpdb;
-		
+		$valid_languages = array("en", "zh-TW", "zh-CN");
 		if ( ! isset( $_SERVER['HTTP_X_WP_NONCE'] ) || ! wp_verify_nonce( $_SERVER['HTTP_X_WP_NONCE'], 'bible_here_nonce' ) ) {
 			sleep(2);
 			wp_send_json_error( array(
@@ -678,7 +678,7 @@ class Bible_Here_Public {
 		// Get parameters from GET request
 		$strong_numbers = isset( $_GET['strong_numbers'] ) ? array_map( 'sanitize_text_field', (array) $_GET['strong_numbers'] ) : array();
 		$strong_number = sanitize_text_field( $_GET['strong_number'] ?? '' );
-		
+		$language = sanitize_text_field( $_GET['language'] ?? '' );
 		// Handle single strong_number parameter for backward compatibility
 		if ( ! empty( $strong_number ) && empty( $strong_numbers ) ) {
 			$strong_numbers = array( $strong_number );
@@ -688,60 +688,35 @@ class Bible_Here_Public {
 		if ( empty( $strong_numbers ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: strong_numbers or strong_number' ) );
 		}
-		
+
+		if (!in_array($language, $valid_languages)) {
+			wp_send_json_error( array( 'message' => 'Invalid or empty language parameter.' ) );
+		}
+
 		// Get Strong's Dictionary data
 		$strong_table = $wpdb->prefix . 'bible_here_strong_dictionary';
-		
+		$fields = 'IFNULL(`' . $language . '`,`en`) AS definition';
 		// Build IN clause for multiple strong numbers
 		$placeholders = implode( ',', array_fill( 0, count( $strong_numbers ), '%s' ) );
-		
+
 		$sql = "SELECT 
 				strong_number,
 				original,
-				en,
-				`zh-TW`,
-				`zh-CN`
+				$fields
 			FROM $strong_table
 			WHERE strong_number IN ($placeholders)
 			ORDER BY strong_number";
-		
+
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $strong_numbers ), ARRAY_A );
-		
+
 		// Handle database errors
 		if ( $wpdb->last_error ) {
 			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ) );
 		}
-		
-		// Transform results to match expected format
-		$strong_dictionary = array();
-		if ( $results ) {
-			foreach ( $results as $entry ) {
-				$languages = array();
-				
-				// Add available language translations
-				if ( ! empty( $entry['en'] ) ) {
-					$languages['en'] = $entry['en'];
-				}
-				if ( ! empty( $entry['zh-TW'] ) ) {
-					$languages['zh-TW'] = $entry['zh-TW'];
-				}
-				if ( ! empty( $entry['zh-CN'] ) ) {
-					$languages['zh-CN'] = $entry['zh-CN'];
-				}
-				
-				$strong_dictionary[] = array(
-					'strong_number' => $entry['strong_number'],
-					'original' => $entry['original'],
-					'languages' => $languages
-				);
-			}
-		}
-		
-		$response_data = array(
-			'strong_dictionary' => $strong_dictionary
-		);
-		
-		wp_send_json_success( $response_data );
+
+		wp_send_json_success( array(
+			'strong_dictionary' => $results ?: array()
+		) );
 	}
 
 	/**

@@ -276,4 +276,22 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			</div>
 		</div>
 	</div>
+
+	<!-- Strong Number Modal -->
+	<div id="strong-number-modal" class="strong-number-modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-container">
+			<div class="modal-header">
+				<h3 class="modal-title"></h3>
+				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
+					<span class="close-icon">×</span>
+				</button>
+			</div>
+			<div class="modal-content">
+				<div class="strong-numbers-list">
+					<!-- Strong numbers will be loaded here -->
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
