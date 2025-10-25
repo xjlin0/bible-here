@@ -572,14 +572,14 @@ console.log("loadVersions() 494, params: ", this.params)
 	splitContent(verses, tableName1, tableName2) {
 		const content1 = [];
 		const content2 = [];
-		if (!Array.isArray(verses) || !tableName1 || tableName1 === tableName2) {
+		if (!Array.isArray(verses) || !tableName1) {  // user will see both versions identical when first clicking +version
 			console.warn('⚠️ 576 params error: tableName1: ', tableName1, ' tableName2: ', tableName2, ' verses: ', verses);
 			return [null, null];
 		}
 		for (const verse of verses) {
 			if (verse.table_name === tableName1) {
 				content1.push(verse);
-			} else if (verse.table_name === tableName2) {
+			} else if (tableName2 && verse.table_name === tableName2) {
 				content2.push(verse);
 			}
 		}
@@ -642,22 +642,22 @@ console.log("loadVersions() 494, params: ", this.params)
 				);
 
 				const [verse1Content, verse2Content] = this.splitContent(chapterContent, this.currentVersion1, this.currentVersion2);
-				console.log('🗄️ [BibleHereReader651] async loadChapter() chapterContent: ', chapterContent, ' verse1Content: ', verse1Content, ' verse2Content ', verse2Content);
+				// console.log('🗄️ [BibleHereReader645] async loadChapter() chapterContent: ', chapterContent, ' verse1Content: ', verse1Content, ' verse2Content ', verse2Content);
 
-				if (chapterContent && chapterContent.length > 0 && (this.currentVersion2 ? verse1Content.length === verse2Content.length : true)) {
-					console.log('✅ [BibleHereReader652] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-					console.log('📖 [BibleHereReader653] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+				if (chapterContent && chapterContent.length > 0 && (this.currentVersion2 ? verse1Content.length === verse2Content.length : true)) {  // user may previously cache scription only in one version but now want to see dual version
+					console.log('✅ [BibleHereReader648] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+					console.log('📖 [BibleHereReader649] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
 					const displayContent = {version1: { verses: verse1Content, table_name: this.currentVersion1 }};
 					if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
 						if (verse2Content && verse2Content.length > 0) {
-							console.log("hi 658 here is verse2Content: ", verse2Content);
+							console.log("hi 653 here is verse2Content: ", verse2Content);
 							this.hideLoading();
 							this.displayChapterContent(displayContent);
 							displayContent.version2 = { verses: verse2Content, table_name: this.currentVersion2 };
 							this.displayDualVersionContent(displayContent);  // load single and dual data for faster switching
 							return;
 						}  // If there's no cached version2 content in dual mode, proceed to API fetch without return
-						console.log("hi 665 here is verse2Content: ", verse2Content);
+						console.log("hi 660 here is verse2Content: ", verse2Content);
 					} else {
 						this.hideLoading();
 						this.displayChapterContent(displayContent);
@@ -665,12 +665,12 @@ console.log("loadVersions() 494, params: ", this.params)
 						return;
 					}
 				} else {
-					console.log('⚠️ [BibleHereReader655] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
+					console.log('⚠️ [BibleHereReader668] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
 				}
 			}
 				
 				// 從 API 獲取
-			console.log('🌐 678 async loadChapter() 從 API 獲取章節內容');
+			console.log('🌐 673 async loadChapter() 從 API 獲取章節內容');
 			
 			// 構建 URL 參數
 			const url = new URL(bibleHereAjax.ajaxurl);
@@ -680,7 +680,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			url.searchParams.set('chapter_number_start', this.currentChapter);
 			url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 			url.searchParams.set('version1_bible', this.currentVersion1);
-			console.log(`🌐 693 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
+			console.log(`🌐 683 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
 
 			if (this.currentVersion2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
 				url.searchParams.set('version2_bible', this.currentVersion2);
@@ -706,7 +706,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader696] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader709] async loadChapter() API 完整回應:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -3551,9 +3551,9 @@ class StrongNumberModal {
 	}
 	
 	async handleStrongNumberClick(element) {
-		const strongNumbers = element.dataset.strongNumbers;
+		const strongNumbers = element.dataset.strongNumbers && element.dataset.strongNumbers.split(',');
 		if (!strongNumbers) return;
-		
+
 		// 獲取當前經文語言
 		const verseContainer = element.closest('.verses-container');
 		const language = verseContainer ? verseContainer.dataset.language || 'en' : 'en';
@@ -3575,7 +3575,7 @@ class StrongNumberModal {
 	}
 	
 	async fetchStrongNumbers(strongNumbers, language) {
-// console.log("3594 bibleHereAjax.nonce: ", bibleHereAjax.nonce);
+console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log("3578b strongNumbers: ", strongNumbers);
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_strong_dictionary',
 			strong_numbers: strongNumbers,
@@ -3593,7 +3593,7 @@ class StrongNumberModal {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		console.log("3612 data: ", data);
+		console.log("3596 data: ", data);
 		if (data.success && data.data) {
 			return data.data;
 		} else {

@@ -676,14 +676,27 @@ class Bible_Here_Public {
 		}
 
 		// Get parameters from GET request
-		$strong_numbers = isset( $_GET['strong_numbers'] ) ? array_map( 'sanitize_text_field', (array) $_GET['strong_numbers'] ) : array();
+		$strong_numbers = array();
+		if ( isset( $_GET['strong_numbers'] ) ) {
+			// Handle comma-separated string by splitting first, then sanitizing
+			$raw_strong_numbers = $_GET['strong_numbers'];
+			if ( is_string( $raw_strong_numbers ) && strpos( $raw_strong_numbers, ',' ) !== false ) {
+				// Split comma-separated string into array
+				$strong_numbers = array_map( 'sanitize_text_field', explode( ',', $raw_strong_numbers ) );
+			} else {
+				// Handle single value or already array format
+				$strong_numbers = array_map( 'sanitize_text_field', (array) $raw_strong_numbers );
+			}
+			// Remove empty values
+			$strong_numbers = array_filter( $strong_numbers );
+		}
 		$strong_number = sanitize_text_field( $_GET['strong_number'] ?? '' );
 		$language = sanitize_text_field( $_GET['language'] ?? '' );
 		// Handle single strong_number parameter for backward compatibility
 		if ( ! empty( $strong_number ) && empty( $strong_numbers ) ) {
 			$strong_numbers = array( $strong_number );
 		}
-error_log('686a: $strong_numbers: ' . $strong_numbers);		error_log('686b: $strong_number: ' . $strong_number);		
+// error_log('686a: $strong_numbers: ');	error_log(print_r( $strong_numbers, true ));	error_log('686b: $strong_number: ' . $strong_number);		
 		// Validate required parameters
 		if ( empty( $strong_numbers ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: strong_numbers or strong_number' ) );
@@ -698,7 +711,7 @@ error_log('686a: $strong_numbers: ' . $strong_numbers);		error_log('686b: $stron
 		$fields = 'IFNULL(`' . $language . '`,`en`) AS definition';
 		// Build IN clause for multiple strong numbers
 		$placeholders = implode( ',', array_fill( 0, count( $strong_numbers ), '%s' ) );
-error_log('701a: $fields: ' . $fields); error_log('701b: $placeholders: ' . $placeholders);
+// error_log('701a: $fields: ' . $fields); error_log('701b: $placeholders: ' . $placeholders);
 		$sql = "SELECT 
 				strong_number,
 				original,
