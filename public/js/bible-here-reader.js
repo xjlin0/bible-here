@@ -566,34 +566,27 @@ console.log("loadVersions() 494, params: ", this.params)
 		});
 	}
 
-		/**
-		 * Load chapters for selected book (mock implementation)
-		 */
-		// loadChapters() {
-		// 	// For now, we'll use a simple chapter count based on book
-		// 	// This should be replaced with actual API call in phase 2
-		// 	const chapterCounts = {
-		// 		'genesis': 50, 'exodus': 40, 'leviticus': 27, 'numbers': 36, 'deuteronomy': 34,
-		// 		'joshua': 24, 'judges': 21, 'ruth': 4, '1samuel': 31, '2samuel': 24,
-		// 		'1kings': 22, '2kings': 25, '1chronicles': 29, '2chronicles': 36, 'ezra': 10,
-		// 		'nehemiah': 13, 'esther': 10, 'job': 42, 'psalms': 150, 'proverbs': 31,
-		// 		'ecclesiastes': 12, 'songofsolomon': 8, 'isaiah': 66, 'jeremiah': 52, 'lamentations': 5,
-		// 		'ezekiel': 48, 'daniel': 12, 'hosea': 14, 'joel': 3, 'amos': 9,
-		// 		'obadiah': 1, 'jonah': 4, 'micah': 7, 'nahum': 3, 'habakkuk': 3,
-		// 		'zephaniah': 3, 'haggai': 2, 'zechariah': 14, 'malachi': 4,
-		// 		'matthew': 28, 'mark': 16, 'luke': 24, 'john': 21, 'acts': 28,
-		// 		'romans': 16, '1corinthians': 16, '2corinthians': 13, 'galatians': 6, 'ephesians': 6,
-		// 		'philippians': 4, 'colossians': 4, '1thessalonians': 5, '2thessalonians': 3, '1timothy': 6,
-		// 		'2timothy': 4, 'titus': 3, 'philemon': 1, 'hebrews': 13, 'james': 5,
-		// 		'1peter': 5, '2peter': 3, '1john': 5, '2john': 1, '3john': 1,
-		// 		'jude': 1, 'revelation': 22
-		// 	};
+	/**
+	 * Sortout the scriptiure content by table names
+	 */
+	splitContent(verses, tableName1, tableName2) {
+		const content1 = [];
+		const content2 = [];
+		if (!Array.isArray(verses) || !tableName1 || tableName1 === tableName2) {
+			console.warn('⚠️ 576 params error: tableName1: ', tableName1, ' tableName2: ', tableName2, ' verses: ', verses);
+			return [null, null];
+		}
+		for (const verse of verses) {
+			if (verse.table_name === tableName1) {
+				content1.push(verse);
+			} else if (verse.table_name === tableName2) {
+				content2.push(verse);
+			}
+		}
+		return [content1, content2];
+	}
 
-		// 	const chapterCount = chapterCounts[this.currentBook] || 1;
-		// 	this.populateChapterSelect(chapterCount);
-		// }
-
-		/**
+	/**
 	 * Load chapter content using cache manager or API
 	 * @param {boolean} updateURL - Whether to update URL parameters (default: true)
 	 */
@@ -633,41 +626,38 @@ console.log("loadVersions() 494, params: ", this.params)
 		try {
 			let chapterContent = null;
 
-			// 獲取當前書卷的 book_number 以取得verse數目
-			// let bookNumber = this.currentBook;
-			// const currentBookData = await this.getCurrentBookData();
-			// if (currentBookData && currentBookData.book_number) {
-			// 	bookNumber = currentBookData.book_number;
-			// 	console.log('📚 543 從快取獲取到 currentBookData:', currentBookData, );
-			// }
-
 			// 嘗試從快取獲取 - 使用 table_name (currentVersion), book_number, chapter_number
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader623] async loadChapter() 嘗試從快取獲取章節內容:', {
+				console.log('🗄️ [BibleHereReader639] async loadChapter() 嘗試從快取獲取章節內容:', {
 					table_name1: this.currentVersion1, table_name2: this.currentVersion2,
 					book_number: this.currentBook,
 					chapter_number: this.currentChapter
 				});
+
 				chapterContent = await this.cacheManager.getVerses(
 					this.currentLanguage1,
 					[this.currentVersion1, this.currentVersion2],
 					this.currentBook,
 					this.currentChapter
 				);
-				console.log('🗄️ [BibleHereReader634] async loadChapter() chapterContent: ', chapterContent);
-				if (chapterContent && chapterContent.length > 0) {
-					console.log('✅ [BibleHereReader636] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
-					console.log('📖 [BibleHereReader637] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
-					const displayContent = {version1: { verses: chapterContent.filter(item => item.table_name === this.currentVersion1), table_name: this.currentVersion1 }};
+
+				const [verse1Content, verse2Content] = this.splitContent(chapterContent, this.currentVersion1, this.currentVersion2);
+				console.log('🗄️ [BibleHereReader651] async loadChapter() chapterContent: ', chapterContent, ' verse1Content: ', verse1Content, ' verse2Content ', verse2Content);
+
+				if (chapterContent && chapterContent.length > 0 && (this.currentVersion2 ? verse1Content.length === verse2Content.length : true)) {
+					console.log('✅ [BibleHereReader652] async loadChapter() 從快取獲取到章節內容，經文數量:', chapterContent.length);
+					console.log('📖 [BibleHereReader653] async loadChapter() 快取經文資料預覽:', chapterContent.slice(0, 3));
+					const displayContent = {version1: { verses: verse1Content, table_name: this.currentVersion1 }};
 					if (this.isDualMode && this.currentVersion2 && this.currentVersion2 !== this.currentVersion1) {
-						const verse2Content = chapterContent.filter(item => item.table_name === this.currentVersion2);
 						if (verse2Content && verse2Content.length > 0) {
+							console.log("hi 658 here is verse2Content: ", verse2Content);
 							this.hideLoading();
 							this.displayChapterContent(displayContent);
 							displayContent.version2 = { verses: verse2Content, table_name: this.currentVersion2 };
 							this.displayDualVersionContent(displayContent);  // load single and dual data for faster switching
 							return;
 						}  // If there's no cached version2 content in dual mode, proceed to API fetch without return
+						console.log("hi 665 here is verse2Content: ", verse2Content);
 					} else {
 						this.hideLoading();
 						this.displayChapterContent(displayContent);
@@ -680,7 +670,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 				
 				// 從 API 獲取
-			console.log('🌐 660 async loadChapter() 從 API 獲取章節內容');
+			console.log('🌐 678 async loadChapter() 從 API 獲取章節內容');
 			
 			// 構建 URL 參數
 			const url = new URL(bibleHereAjax.ajaxurl);
@@ -690,7 +680,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			url.searchParams.set('chapter_number_start', this.currentChapter);
 			url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 			url.searchParams.set('version1_bible', this.currentVersion1);
-			console.log(`🌐 670 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
+			console.log(`🌐 693 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
 
 			if (this.currentVersion2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
 				url.searchParams.set('version2_bible', this.currentVersion2);
@@ -846,7 +836,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html1 += `<span class="verse-number unselectable-list  ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-				html1 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
+				html1 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html1 += `</p>`;
 			});
 			version1Container.innerHTML = html1;
@@ -866,7 +856,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html2 += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-				html2 += `<span class="verse-text">${verse.text}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
+				html2 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
@@ -882,7 +872,7 @@ console.log("loadVersions() 494, params: ", this.params)
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
 					html1 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
-					html1 += `<span class="verse-text">${verse.text}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
+					html1 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
@@ -895,7 +885,7 @@ console.log("loadVersions() 494, params: ", this.params)
 				version2Container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			}
 		}
-		
+		if(this.elements.errorMessage && this.elements.errorMessage.display) {this.elements.errorMessage.display='none';}
 		console.log(`🎉 雙版本內容處理完成 version1NameShort: ${this.currentVersion1NameShort} version2NameShort: ${this.currentVersion2NameShort}`);
 	}
 	
@@ -3557,13 +3547,7 @@ class StrongNumberModal {
 			}
 		});
 		
-		// Delegate click events for strong-number links
-		document.addEventListener('click', (e) => {
-			if (e.target.classList.contains('strong-number-link')) {
-				e.preventDefault();
-				this.handleStrongNumberClick(e.target);
-			}
-		});
+
 	}
 	
 	async handleStrongNumberClick(element) {
@@ -3622,20 +3606,21 @@ class StrongNumberModal {
 			this.modalContent.innerHTML = '<div class="no-strong-numbers">No Strong Numbers found.</div>';
 			return;
 		}
-console.log("3625 strongData: ", strongData);
 		console.log("StrongNumberModal.displayStrongNumbers() here is strongData: ", strongData);
+		
+		// 使用類似 Cross Reference 的顯示格式
 		let html = '<div class="strong-numbers-container">';
 		strongData.forEach(item => {
 			html += `<div class="strong-number-item">`;
-			html += `<div class="strong-number-header">`;
-			html += `<span class="strong-number-code">${item.strong_number}</span>`;
+			html += `<div class="strong-number-link">`;
+			html += `<span class="strong-number-reference">${item.strong_number}</span>`;
 			if (item.original) {
-				html += `<span class="strong-number-original">${item.original}</span>`;
+				html += `<span class="strong-number-original"> - ${item.original}</span>`;
+			}
+			if (item.definition) {
+				html += `<span class="strong-number-text">${item.definition}</span>`;
 			}
 			html += `</div>`;
-			if (item.definition) {
-				html += `<div class="strong-number-definition">${item.definition}</div>`;
-			}
 			html += `</div>`;
 		});
 		html += '</div>';

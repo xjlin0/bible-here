@@ -683,7 +683,7 @@ class Bible_Here_Public {
 		if ( ! empty( $strong_number ) && empty( $strong_numbers ) ) {
 			$strong_numbers = array( $strong_number );
 		}
-		
+error_log('686a: $strong_numbers: ' . $strong_numbers);		error_log('686b: $strong_number: ' . $strong_number);		
 		// Validate required parameters
 		if ( empty( $strong_numbers ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: strong_numbers or strong_number' ) );
@@ -698,7 +698,7 @@ class Bible_Here_Public {
 		$fields = 'IFNULL(`' . $language . '`,`en`) AS definition';
 		// Build IN clause for multiple strong numbers
 		$placeholders = implode( ',', array_fill( 0, count( $strong_numbers ), '%s' ) );
-
+error_log('701a: $fields: ' . $fields); error_log('701b: $placeholders: ' . $placeholders);
 		$sql = "SELECT 
 				strong_number,
 				original,
