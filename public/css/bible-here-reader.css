@@ -2616,3 +2616,129 @@
         font-size: 12px;
     }
 }
+
+/* ===== STRONG NUMBER MODAL STYLES ===== */
+
+/* Strong Numbers List Container */
+.strong-numbers-list {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.strong-numbers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Strong Number Item */
+.strong-number-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.strong-number-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Strong Number Link in Modal */
+.strong-numbers-list .strong-number-link {
+    display: block;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    border-bottom: none;
+    border-radius: 0;
+    cursor: default;
+}
+
+.strong-numbers-list .strong-number-link:hover {
+    background: #f9fafb;
+    color: inherit;
+}
+
+/* Strong Number Reference */
+.strong-number-reference {
+    font-weight: 700;
+    color: #007cba;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Strong Number Original Text */
+.strong-number-original {
+    font-weight: 600;
+    color: #374151;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-family: 'Times New Roman', serif;
+    display: block;
+}
+
+/* Strong Number Translation Text */
+.strong-number-text {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.strong-number-text:last-child {
+    margin-bottom: 0;
+}
+
+/* Dark theme styles for Strong Number Modal */
+.bible-here-reader.theme-dark .strong-number-item {
+    border-color: #374151;
+    background: #1f2937;
+}
+
+.bible-here-reader.theme-dark .strong-number-item:hover {
+    border-color: #4b5563;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.bible-here-reader.theme-dark .strong-numbers-list .strong-number-link:hover {
+    background: #374151;
+}
+
+.bible-here-reader.theme-dark .strong-number-reference {
+    color: #60a5fa;
+}
+
+.bible-here-reader.theme-dark .strong-number-original {
+    color: #f9fafb;
+}
+
+.bible-here-reader.theme-dark .strong-number-text {
+    color: #d1d5db;
+}
+
+/* Mobile responsive adjustments for Strong Number Modal */
+@media (max-width: 768px) {
+    .strong-numbers-list {
+        padding: 16px 20px;
+    }
+    
+    .strong-numbers-list .strong-number-link {
+        padding: 12px;
+    }
+    
+    .strong-number-reference {
+        font-size: 13px;
+    }
+    
+    .strong-number-original {
+        font-size: 15px;
+    }
+    
+    .strong-number-text {
+        font-size: 13px;
+    }
+}

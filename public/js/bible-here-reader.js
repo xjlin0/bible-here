@@ -3613,13 +3613,33 @@ console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log(
 		strongData.forEach(item => {
 			html += `<div class="strong-number-item">`;
 			html += `<div class="strong-number-link">`;
+			
+			// Strong Number Reference
 			html += `<span class="strong-number-reference">${item.strong_number}</span>`;
+			
+			// Original Text
 			if (item.original) {
-				html += `<span class="strong-number-original"> - ${item.original}</span>`;
+				html += `<span class="strong-number-original">${item.original}</span>`;
 			}
+			
+			// Definition/Translation
 			if (item.definition) {
-				html += `<span class="strong-number-text">${item.definition}</span>`;
+				html += `<div class="strong-number-text">${item.definition}</div>`;
 			}
+			
+			// Additional translations if available
+			if (item.kjv_translation) {
+				html += `<div class="strong-number-text"><strong>KJV:</strong> ${item.kjv_translation}</div>`;
+			}
+			
+			if (item.transliteration) {
+				html += `<div class="strong-number-text"><strong>Transliteration:</strong> ${item.transliteration}</div>`;
+			}
+			
+			if (item.pronunciation) {
+				html += `<div class="strong-number-text"><strong>Pronunciation:</strong> ${item.pronunciation}</div>`;
+			}
+			
 			html += `</div>`;
 			html += `</div>`;
 		});
