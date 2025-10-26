@@ -708,10 +708,15 @@ class Bible_Here_Public {
 
 		// Get Strong's Dictionary data
 		$strong_table = $wpdb->prefix . 'bible_here_strong_dictionary';
-		$fields = 'IFNULL(`' . $language . '`,`en`) AS definition';
+		// Select fields based on language to avoid duplication
+		if ($language === 'en') {
+			$fields = '`en`';
+		} else {
+			$fields = '`en`, `' . $language . '`';
+		}
 		// Build IN clause for multiple strong numbers
 		$placeholders = implode( ',', array_fill( 0, count( $strong_numbers ), '%s' ) );
-// error_log('701a: $fields: ' . $fields); error_log('701b: $placeholders: ' . $placeholders);
+
 		$sql = "SELECT 
 				strong_number,
 				original,

@@ -3553,12 +3553,12 @@ class StrongNumberModal {
 	async handleStrongNumberClick(element) {
 		const strongNumbers = element.dataset.strongNumbers && element.dataset.strongNumbers.split(',');
 		if (!strongNumbers) return;
-
-		// 獲取當前經文語言
-		const verseContainer = element.closest('.verses-container');
-		const language = verseContainer ? verseContainer.dataset.language || 'en' : 'en';
-		
-		this.modalTitle.textContent = `Strong Numbers: ${strongNumbers}`;
+		const verseText = element.closest('span.verse-text').textContent.trim();
+		const strongNumberWord = element.textContent.trim();
+		const versionContainer = element.closest('div.bible-version');
+		const language = versionContainer ? this.readerInstance['currentLanguage' + versionContainer.dataset.languageNumber] : 'en';
+// console.log("3560 language: ", language);
+		this.modalTitle.textContent = `${strongNumberWord}: ${strongNumbers} (${verseText ? ' from ' + verseText : ''})`;
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-strong-numbers">Loading Strong Numbers...</div>';
 		this.show();
@@ -3567,7 +3567,7 @@ class StrongNumberModal {
 // console.log("3583 bibleHereAjax.nonce: ", bibleHereAjax.nonce);
 			const strongData = await this.fetchStrongNumbers(strongNumbers, language);
 			console.log('📖 [handleStrongNumberClick] 獲取到的 Strong Numbers:', strongData);
-			this.displayStrongNumbers(strongData.strong_dictionary);
+			this.displayStrongNumbers(strongData.strong_dictionary, language);
 		} catch (error) {
 			console.error('Error fetching Strong Numbers:', error);
 			this.modalContent.innerHTML = '<div class="error-strong-numbers">Error loading Strong Numbers. Please try again.</div>';
@@ -3601,7 +3601,7 @@ console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log(
 		}
 	}
 	
-	displayStrongNumbers(strongData) {
+	displayStrongNumbers(strongData, language) {
 		if (!strongData || strongData.length === 0) {
 			this.modalContent.innerHTML = '<div class="no-strong-numbers">No Strong Numbers found.</div>';
 			return;
@@ -3623,22 +3623,22 @@ console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log(
 			}
 			
 			// Definition/Translation
-			if (item.definition) {
-				html += `<div class="strong-number-text">${item.definition}</div>`;
+			if (item.en || item[language]) {
+				html += `<div class="strong-number-text">${item[language] || item.en}</div>`;
 			}
 			
 			// Additional translations if available
-			if (item.kjv_translation) {
-				html += `<div class="strong-number-text"><strong>KJV:</strong> ${item.kjv_translation}</div>`;
-			}
+			// if (item.kjv_translation) {
+			// 	html += `<div class="strong-number-text"><strong>KJV:</strong> ${item.kjv_translation}</div>`;
+			// }
 			
-			if (item.transliteration) {
-				html += `<div class="strong-number-text"><strong>Transliteration:</strong> ${item.transliteration}</div>`;
-			}
+			// if (item.transliteration) {
+			// 	html += `<div class="strong-number-text"><strong>Transliteration:</strong> ${item.transliteration}</div>`;
+			// }
 			
-			if (item.pronunciation) {
-				html += `<div class="strong-number-text"><strong>Pronunciation:</strong> ${item.pronunciation}</div>`;
-			}
+			// if (item.pronunciation) {
+			// 	html += `<div class="strong-number-text"><strong>Pronunciation:</strong> ${item.pronunciation}</div>`;
+			// }
 			
 			html += `</div>`;
 			html += `</div>`;
