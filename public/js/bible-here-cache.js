@@ -18,19 +18,22 @@
 class BibleHereDB extends Dexie {
     constructor() {
         super('BibleHereDB');
-        
+
         console.log('🗄️ [BibleHereDB] Initializing IndexedDB database...');
-        
+
         // Define database schema according to technical document
         this.version(1).stores({
             // Verses table: composite primary key [table_name+verse_id], value as object
             verses: '[table_name+verse_id], bookmark, updatedAt',
-            
+
             // Books table: primary key language_code, value as object
             books: 'language_code&, updatedAt',
-            
+
             // Versions table: primary key table_name, value as object with updatedAt
-            versions: 'table_name&, updatedAt'
+            versions: 'table_name&, updatedAt',
+
+            // Versions table: primary key table_name, value as object with updatedAt
+            strongs: 'strong_number&, updatedAt'
         });
         
         // // Version 2: Add bookmark field to verses table
@@ -570,6 +573,66 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
     }
 
     /**
+     * Cache Strong Numbers data (no expiry for Strong Numbers according to technical document)
+     * @param {Array} strongsData - Array of Strong Numbers data objects
+     * @returns {Promise<number>} Number of cached Strong Numbers
+     */
+    async cacheStrongs(strongsData) {
+        try {
+            console.log('💾 [CacheManager] Caching Strong Numbers:', strongsData.length, 'items');
+            
+            const now = Date.now();
+            const strongsToCache = [];
+            
+            strongsData.forEach(strongItem => {
+                strongsToCache.push({
+                    strong_number: strongItem.strong_number,
+                    value: strongItem,
+                    updatedAt: now
+                });
+            });
+            
+            await this.db.strongs.bulkPut(strongsToCache);
+            console.log('✅ [CacheManager] Successfully cached', strongsToCache.length, 'Strong Numbers');
+            
+            return strongsToCache.length;
+        } catch (error) {
+            console.error('❌ [CacheManager] Failed to cache Strong Numbers:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get Strong Numbers from cache
+     * @param {Array} strongNumbers - Array of Strong Number strings (e.g., ['H1234', 'G5678'])
+     * @returns {Promise<Array>} Array of cached Strong Numbers data
+     */
+    async getStrongs(strongNumbers) {
+        try {
+            console.log('🔍 [CacheManager] Searching cached Strong Numbers:', strongNumbers);
+            
+            if (!Array.isArray(strongNumbers) || strongNumbers.length === 0) {
+                console.warn('⚠️ [CacheManager] Invalid strongNumbers parameter:', strongNumbers);
+                return [];
+            }
+            
+            // Query multiple Strong Numbers at once
+            const cachedStrongs = await this.db.strongs
+                .where('strong_number')
+                .anyOf(strongNumbers)
+                .toArray();
+            
+            console.log('📖 [CacheManager] Found', cachedStrongs.length, 'cached Strong Numbers out of', strongNumbers.length, 'requested');
+            
+            // Return the value objects from cached data
+            return cachedStrongs.map(item => item.value);
+        } catch (error) {
+            console.error('❌ [CacheManager] Failed to get cached Strong Numbers:', error);
+            return [];
+        }
+    }
+
+    /**
      * Get cache statistics
      * @returns {Promise<Object>} Cache statistics including counts and database size
      */
@@ -583,7 +646,8 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                 counts: {
                     verses: 0,
                     books: 0,
-                    versions: 0
+                    versions: 0,
+                    strongs: 0
                 },
                 databaseSize: 0,
                 lastUpdated: new Date().toISOString()
@@ -594,17 +658,20 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                 stats.counts.verses = await this.db.verses.count();
                 stats.counts.books = await this.db.books.count();
                 stats.counts.versions = await this.db.versions.count();
+                stats.counts.strongs = await this.db.strongs.count();
                 
                 // Calculate approximate database size
                 const allVerses = await this.db.verses.toArray();
                 const allBooks = await this.db.books.toArray();
                 const allVersions = await this.db.versions.toArray();
+                const allStrongs = await this.db.strongs.toArray();
                 
                 const versesSize = JSON.stringify(allVerses).length;
                 const booksSize = JSON.stringify(allBooks).length;
                 const versionsSize = JSON.stringify(allVersions).length;
+                const strongsSize = JSON.stringify(allStrongs).length;
                 
-                stats.databaseSize = versesSize + booksSize + versionsSize;
+                stats.databaseSize = versesSize + booksSize + versionsSize + strongsSize;
             }
             
             console.log('📊 [CacheManager] Cache statistics:', stats);
@@ -615,7 +682,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             return {
                 isInitialized: false,
                 cacheExpiry: this.versionsExpiry,
-                counts: { verses: 0, books: 0, versions: 0 },
+                counts: { verses: 0, books: 0, versions: 0, strongs: 0 },
                 databaseSize: 0,
                 error: error.message,
                 lastUpdated: new Date().toISOString()

@@ -452,12 +452,14 @@ class BibleHereReader {
 		this.initializeResizableDivider();
 		
 		// Strong Number click events (using event delegation)
-		this.container.addEventListener('click', (e) => {
-			if (e.target.classList.contains('strong-number-link')) {
-				e.preventDefault();
-				this.strongNumberModal.handleStrongNumberClick(e.target);
-			}
-		});
+		if (parseInt(this.container.dataset.strongInstalled)){
+			this.container.addEventListener('click', (e) => {
+				if (e.target.classList.contains('strong-number-link')) {
+					e.preventDefault();
+					this.strongNumberModal.handleStrongNumberClick(e.target);
+				}
+			});
+		}
 	}
 
 		/**
@@ -3575,7 +3577,26 @@ class StrongNumberModal {
 	}
 	
 	async fetchStrongNumbers(strongNumbers, language) {
-console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log("3578b strongNumbers: ", strongNumbers);
+console.log("3580a type of strongNumbers: ", typeof strongNumbers); console.log("3580b strongNumbers: ", strongNumbers);
+		
+		// First, try to get data from cache
+		if (window.bibleHereCacheManager && window.bibleHereCacheManager.isInitialized) {
+			try {
+				const cachedData = await window.bibleHereCacheManager.getStrongs(strongNumbers);
+				
+				if (cachedData && cachedData.length > 0) {
+					console.log('✅ [StrongNumberModal] Found cached Strong Numbers:', cachedData.length, 'items');
+					return { strong_dictionary: cachedData };
+				}
+			} catch (cacheError) {
+				console.warn('⚠️ [StrongNumberModal] Cache lookup failed:', cacheError);
+				// Continue to fetch from server if cache fails
+			}
+		}
+		
+		// If no cache data, fetch from server
+		console.log('🌐 [StrongNumberModal] No cache data found, fetching from server...');
+		
 		const params = new URLSearchParams({
 			action: 'bible_here_public_get_strong_dictionary',
 			strong_numbers: strongNumbers,
@@ -3595,6 +3616,17 @@ console.log("3578a type of strongNumbers: ", typeof strongNumbers); console.log(
 		const data = await response.json();
 		console.log("3596 data: ", data);
 		if (data.success && data.data) {
+			// Cache the fetched data
+			if (window.bibleHereCacheManager && window.bibleHereCacheManager.isInitialized && data.data.strong_dictionary) {
+				try {
+					await window.bibleHereCacheManager.cacheStrongs(data.data.strong_dictionary);
+					console.log('💾 [StrongNumberModal] Successfully cached Strong Numbers data');
+				} catch (cacheError) {
+					console.warn('⚠️ [StrongNumberModal] Failed to cache Strong Numbers:', cacheError);
+					// Continue even if caching fails
+				}
+			}
+			
 			return data.data;
 		} else {
 			throw new Error(data.message || 'Failed to fetch Strong Numbers');
