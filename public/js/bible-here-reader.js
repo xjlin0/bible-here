@@ -348,12 +348,102 @@ class BibleHereReader {
 			});
 		}
 
-		// Search button
+		// Search button and search functionality
 		if (this.elements.searchButton) {
 			this.elements.searchButton.addEventListener('click', () => {
 				this.openSearch();
 			});
 		}
+
+		// Search container events (click for mobile, hover for desktop)
+		const searchContainer = this.container.querySelector('.search-container');
+		if (searchContainer) {
+			// Click event for mobile support
+			searchContainer.addEventListener('click', (e) => {
+				// Only trigger on the container itself or search icon, not on input or buttons
+				if (e.target === searchContainer || e.target.classList.contains('search-icon')) {
+					e.preventDefault();
+					this.showSearchInput();
+				}
+			});
+			
+			// Hover events for desktop support
+			searchContainer.addEventListener('mouseenter', () => {
+				this.showSearchInput();
+			});
+			
+			searchContainer.addEventListener('mouseleave', (e) => {
+				// Only hide if not focusing on input
+				if (!searchContainer.contains(e.relatedTarget)) {
+					this.hideSearchInput();
+				}
+			});
+		}
+
+		// Search input events
+		const searchInput = this.container.querySelector('.search-input');
+		if (searchInput) {
+			searchInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					this.performSearch();
+				}
+			});
+			
+			searchInput.addEventListener('blur', () => {
+				// Delay hiding to allow for button clicks
+				setTimeout(() => {
+					this.hideSearchInput();
+				}, 200);
+			});
+		}
+
+		// Search submit button
+		const searchSubmitBtn = this.container.querySelector('.search-submit-btn');
+		if (searchSubmitBtn) {
+			searchSubmitBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.performSearch();
+			});
+		}
+
+		// Search cancel button
+		const searchCancelBtn = this.container.querySelector('.search-cancel-btn');
+		if (searchCancelBtn) {
+			searchCancelBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.hideSearchInput();
+			});
+		}
+
+		// Search results modal close button
+		const searchModalCloseBtn = this.container.querySelector('.search-results-modal .modal-close');
+		if (searchModalCloseBtn) {
+			searchModalCloseBtn.addEventListener('click', () => {
+				this.hideSearchResults();
+			});
+		}
+
+		// Search results modal overlay click to close
+		const searchModalOverlay = this.container.querySelector('.search-results-modal .modal-overlay');
+		if (searchModalOverlay) {
+			searchModalOverlay.addEventListener('click', (e) => {
+				// Only close if clicking on the overlay itself, not on modal content
+				if (e.target === searchModalOverlay) {
+					this.hideSearchResults();
+				}
+			});
+		}
+
+		// ESC key to close search results modal
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				const searchModal = this.container.querySelector('.search-results-modal');
+				if (searchModal && searchModal.style.display !== 'none') {
+					this.hideSearchResults();
+				}
+			}
+		})
 
 		// Versions button
 		if (this.elements.versionsButton) {
@@ -1303,11 +1393,224 @@ console.log("loadVersions() 494, params: ", this.params)
 	}
 
 	/**
-	 * Open search interface
+	 * Open search interface (legacy method for backward compatibility)
 	 */
 	openSearch() {
-		// TODO: Implement search functionality
-		console.log('Search functionality to be implemented');
+		console.log('Search button clicked');
+		// This method is kept for backward compatibility
+		// The actual search functionality is handled by hover events
+	}
+	
+	/**
+	 * Show search input on hover
+	 */
+	showSearchInput() {
+		const searchContainer = this.container.querySelector('.search-container');
+		if (!searchContainer) return;
+		
+		const searchBtn = searchContainer.querySelector('.btn-search');
+		const searchInputContainer = searchContainer.querySelector('.search-input-container');
+		const searchInput = searchContainer.querySelector('.search-input');
+		
+		if (searchBtn && searchInputContainer && searchInput) {
+			// Hide button and show input container
+			searchBtn.style.display = 'none';
+			searchInputContainer.style.display = 'flex';
+			
+			// Focus on input
+			searchInput.focus();
+		}
+	}
+	
+	/**
+	 * Hide search input
+	 */
+	hideSearchInput() {
+		const searchContainer = this.container.querySelector('.search-container');
+		if (!searchContainer) return;
+		
+		const searchBtn = searchContainer.querySelector('.btn-search');
+		const searchInputContainer = searchContainer.querySelector('.search-input-container');
+		const searchInput = searchContainer.querySelector('.search-input');
+		
+		if (searchBtn && searchInputContainer && searchInput) {
+			// Clear input and hide container
+			searchInput.value = '';
+			searchInputContainer.style.display = 'none';
+			searchBtn.style.display = 'block';
+		}
+	}
+	
+	/**
+	 * Perform search
+	 */
+	async performSearch() {
+		const searchInput = this.container.querySelector('.search-input');
+		if (!searchInput) return;
+		
+		const searchTerm = searchInput.value.trim();
+		
+		if (!searchTerm || searchTerm.length < 2) {
+			alert('請輸入至少2個字符進行搜索');
+			return;
+		}
+		
+		// Check cache first
+		if (this.searchCache && this.searchCache[searchTerm]) {
+			console.log('使用緩存的搜索結果:', searchTerm);
+			this.displaySearchResults(searchTerm, this.searchCache[searchTerm]);
+			this.hideSearchInput();
+			return;
+		}
+		
+		// Show loading
+		this.showLoading();
+		
+		try {
+			// Build search URL with all books and chapters for full text search
+			const searchUrl = `${bibleHereAjax.ajaxurl}?action=bible_here_public_get_verses&version1_bible=${encodeURIComponent(this.currentVersion1)}&search=${encodeURIComponent(searchTerm)}`;
+			
+			const response = await fetch(searchUrl, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					"X-WP-Nonce": bibleHereAjax.nonce
+				},
+			});
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			
+			if (data.success && data.data && data.data.version1) {
+				// Cache the results
+				if (!this.searchCache) {
+					this.searchCache = {};
+				}
+				this.searchCache[searchTerm] = data.data.version1;
+				
+				this.displaySearchResults(searchTerm, data.data.version1);
+			} else {
+				throw new Error(data.data || '未找到搜索結果');
+			}
+		} catch (error) {
+			console.error('搜索錯誤:', error);
+			this.showError(`搜索失敗: ${error.message}`);
+		} finally {
+			this.hideLoading();
+			this.hideSearchInput();
+		}
+	}
+	
+	/**
+	 * Display search results in modal
+	 */
+	displaySearchResults(searchTerm, results) {
+		const modal = this.container.querySelector('.search-results-modal');
+		const modalTitle = modal.querySelector('.modal-title');
+		const modalContent = modal.querySelector('.search-results-list');
+		
+		if (!modal || !modalTitle || !modalContent) {
+			console.error('Search results modal not found');
+			return;
+		}
+		const resultCounts = results && results.verses && results.verses.length || 0;
+		// Set modal title
+		modalTitle.textContent = `${resultCounts} search results: "${searchTerm}"`;
+		
+		// Generate results HTML
+		let html = '<div class="search-results-container">';
+		
+		if (resultCounts > 0) {
+			results.verses.forEach(verse => {
+				html += `<div class="search-result-item">`;
+				html += `<a href="#" class="search-result-link" data-book="${verse.book_number}" data-chapter="${verse.chapter_number}" data-verse="${verse.verse_number}">`;
+				html += `<span class="search-result-reference">${verse.title_full} ${verse.chapter_number}:${verse.verse_number}</span>`;
+				html += `<span class="search-result-text">${verse.text}</span>`;
+				html += `</a>`;
+				html += `</div>`;
+			});
+		} else {
+			html += '<div class="no-search-results">No search results found.</div>';
+		}
+		
+		html += '</div>';
+		
+		modalContent.innerHTML = html;
+		
+		// Add click event listeners to search result links
+		const searchResultLinks = modalContent.querySelectorAll('.search-result-link');
+		searchResultLinks.forEach(link => {
+			link.addEventListener('click', (e) => {
+				e.preventDefault();
+				const bookNumber = parseInt(link.dataset.book);
+				const chapterNumber = parseInt(link.dataset.chapter);
+				const verseNumber = parseInt(link.dataset.verse);
+				
+				// Hide the search results modal
+				this.hideSearchResults();
+				
+				// Navigate to the selected verse
+				this.navigateToVerse(bookNumber, chapterNumber, verseNumber);
+			});
+		});
+		
+		// Show modal
+		modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+	}
+	
+	/**
+	 * Hide search results modal
+	 */
+	hideSearchResults() {
+		const modal = this.container.querySelector('.search-results-modal');
+		if (modal) {
+			modal.style.display = 'none';
+			document.body.style.overflow = '';
+		}
+	}
+
+	/**
+	 * Navigate to a specific verse
+	 * @param {number} bookNumber - The book number
+	 * @param {number} chapterNumber - The chapter number
+	 * @param {number} verseNumber - The verse number (optional)
+	 */
+	async navigateToVerse(bookNumber, chapterNumber, verseNumber = null) {
+		console.log('🧭 [BibleHereReader] navigateToVerse:', { bookNumber, chapterNumber, verseNumber });
+		
+		// Update current book and chapter
+		this.currentBook = parseInt(bookNumber);
+		this.currentChapter = parseInt(chapterNumber);
+		
+		// Update URL
+		this.updateURL();
+		
+		// Update UI selectors
+		this.updateBookSelect();
+		this.updateChapterSelect();
+		this.updateBookChapterButton();
+		
+		// Load the new chapter
+		await this.loadChapter();
+		
+		// If verse number is specified, scroll to that verse
+		if (verseNumber) {
+			setTimeout(() => {
+				const verseElement = this.container.querySelector(`[data-verse="${verseNumber}"]`);
+				if (verseElement) {
+					verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					// Highlight the verse temporarily
+					verseElement.style.backgroundColor = '#ffeb3b';
+					setTimeout(() => {
+						verseElement.style.backgroundColor = '';
+					}, 2000);
+				}
+			}, 500); // Wait for content to load
+		}
 	}
 
 	/**

@@ -77,9 +77,20 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 	<!-- Navigation Bar (All buttons in single row) -->
 	<div class="bible-reader-nav">
 		<!-- Search Button (moved to leftmost position) -->
-		<button type="button" class="btn-nav btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
-			<span class="search-icon">🔍</span>
-		</button>
+		<div class="search-container">
+			<button type="button" class="btn-nav btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
+				<span class="search-icon">🔍</span>
+			</button>
+			<div class="search-input-container" style="display: none;">
+				<input type="text" class="search-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
+				<button type="button" class="search-submit-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
+					<span class="search-icon">🔍</span>
+				</button>
+				<button type="button" class="search-cancel-btn" title="<?php _e( 'Cancel', 'bible-here' ); ?>">
+					<span class="cancel-icon">×</span>
+				</button>
+			</div>
+		</div>
 
 		<!-- Navigation Group: Previous, Book+Chapter, Version, Next (grouped together) -->
 		<div class="nav-group navigation-controls">
@@ -272,6 +283,24 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			<div class="modal-content">
 				<div class="cross-references-list">
 					<!-- Cross references will be loaded here -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Search Results Modal -->
+	<div id="search-results-modal" class="search-results-modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-container">
+			<div class="modal-header">
+				<h3 class="modal-title"></h3>
+				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
+					<span class="close-icon">×</span>
+				</button>
+			</div>
+			<div class="modal-content">
+				<div class="search-results-list">
+					<!-- Search results will be loaded here -->
 				</div>
 			</div>
 		</div>

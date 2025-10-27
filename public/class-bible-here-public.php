@@ -303,6 +303,7 @@ class Bible_Here_Public {
 		$chapter_number_end = intval( $_GET['chapter_number_end'] ?? $chapter_number_start );
 		$verse_number_start = intval( $_GET['verse_number_start'] ?? 0 );
 		$verse_number_end = intval( $_GET['verse_number_end'] ?? 0 );
+		$search = sanitize_text_field( $_GET['search'] ?? '' );
 
 		// Validate required parameters
 		if ( empty( $version1_bible_raw ) ) {
@@ -318,7 +319,7 @@ class Bible_Here_Public {
 		$response_data = array();
 
 		// Process version1
-		$version1_data = $this->get_version_verses( $version1_bible, $version1_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end );
+		$version1_data = $this->get_version_verses( $version1_bible, $version1_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search );
 		if ( is_wp_error( $version1_data ) ) {
 			wp_send_json_error( array( 'message' => $version1_data->get_error_message() ) );
 		}
@@ -353,9 +354,9 @@ class Bible_Here_Public {
 	 *
 	 * @since    1.0.0
 	 */
-	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end ) {
+	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search = '' ) {
 		global $wpdb;
-
+error_log('got get_version_verses here is $search: ' . $search);
 		// Check if bible table exists
 		$table_exists = $wpdb->get_var( $wpdb->prepare( 
 			"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s",
@@ -381,9 +382,10 @@ class Bible_Here_Public {
 		}
 		// Get book info
 		$books_table = $wpdb->prefix . 'bible_here_books';
+		$language = $version_info['language'] ?? 'en';
 		$book_info = $wpdb->get_row( $wpdb->prepare(
 			"SELECT title_full FROM $books_table WHERE language = %s AND book_number = %d",
-			$version_info['language'] ?? 'en',
+			$language,
 			$book_number_start
 		), ARRAY_A );
 
@@ -391,24 +393,32 @@ class Bible_Here_Public {
 		$where_conditions = array();
 		$query_params = array();
 
-		// Book range
-		if ( $book_number_start === $book_number_end ) {
-			$where_conditions[] = 'book_number = %d';
-			$query_params[] = $book_number_start;
-		} else {
-			$where_conditions[] = 'book_number BETWEEN %d AND %d';
-			$query_params[] = $book_number_start;
-			$query_params[] = $book_number_end;
-		}
+		// Only add book/chapter restrictions if not performing a search
+		if ( empty( $search ) ) {
+			if ($book_number_start != null) {
+				if ( $book_number_start === $book_number_end ) {
+					$where_conditions[] = 'h.book_number = %d';
+					$query_params[] = $book_number_start;
+				} else {
+					$where_conditions[] = 'h.book_number BETWEEN %d AND %d';
+					$query_params[] = $book_number_start;
+					$query_params[] = $book_number_end;
+				}
+			}
 
-		// Chapter range
-		if ( $chapter_number_start === $chapter_number_end ) {
-			$where_conditions[] = 'chapter_number = %d';
-			$query_params[] = $chapter_number_start;
+			if ($chapter_number_start != null) {
+				if ( $chapter_number_start === $chapter_number_end ) {
+					$where_conditions[] = 'h.chapter_number = %d';
+					$query_params[] = $chapter_number_start;
+				} else {
+					$where_conditions[] = 'h.chapter_number BETWEEN %d AND %d';
+					$query_params[] = $chapter_number_start;
+					$query_params[] = $chapter_number_end;
+				}
+			}
 		} else {
-			$where_conditions[] = 'chapter_number BETWEEN %d AND %d';
-			$query_params[] = $chapter_number_start;
-			$query_params[] = $chapter_number_end;
+			$where_conditions[] = 'LOWER(verse_text) LIKE LOWER(%s)';
+			$query_params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
 		// Verse range (optional)
@@ -423,29 +433,40 @@ class Bible_Here_Public {
 			}
 		}
 
+		// Search condition (optional)
+		// if ( ! empty( $search ) ) {
+		// 	$where_conditions[] = 'verse_text LIKE %s';
+		// 	$query_params[] = '%' . $wpdb->esc_like( $search ) . '%';
+		// }
+		error_log('435 here is the $where_conditions '); error_log(print_r($where_conditions, true));
 		$where_clause = implode( ' AND ', $where_conditions );
-
+error_log('got get_version_verses here is $commentary_table: ' . $commentary_table);
 		// Build main query
 		$sql = "SELECT 
 				CAST(verse_number AS UNSIGNED) as verse_number,
 				verse_text as text,
+				h.book_number,
+				h.chapter_number,
+				h.verse_number,
+				b.title_full,
 				verse_id
-			FROM $bible_table
+			FROM $bible_table h
+			  JOIN $books_table b
+			    ON b.language = '$language' AND h.book_number = b.book_number
 			WHERE $where_clause
-			ORDER BY book_number, chapter_number, verse_number";
-
+			ORDER BY h.book_number, h.chapter_number, h.verse_number";
+error_log('got get_version_verses here is $sql: ' . $sql);
 		$prepared_sql = $wpdb->prepare( $sql, $query_params );
 		$verses = $wpdb->get_results( $prepared_sql, ARRAY_A );
-
+error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
 		// Handle database errors
 		if ( $wpdb->last_error ) {
 			return new WP_Error( 'database_error', 'Database error: ' . $wpdb->last_error );
 		}
 
-		// Convert verse field to integer
-		foreach ( $verses as &$verse ) {
-			$verse['verse_number'] = intval( $verse['verse_number'] );
-		}
+		// foreach ( $verses as &$verse ) {
+		// 	$verse['verse_number'] = intval( $verse['verse_number'] );
+		// }   // Convert verse field to integer since everything is string now
 
 		// Add commentary if provided
 		if ( ! empty( $commentary_table ) && $verses ) {
@@ -465,14 +486,24 @@ class Bible_Here_Public {
 			}
 		}
 
-		return array(
+		 $results = array(
 			'table_name' => $table_name_for_query,
-			'book_number' => $book_number_start,
-			'book_name' => $book_info['title_full'] ?? 'Unknown',
+			// 'book_number' => $book_number_start,
+			// 'book_name' => $book_info['title_full'] ?? 'Unknown',
 			'chapter_number' => $chapter_number_start,
 			'version_name' => $version_info['name'] ?? 'Unknown Version',
 			'verses' => $verses ?: array()
 		);
+
+		if (  empty( $search ) ) {
+			$results['book_number'] = null;
+			$results['book_name'] = null;
+		} else {
+			$results['book_number'] = $book_number_start;
+			$results['book_name'] = $$book_info['title_full'] ?? 'Unknown';
+		}
+
+		return $results;
 	}
 
 	/**
