@@ -3874,16 +3874,16 @@ class StrongNumberModal {
 		const strongNumberWord = element.textContent.trim();
 		const versionContainer = element.closest('div.bible-version');
 		const language = versionContainer ? this.readerInstance['currentLanguage' + versionContainer.dataset.languageNumber] : 'en';
-// console.log("3560 language: ", language);
-		this.modalTitle.textContent = `${strongNumberWord}: ${strongNumbers} (${verseText ? ' from ' + verseText : ''})`;
+
+		this.modalTitle.innerHTML = `${strongNumberWord}: ${strongNumbers} (${verseText ? ' from ' + verseText.replaceAll(strongNumberWord, `<b>${strongNumberWord}</b>`) : ''})`;
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-strong-numbers">Loading Strong Numbers...</div>';
 		this.show();
-		// console
+
 		try {
-// console.log("3583 bibleHereAjax.nonce: ", bibleHereAjax.nonce);
+
 			const strongData = await this.fetchStrongNumbers(strongNumbers, language);
-			console.log('📖 [handleStrongNumberClick] 獲取到的 Strong Numbers:', strongData);
+			console.log('📖 [handleStrongNumberClick] Found Strong Numbers:', strongData);
 			this.displayStrongNumbers(strongData.strong_dictionary, language);
 		} catch (error) {
 			console.error('Error fetching Strong Numbers:', error);
@@ -3891,9 +3891,7 @@ class StrongNumberModal {
 		}
 	}
 	
-	async fetchStrongNumbers(strongNumbers, language) {
-console.log("3580a type of strongNumbers: ", typeof strongNumbers); console.log("3580b strongNumbers: ", strongNumbers);
-		
+	async fetchStrongNumbers(strongNumbers, language) {		
 		// First, try to get data from cache
 		if (window.bibleHereCacheManager && window.bibleHereCacheManager.isInitialized) {
 			try {
