@@ -82,7 +82,7 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 				<span class="search-icon">🔍</span>
 			</button>
 			<div class="search-input-container" style="display: none;">
-				<input type="text" class="search-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
+				<input type="text" name="search-input" class="search-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
 				<button type="button" class="search-submit-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
 					<span class="search-icon">🔍</span>
 				</button>

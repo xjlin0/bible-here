@@ -219,6 +219,10 @@
 	border-radius: 4px;
 	min-height: 36px;
 	max-height: 36px;
+	display: block !important;
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	visibility: visible !important;
 }
 
 /* Force remove borders and shadows for search button in all modes */
@@ -228,14 +232,14 @@
 	outline: none !important;
 }
 
-.btn-search:hover,
+/* .btn-search:hover,
 .btn-search:focus,
 .btn-search:active {
 	border: none !important;
 	box-shadow: none !important;
 	outline: none !important;
 	transform: none !important;
-}
+} */
 
 .search-icon {
 	font-size: 16px;
@@ -247,8 +251,11 @@
 	display: flex;
 	align-items: center;
 	min-width: 50px;
+	max-width: 250px;
+	width: 100%;
 	height: 36px;
 	transition: all 0.3s ease;
+	box-sizing: border-box;
 }
 
 .search-input-container {
@@ -266,26 +273,34 @@
 	padding: 0 8px;
 	gap: 8px;
 	z-index: 1000;
-	min-width: 250px;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .search-input {
 	flex: 1;
-	border: none;
-	outline: none;
+	border: none !important;
+	outline: none !important;
+	margin: 0 !important;
+	height: 16px !important;
 	background: transparent;
 	font-size: 14px;
 	color: #495057;
 	padding: 4px 0;
+	box-shadow: none !important;
+	min-width: 0;
+	width: auto;
 }
 
 .search-input::placeholder {
 	color: #6c757d;
 }
 
-.search-submit {
-	width: 24px;
-	height: 24px;
+.search-submit,
+.search-submit-btn {
+	width: 28px;
+	height: 28px;
 	border: none;
 	background: transparent;
 	cursor: pointer;
@@ -295,15 +310,18 @@
 	border-radius: 3px;
 	transition: all 0.2s ease;
 	color: #007cba;
+	flex-shrink: 0;
 }
 
-.search-submit:hover {
+.search-submit:hover,
+.search-submit-btn:hover {
 	background: rgba(0, 124, 186, 0.1);
 }
 
-.search-cancel {
-	width: 24px;
-	height: 24px;
+.search-cancel,
+.search-cancel-btn {
+	width: 28px;
+	height: 28px;
 	border: none;
 	background: transparent;
 	cursor: pointer;
@@ -313,21 +331,23 @@
 	border-radius: 3px;
 	transition: all 0.2s ease;
 	color: #6c757d;
+	flex-shrink: 0;
 }
 
-.search-cancel:hover {
+.search-cancel:hover,
+.search-cancel-btn:hover {
 	background: rgba(108, 117, 125, 0.1);
 	color: #495057;
 }
 
-.search-container:hover .search-input-container {
+/* .search-container:hover .search-input-container {
 	display: flex;
 }
 
 .search-container:hover .btn-search {
 	opacity: 0;
 	pointer-events: none;
-}
+} */
 
 /* Dark theme styles for search */
 .bible-here-reader.theme-dark .search-input-container {
@@ -344,19 +364,23 @@
 	color: #9ca3af;
 }
 
-.bible-here-reader.theme-dark .search-submit {
+.bible-here-reader.theme-dark .search-submit,
+.bible-here-reader.theme-dark .search-submit-btn {
 	color: #60a5fa;
 }
 
-.bible-here-reader.theme-dark .search-submit:hover {
+.bible-here-reader.theme-dark .search-submit:hover,
+.bible-here-reader.theme-dark .search-submit-btn:hover {
 	background: rgba(96, 165, 250, 0.1);
 }
 
-.bible-here-reader.theme-dark .search-cancel {
+.bible-here-reader.theme-dark .search-cancel,
+.bible-here-reader.theme-dark .search-cancel-btn {
 	color: #9ca3af;
 }
 
-.bible-here-reader.theme-dark .search-cancel:hover {
+.bible-here-reader.theme-dark .search-cancel:hover,
+.bible-here-reader.theme-dark .search-cancel-btn:hover {
 	background: rgba(156, 163, 175, 0.1);
 	color: #f3f4f6;
 }
@@ -1920,7 +1944,7 @@
 	}
 	
 	/* Force remove all borders and shadows for all states */
-	.btn-search:hover,
+	/* .btn-search:hover,
 	.btn-search:focus,
 	.btn-search:active,
 	.btn-settings:hover,
@@ -1930,16 +1954,16 @@
 		box-shadow: none !important;
 		outline: none !important;
 		transform: none !important;
-	}
+	} */
 	
-	.btn-search:hover,
+	/* .btn-search:hover,
 	.btn-settings:hover {
 		background: rgba(0, 124, 186, 0.1) !important;
 		box-shadow: none !important;
 		border: none !important;
 		outline: none !important;
 		transform: none !important;
-	}
+	} */
 	
 	.btn-search:focus,
 	.btn-settings:focus {
@@ -1959,11 +1983,11 @@
 		transform: none !important;
 	}
 	
-	.bible-here-reader.theme-dark .btn-search:hover,
+	/* .bible-here-reader.theme-dark .btn-search:hover,
 	.bible-here-reader.theme-dark .btn-settings:hover {
 		background: rgba(255, 255, 255, 0.1) !important;
 		box-shadow: none !important;
-	}
+	} */
 	
 	.bible-here-reader.theme-dark .btn-search:focus,
 	.bible-here-reader.theme-dark .btn-settings:focus {
@@ -2183,7 +2207,7 @@
     background: transparent !important;
 }
 
-.bible-here-reader.theme-light .btn-search:hover,
+/* .bible-here-reader.theme-light .btn-search:hover,
 .bible-here-reader.theme-dark .btn-search:hover,
 .bible-here-reader.theme-light .btn-settings:hover,
 .bible-here-reader.theme-dark .btn-settings:hover,
@@ -2199,7 +2223,7 @@
     box-shadow: none !important;
     outline: none !important;
     background: transparent !important;
-}
+} */
 
 /* ===== CLOSE VERSION BUTTON ===== */
 .btn-close-version {
