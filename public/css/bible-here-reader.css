@@ -2894,7 +2894,8 @@
     color: #007cba;
     font-size: 14px;
     margin-bottom: 8px;
-    display: block;
+    cursor: pointer;
+	text-decoration: underline;
 }
 
 /* Strong Number Original Text */

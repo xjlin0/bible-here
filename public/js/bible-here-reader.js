@@ -4050,7 +4050,7 @@ class StrongNumberModal {
 		const strongNumberRegex = /([GH]\d{1,5})/g;
 		
 		return text.replace(strongNumberRegex, (match) => {
-			return `<span class="strong-number-reference" data-strong-number="${match}" style="cursor: pointer; color: #0073aa; text-decoration: underline;">${match}</span>`;
+			return `<span class="strong-number-reference" data-strong-number="${match}">${match}</span>`;
 			// return `<strong class="strong-number-reference" data-strong-number="${match}">${match}</strong>`;
 
 		});
