@@ -3848,6 +3848,8 @@ class StrongNumberModal {
 		this.modalContent = this.modal.querySelector('.strong-numbers-list');
 		this.closeBtn = this.modal.querySelector('.modal-close.close-button');
 		this.overlay = this.modal.querySelector('.modal-overlay');
+		this.history = []; // Will be converted to 2D array for navigation history
+		this.historyIndex = -1; // Current position in history
 		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
 		this.bindEvents();
 	}
@@ -3864,9 +3866,102 @@ class StrongNumberModal {
 			}
 		});
 		
+		// Add event delegation for strong-number-reference clicks
+		this.modalContent.addEventListener('click', (e) => {
+			if (e.target.classList.contains('strong-number-reference')) {
+				e.preventDefault();
+				this.handleStrongNumberReferenceClick(e.target);
+			}
+		});
+		
+		// Add navigation button event listeners
+		const backwardBtn = this.modal.querySelector('.modal-backward');
+		const forwardBtn = this.modal.querySelector('.strong-forward');
+		
+		if (backwardBtn) {
+			backwardBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (!backwardBtn.disabled) {
+					this.navigateHistory('back');
+				}
+			});
+		}
+		
+		if (forwardBtn) {
+			forwardBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (!forwardBtn.disabled) {
+					this.navigateHistory('forward');
+				}
+			});
+		}
 
 	}
+
+	// History management methods
+	addToHistory(strongNumbers) {
+		// Remove any history after current position (when navigating back then forward to new item)
+		if (this.historyIndex < this.history.length - 1) {
+			this.history = this.history.slice(0, this.historyIndex + 1);
+		}
+		
+		// Add new entry to history
+		this.history.push(strongNumbers);
+		this.historyIndex = this.history.length - 1;
+		
+		console.log('📚 [addToHistory] History updated:', this.history, 'Index:', this.historyIndex);
+	}
 	
+	updateNavigationButtons() {
+		const backwardBtn = this.modal.querySelector('.modal-backward');
+		const forwardBtn = this.modal.querySelector('.strong-forward');
+		
+		if (backwardBtn) {
+			backwardBtn.disabled = this.historyIndex <= 0;
+			backwardBtn.style.opacity = this.historyIndex <= 0 ? '0.5' : '1';
+		}
+		
+		if (forwardBtn) {
+			forwardBtn.disabled = this.historyIndex >= this.history.length - 1;
+			forwardBtn.style.opacity = this.historyIndex >= this.history.length - 1 ? '0.5' : '1';
+		}
+	}
+	
+	async navigateHistory(direction) {
+		if (direction === 'back' && this.historyIndex > 0) {
+			this.historyIndex--;
+		} else if (direction === 'forward' && this.historyIndex < this.history.length - 1) {
+			this.historyIndex++;
+		} else {
+			return; // No navigation possible
+		}
+		
+		const strongNumbers = this.history[this.historyIndex];
+		console.log('🔄 [navigateHistory] Navigating to:', strongNumbers, 'Index:', this.historyIndex);
+		
+		// Get current language
+		const versionContainer = document.querySelector('div.bible-version');
+		const language = versionContainer ? this.readerInstance['currentLanguage' + versionContainer.dataset.languageNumber] : 'en';
+		
+		// Update modal title
+		this.modalTitle.innerHTML = `Strong Numbers: ${strongNumbers.join(', ')}`;
+		
+		// Show loading state
+		this.modalContent.innerHTML = '<div class="loading-strong-numbers">Loading Strong Numbers...</div>';
+		
+		try {
+			const strongData = await this.fetchStrongNumbers(strongNumbers, language);
+			console.log('📖 [navigateHistory] Found Strong Numbers:', strongData);
+			this.displayStrongNumbers(strongData.strong_dictionary, language);
+			this.updateNavigationButtons();
+		} catch (error) {
+			console.error('Error fetching Strong Numbers during navigation:', error);
+			this.modalContent.innerHTML = '<div class="error-strong-numbers">Error loading Strong Numbers. Please try again.</div>';
+		}
+	}
+
 	async handleStrongNumberClick(element) {
 		const strongNumbers = element.dataset.strongNumbers && element.dataset.strongNumbers.split(',');
 		if (!strongNumbers) return;
@@ -3874,6 +3969,9 @@ class StrongNumberModal {
 		const strongNumberWord = element.textContent.trim();
 		const versionContainer = element.closest('div.bible-version');
 		const language = versionContainer ? this.readerInstance['currentLanguage' + versionContainer.dataset.languageNumber] : 'en';
+
+		// Add to history before navigating
+		this.addToHistory(strongNumbers);
 
 		this.modalTitle.innerHTML = `${strongNumberWord}: ${strongNumbers} (${verseText ? ' from ' + verseText.replaceAll(strongNumberWord, `<b>${strongNumberWord}</b>`) : ''})`;
 		// Show loading state
@@ -3885,6 +3983,7 @@ class StrongNumberModal {
 			const strongData = await this.fetchStrongNumbers(strongNumbers, language);
 			console.log('📖 [handleStrongNumberClick] Found Strong Numbers:', strongData);
 			this.displayStrongNumbers(strongData.strong_dictionary, language);
+			this.updateNavigationButtons();
 		} catch (error) {
 			console.error('Error fetching Strong Numbers:', error);
 			this.modalContent.innerHTML = '<div class="error-strong-numbers">Error loading Strong Numbers. Please try again.</div>';
@@ -3946,6 +4045,45 @@ class StrongNumberModal {
 		}
 	}
 	
+	processStrongNumberReferences(text) {
+		// Regular expression to match G12345 or H12345 format
+		const strongNumberRegex = /([GH]\d{1,5})/g;
+		
+		return text.replace(strongNumberRegex, (match) => {
+			return `<span class="strong-number-reference" data-strong-number="${match}" style="cursor: pointer; color: #0073aa; text-decoration: underline;">${match}</span>`;
+			// return `<strong class="strong-number-reference" data-strong-number="${match}">${match}</strong>`;
+
+		});
+	}
+	
+	async handleStrongNumberReferenceClick(element) {
+		const strongNumber = element.dataset.strongNumber;
+		if (!strongNumber) return;
+		
+		// Add to history before navigating
+		this.addToHistory([strongNumber]);
+		
+		// Get current language from the modal context
+		const versionContainer = document.querySelector('div.bible-version');
+		const language = versionContainer ? this.readerInstance['currentLanguage' + versionContainer.dataset.languageNumber] : 'en';
+		
+		// Update modal title
+		this.modalTitle.innerHTML = `Strong Number: ${strongNumber}`;
+		
+		// Show loading state
+		this.modalContent.innerHTML = '<div class="loading-strong-numbers">Loading Strong Number...</div>';
+		
+		try {
+			const strongData = await this.fetchStrongNumbers([strongNumber], language);
+			console.log('📖 [handleStrongNumberReferenceClick] Found Strong Number:', strongData);
+			this.displayStrongNumbers(strongData.strong_dictionary, language);
+			this.updateNavigationButtons();
+		} catch (error) {
+			console.error('Error fetching Strong Number:', error);
+			this.modalContent.innerHTML = '<div class="error-strong-numbers">Error loading Strong Number. Please try again.</div>';
+		}
+	}
+	
 	displayStrongNumbers(strongData, language) {
 		if (!strongData || strongData.length === 0) {
 			this.modalContent.innerHTML = '<div class="no-strong-numbers">No Strong Numbers found.</div>';
@@ -3966,12 +4104,13 @@ class StrongNumberModal {
 			if (item.original) {
 				html += `<span class="strong-number-original">${item.original}</span>`;
 			}
-			
+
 			// Definition/Translation
 			if (item.en || item[language]) {
-				html += `<div class="strong-number-text">${item[language] || item.en}</div>`;
+				const translationText = (item[language] || item.en || 'Missing data...').replace(/\n/g, '<br>');
+				html += `<div class="strong-number-text">${this.processStrongNumberReferences(translationText)}</div>`;
 			}
-			
+
 			// Additional translations if available
 			// if (item.kjv_translation) {
 			// 	html += `<div class="strong-number-text"><strong>KJV:</strong> ${item.kjv_translation}</div>`;
