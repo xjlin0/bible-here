@@ -1511,7 +1511,7 @@ console.log("loadVersions() 494, params: ", this.params)
 		const modal = this.container.querySelector('.search-results-modal');
 		const modalTitle = modal.querySelector('.modal-title');
 		const modalContent = modal.querySelector('.search-results-list');
-		
+
 		if (!modal || !modalTitle || !modalContent) {
 			console.error('Search results modal not found');
 			return;
@@ -1519,41 +1519,50 @@ console.log("loadVersions() 494, params: ", this.params)
 		const resultCounts = results && results.verses && results.verses.length || 0;
 		// Set modal title
 		modalTitle.textContent = `${resultCounts} search results: "${searchTerm}"`;
-		
+
 		// Generate results HTML
 		let html = '<div class="search-results-container">';
-		
+
 		if (resultCounts > 0) {
+			const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
 			results.verses.forEach(verse => {
+				// Highlight search term in verse text with underline
+				let highlightedText = verse.text;
+				if (searchTerm && searchTerm.trim()) {
+					highlightedText = verse.text.replace(regex, '<strong>$1</strong>');
+				}
+				
+				// Generate dynamic URL with book and chapter parameters
+				const currentUrl = new URL(window.location);
+				currentUrl.searchParams.set('book', verse.book_number);
+				currentUrl.searchParams.set('chapter', verse.chapter_number);
+				if (verse.verse_number) {
+					currentUrl.searchParams.set('verse', verse.verse_number);
+				}
+				const dynamicHref = currentUrl.toString();
+				
 				html += `<div class="search-result-item">`;
-				html += `<a href="#" class="search-result-link" data-book="${verse.book_number}" data-chapter="${verse.chapter_number}" data-verse="${verse.verse_number}">`;
+				html += `<a href="${dynamicHref}" class="search-result-link" data-book="${verse.book_number}" data-chapter="${verse.chapter_number}" data-verse="${verse.verse_number}">`;
 				html += `<span class="search-result-reference">${verse.title_full} ${verse.chapter_number}:${verse.verse_number}</span>`;
-				html += `<span class="search-result-text">${verse.text}</span>`;
+				html += `<span class="search-result-text">${highlightedText}</span>`;
 				html += `</a>`;
 				html += `</div>`;
 			});
 		} else {
 			html += '<div class="no-search-results">No search results found.</div>';
 		}
-		
+
 		html += '</div>';
 		
 		modalContent.innerHTML = html;
 		
-		// Add click event listeners to search result links
+		// Add simplified click event listeners to search result links
 		const searchResultLinks = modalContent.querySelectorAll('.search-result-link');
 		searchResultLinks.forEach(link => {
 			link.addEventListener('click', (e) => {
-				e.preventDefault();
-				const bookNumber = parseInt(link.dataset.book);
-				const chapterNumber = parseInt(link.dataset.chapter);
-				const verseNumber = parseInt(link.dataset.verse);
-				
-				// Hide the search results modal
+				// Hide the search results modal when clicking
 				this.hideSearchResults();
-				
-				// Navigate to the selected verse
-				this.navigateToVerse(bookNumber, chapterNumber, verseNumber);
+				// Let the browser handle the navigation via the href URL
 			});
 		});
 		
@@ -1586,8 +1595,11 @@ console.log("loadVersions() 494, params: ", this.params)
 		this.currentBook = parseInt(bookNumber);
 		this.currentChapter = parseInt(chapterNumber);
 		
-		// Update URL
-		this.updateURL();
+		// Update URL parameters with book and chapter
+		this.updateURLParams({
+			book: this.currentBook,
+			chapter: this.currentChapter
+		});
 		
 		// Update UI selectors
 		this.updateBookSelect();
