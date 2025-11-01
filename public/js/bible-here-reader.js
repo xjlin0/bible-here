@@ -522,7 +522,7 @@ class BibleHereReader {
 				 !e.target.closest('.cross-reference-modal')) {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('🔄 關閉雙版本模式');
+				console.log('🔄 Turning off dual versions');
 				this.toggleVersions();
 			}
 		});
@@ -3846,7 +3846,7 @@ class StrongNumberModal {
 		this.modal = document.getElementById('strong-number-modal');
 		this.modalTitle = this.modal.querySelector('.modal-title');
 		this.modalContent = this.modal.querySelector('.strong-numbers-list');
-		this.closeBtn = this.modal.querySelector('.modal-close');
+		this.closeBtn = this.modal.querySelector('.modal-close.close-button');
 		this.overlay = this.modal.querySelector('.modal-overlay');
 		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
 		this.bindEvents();

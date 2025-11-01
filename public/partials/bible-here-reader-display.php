@@ -277,7 +277,7 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			<div class="modal-header">
 				<h3 class="modal-title"></h3>
 				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
-					<span class="close-icon">×</span>
+					<span class="close-icon">X</span>
 				</button>
 			</div>
 			<div class="modal-content">
@@ -295,7 +295,7 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			<div class="modal-header">
 				<h3 class="modal-title"></h3>
 				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
-					<span class="close-icon">×</span>
+					<span class="close-icon">X</span>
 				</button>
 			</div>
 			<div class="modal-content">
@@ -312,8 +312,14 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 		<div class="modal-container">
 			<div class="modal-header">
 				<h3 class="modal-title"></h3>
-				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
-					<span class="close-icon">×</span>
+				<button type="button" class="modal-backward modal-close" title="<?php _e( 'Backward', 'bible-here' ); ?>">
+					<span class="backward-icon">&lt;</span>
+				</button>
+				<button type="button" class="strong-forward modal-close" title="<?php _e( 'Forward', 'bible-here' ); ?>">
+					<span class="forward-icon">&gt;</span>
+				</button>
+				<button type="button" class="modal-close close-button" title="<?php _e( 'Close', 'bible-here' ); ?>">
+					<span class="close-icon">X</span>
 				</button>
 			</div>
 			<div class="modal-content">
