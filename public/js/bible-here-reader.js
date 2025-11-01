@@ -358,26 +358,20 @@ class BibleHereReader {
 		// Search container events (click for mobile, hover for desktop)
 		const searchContainer = this.container.querySelector('.search-container');
 		if (searchContainer) {
-			// Click event for mobile support
-			searchContainer.addEventListener('click', (e) => {
-				// Only trigger on the container itself or search icon, not on input or buttons
-				if (e.target === searchContainer || e.target.classList.contains('search-icon')) {
+			// Click event to toggle search input
+			const searchBtn = searchContainer.querySelector('.btn-search');
+			if (searchBtn) {
+				searchBtn.addEventListener('click', (e) => {
 					e.preventDefault();
-					this.showSearchInput();
-				}
-			});
-			
-			// Hover events for desktop support
-			searchContainer.addEventListener('mouseenter', () => {
-				this.showSearchInput();
-			});
-			
-			searchContainer.addEventListener('mouseleave', (e) => {
-				// Only hide if not focusing on input
-				if (!searchContainer.contains(e.relatedTarget)) {
-					this.hideSearchInput();
-				}
-			});
+					e.stopPropagation();
+					const searchInputContainer = searchContainer.querySelector('.search-input-container');
+					if (searchInputContainer && searchInputContainer.style.display === 'block') {
+						this.hideSearchInput();
+					} else {
+						this.showSearchInput();
+					}
+				});
+			}
 		}
 
 		// Search input events
@@ -390,12 +384,8 @@ class BibleHereReader {
 				}
 			});
 			
-			searchInput.addEventListener('blur', () => {
-				// Delay hiding to allow for button clicks
-				setTimeout(() => {
-					this.hideSearchInput();
-				}, 200);
-			});
+			// Remove blur event that auto-hides search input
+			// Now search input will only hide on explicit actions
 		}
 
 		// Search submit button
@@ -462,6 +452,15 @@ class BibleHereReader {
 
 		// Close menus when clicking outside
 		document.addEventListener('click', (e) => {
+			// Close search input
+			const searchContainer = this.container.querySelector('.search-container');
+			if (searchContainer && !searchContainer.contains(e.target)) {
+				const searchInputContainer = searchContainer.querySelector('.search-input-container');
+				if (searchInputContainer && searchInputContainer.style.display === 'block') {
+					this.hideSearchInput();
+				}
+			}
+			
 			// Close theme menu
 			if (this.elements.themeMenu && 
 				!this.elements.themeMenu.contains(e.target) && 
