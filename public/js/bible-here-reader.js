@@ -345,11 +345,11 @@ class BibleHereReader {
 		}
 
 		// Search button and search functionality
-		if (this.elements.searchButton) {
-			this.elements.searchButton.addEventListener('click', () => {
-				this.openSearch();
-			});
-		}
+		// if (this.elements.searchButton) {
+		// 	this.elements.searchButton.addEventListener('click', () => {
+		// 		this.openSearch();
+		// 	});
+		// }
 
 		// Search container events (click for mobile, hover for desktop)
 		const searchContainer = this.container.querySelector('.search-container');
@@ -1390,11 +1390,11 @@ console.log("loadVersions() 494, params: ", this.params)
 	/**
 	 * Open search interface (legacy method for backward compatibility)
 	 */
-	openSearch() {
-		console.log('Search button clicked');
-		// This method is kept for backward compatibility
-		// The actual search functionality is handled by hover events
-	}
+	// openSearch() {
+	// 	console.log('Search button clicked');
+	// 	// This method is kept for backward compatibility
+	// 	// The actual search functionality is handled by hover events
+	// }
 	
 	/**
 	 * Show search input on hover
