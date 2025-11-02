@@ -78,7 +78,7 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 	<div class="bible-reader-nav">
 		<!-- Search Button (moved to leftmost position) -->
 		<div class="search-container">
-			<button type="button" class="btn-nav btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
+			<button type="button" class="btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
 				<span class="search-icon">🔍</span>
 			</button>
 			<div class="search-input-container" style="display: none;">
@@ -113,7 +113,7 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			</div>
 
 			<!-- Book Chapter Menu (Hidden by default) -->
-			<div class="book-chapter-menu" style="display: none;">
+			<div class="book-chapter-menu">
 				<div class="book-chapter-menu-content">
 					<!-- Tab Navigation -->
 					<div class="menu-tabs">
@@ -180,12 +180,12 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 		</div>
 
 		<!-- Settings Button -->
-		<button type="button" class="btn-nav btn-settings" title="<?php _e( 'Settings', 'bible-here' ); ?>">
+		<button type="button" class="btn-settings" title="<?php _e( 'Settings', 'bible-here' ); ?>">
 			<span class="settings-icon">⚙️</span>
 		</button>
 
 		<!-- Settings Menu (Hidden by default) -->
-		<div class="theme-menu" style="display: none;">
+		<div class="theme-menu">
 			<div class="theme-menu-content">
 				<!-- Theme Settings Section -->
 				<div class="settings-section">

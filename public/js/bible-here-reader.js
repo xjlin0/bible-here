@@ -288,17 +288,13 @@ class BibleHereReader {
 	 * Bind event handlers
 	 */
 	bindEvents() {
-		// Book and Chapter button click  // 設置當前活動的選擇器為第一個
+		// Book and Chapter button click
 		if (this.elements.bookChapterButton1) {
-			// console.log('綁定書卷章節按鈕點擊事件');
 			this.elements.bookChapterButton1.addEventListener('click', (e) => {
-				console.log('第一個書卷章節按鈕被點擊, e.currentTarget.value: ',e.currentTarget.value, typeof e.currentTarget.value);
-				// 設置當前活動的選擇器為第一個
+				// Set current active selector to first
 				this.activeSelector = e.currentTarget.value;
 				this.toggleBookChapterMenu();
 			});
-		} else {
-			console.log('找不到書卷章節按鈕元素');
 		}
 
 		// Second Book and Chapter button click  // 設置當前活動的選擇器為第二個
@@ -2335,18 +2331,13 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Toggle book chapter menu
 	 */
 	toggleBookChapterMenu() {
-		console.log('toggleBookChapterMenu() 被調用');
-		console.log('bookChapterMenu 元素:', this.elements.bookChapterMenu);
 		if (!this.elements.bookChapterMenu) {
-			console.log('找不到 bookChapterMenu 元素');
 			return;
 		}
 
 		if (this.elements.bookChapterMenu.classList.contains('book-chapter-menu-visible')) {
-			console.log('隱藏 book chapter menu');
 			this.hideBookChapterMenu();
 		} else {
-			console.log('顯示 book chapter menu');
 			this.showBookChapterMenu();
 		}
 	}
@@ -2355,9 +2346,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Show book chapter menu
 	 */
 	showBookChapterMenu() {
-		console.log('showBookChapterMenu() 被調用');
 		if (!this.elements.bookChapterMenu) {
-			console.log('找不到 bookChapterMenu 元素');
 			return;
 		}
 
@@ -2366,17 +2355,13 @@ console.log("loadVersions() 494, params: ", this.params)
 
 		// Show menu
 		this.elements.bookChapterMenu.classList.add('book-chapter-menu-visible');
-		console.log('已添加 book-chapter-menu-visible class');
 
 		// Initialize with books tab if not already set
 		const activeTab = this.elements.bookChapterMenu.querySelector('.menu-tab.active');
-		console.log('當前 active tab:', activeTab);
 		if (!activeTab) {
-			console.log('沒有 active tab，切換到 books tab');
 			this.switchBookChapterTab('books');
 		} else {
-			console.log('已有 active tab:', activeTab.dataset.tab);
-			// 調用 switchBookChapterTab 來確保對應的 load 函數被執行
+			// Call switchBookChapterTab to ensure the corresponding load function is executed
 			this.switchBookChapterTab(activeTab.dataset.tab);
 		}
 	}
@@ -2396,10 +2381,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Switch book chapter menu tab
 	 */
 	switchBookChapterTab(tabName) {
-		console.log('switchBookChapterTab 被調用，tabName:', tabName);
-		console.log('bookChapterMenu 元素:', this.elements.bookChapterMenu);
 		if (!this.elements.bookChapterMenu) {
-			console.log('找不到 bookChapterMenu 元素');
 			return;
 		}
 
@@ -2416,22 +2398,16 @@ console.log("loadVersions() 494, params: ", this.params)
 		});
 
 		// Load content based on tab
-		console.log('準備載入 tab 內容，tabName:', tabName);
 		switch (tabName) {
 			case 'versions':
-				console.log('載入 versions tab');
 				this.loadVersionsTab();
 				break;
 			case 'books':
-				console.log('載入 books tab');
 				this.loadBooksTabAndUpdateBookChapterButton();
 				break;
 			case 'chapters':
-				console.log('載入 chapters tab');
 				this.loadChaptersTab();
 				break;
-			default:
-				console.log('未知的 tab 名稱:', tabName);
 		}
 	}
 
@@ -2596,17 +2572,8 @@ console.log("loadVersions() 494, params: ", this.params)
 			let books = null;
 			// 嘗試從快取獲取書卷列表
 			if (this.cacheManager) {
-				console.log('🗄️ [BibleHereReader 2334] 嘗試從快取獲取書卷列表, currentLanguage: ', currentLanguage);
-				console.log('🌐 [DEBUG] 當前語言參數 this[currentLanguageVariable]:', this[currentLanguageVariable]);
 				books = await this.cacheManager.getCachedBooks(this['currentLanguage' + this.activeSelector]);
-				if (books && Object.keys(books).length > 0) {
-					console.log('✅ [BibleHereReader2337] 從快取獲取到書卷列表，書卷數量:', Object.keys(books).length);
-					console.log('📚 [BibleHereReader2338] 快取書卷資料預覽, books:', books[1]);
-					console.log('🔍 [DEBUG] 書卷名稱語言檢查:', {
-						firstBookName: books[40]?.title_full,
-						secondBookName: books[41]?.title_full,
-						thirdBookName: books[42]?.title_full
-					});
+			if (books && Object.keys(books).length > 0) {
 					this.renderBooksList(Object.values(books), booksContent);
 					this.updateBookChapterButton(versionNameShort, books[this.currentBook].title_short);
 					return;
@@ -2675,8 +2642,7 @@ console.log("loadVersions() 494, params: ", this.params)
 	 * Render books list from data
 	 */
 	renderBooksList(books, booksContent) {
-		console.log('🎨 開始渲染書卷列表，書卷數量:', books.length);
-		console.log('🌐 [DEBUG] 當前語言參數 (renderBooksList):', this.currentLanguage);
+
 
 		// 分離舊約和新約書卷, genre_type可能不是英文, 故無法直接使用 genre_type 分離
 		const oldTestament = books.filter(book => book.book_number && book.book_number <= 39);  // 假設舊約書卷編號 1-39
