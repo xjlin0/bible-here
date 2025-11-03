@@ -361,7 +361,7 @@ class BibleHereReader {
 					e.preventDefault();
 					e.stopPropagation();
 					const searchInputContainer = searchContainer.querySelector('.search-input-container');
-					if (searchInputContainer && searchInputContainer.style.display === 'block') {
+					if (searchInputContainer && (searchInputContainer.style.display === 'flex' || searchInputContainer.style.display === 'block')) {
 						this.hideSearchInput();
 					} else {
 						this.showSearchInput();
