@@ -86,9 +86,6 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 				<button type="button" class="search-submit-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
 					<span class="search-icon">🔍</span>
 				</button>
-				<button type="button" class="search-cancel-btn" title="<?php _e( 'Cancel', 'bible-here' ); ?>">
-					<span class="cancel-icon">×</span>
-				</button>
 			</div>
 		</div>
 

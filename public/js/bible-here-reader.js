@@ -452,7 +452,7 @@ class BibleHereReader {
 			const searchContainer = this.container.querySelector('.search-container');
 			if (searchContainer && !searchContainer.contains(e.target)) {
 				const searchInputContainer = searchContainer.querySelector('.search-input-container');
-				if (searchInputContainer && searchInputContainer.style.display === 'block') {
+				if (searchInputContainer && searchInputContainer.style.display === 'flex') {
 					this.hideSearchInput();
 				}
 			}
@@ -1753,9 +1753,9 @@ console.log("loadVersions() 494, params: ", this.params)
 	/**
 	 * Show add version interface (placeholder for phase 4)
 	 */
-	showAddVersionInterface() {
-		alert('Add Version functionality will be implemented in Phase 4: Dual Version Mode');
-	}
+	// showAddVersionInterface() {
+	// 	alert('Add Version functionality will be implemented in Phase 4: Dual Version Mode');
+	// }
 
 	/**
 	 * Show loading indicator
