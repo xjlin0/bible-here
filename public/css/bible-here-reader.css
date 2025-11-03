@@ -215,8 +215,8 @@
 /* ===== SEARCH BUTTON ===== */
 .bible-here-reader .search-container .btn-search,
 .bible-here-reader .navigation .btn-search {
-	min-width: 50px;
-	padding: 8px 12px;
+	/* min-width: 50px; */
+	/* padding: 8px 12px; */
 	border-radius: 4px;
 	min-height: 36px;
 	max-height: 36px;
@@ -252,160 +252,15 @@
 	position: relative;
 	display: flex;
 	align-items: center;
-	min-width: 50px;
+	/* min-width: 50px; */
 	max-width: 250px;
-	width: 100%;
+	/* width: 100%; */
 	height: 36px;
 	transition: all 0.3s ease;
 	box-sizing: border-box;
 }
 
-.search-input-container {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 36px;
-	display: none;
-	align-items: center;
-	background: #ffffff;
-	border: 2px solid #007cba;
-	border-radius: 4px;
-	box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
-	padding: 0 8px;
-	gap: 8px;
-	z-index: 1000;
-	width: 100%;
-	max-width: 100%;
-	box-sizing: border-box;
-}
-
-.bible-here-reader .search-input-container .search-input#bible-here-search-input {
-	flex: 1;
-	border: none;
-	outline: none;
-	margin: 0;
-	height: 16px;
-	background: transparent;
-	font-size: 14px;
-	color: #495057;
-	padding: 4px 0;
-	box-shadow: none;
-	min-width: 0;
-	width: auto;
-}
-
-.search-input::placeholder {
-	color: #6c757d;
-}
-
-/* Custom webkit search cancel button - change X to circular arrow */
-.bible-here-reader .search-input#bible-here-search-input::-webkit-search-cancel-button {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 24px;
-	height: 24px;
-	cursor: pointer;
-	position: relative;
-	background-image: none;
-	background-color: transparent;
-	/* Use a data URI with SVG for the circular arrow */
-	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="12" y="17" text-anchor="middle" font-family="Arial" font-size="18" fill="%236c757d">↻</text></svg>') no-repeat center center;
-	background-size: 24px 24px;
-}
-
-.bible-here-reader.theme-dark .search-input#bible-here-search-input::-webkit-search-cancel-button {
-	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="12" y="17" text-anchor="middle" font-family="Arial" font-size="18" fill="%239ca3af">↻</text></svg>') no-repeat center center;
-	background-size: 24px 24px;
-}
-
-.search-submit,
-.search-submit-btn {
-	width: 28px;
-	height: 28px;
-	border: none;
-	background: transparent;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 3px;
-	transition: all 0.2s ease;
-	color: #007cba;
-	flex-shrink: 0;
-}
-
-.search-submit:hover,
-.search-submit-btn:hover {
-	background: rgba(0, 124, 186, 0.1);
-}
-
-.search-cancel,
-.search-cancel-btn {
-	width: 28px;
-	height: 28px;
-	border: none;
-	background: transparent;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 3px;
-	transition: all 0.2s ease;
-	color: #6c757d;
-	flex-shrink: 0;
-}
-
-.search-cancel:hover,
-.search-cancel-btn:hover {
-	background: rgba(108, 117, 125, 0.1);
-	color: #495057;
-}
-
-/* .search-container:hover .search-input-container {
-	display: flex;
-}
-
-.search-container:hover .btn-search {
-	opacity: 0;
-	pointer-events: none;
-} */
-
-/* Dark theme styles for search */
-.bible-here-reader.theme-dark .search-input-container {
-	background: #374151;
-	border-color: #60a5fa;
-	box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
-}
-
-.bible-here-reader.theme-dark .search-input {
-	color: #f9fafb;
-}
-
-.bible-here-reader.theme-dark .search-input::placeholder {
-	color: #9ca3af;
-}
-
-.bible-here-reader.theme-dark .search-submit,
-.bible-here-reader.theme-dark .search-submit-btn {
-	color: #60a5fa;
-}
-
-.bible-here-reader.theme-dark .search-submit:hover,
-.bible-here-reader.theme-dark .search-submit-btn:hover {
-	background: rgba(96, 165, 250, 0.1);
-}
-
-.bible-here-reader.theme-dark .search-cancel,
-.bible-here-reader.theme-dark .search-cancel-btn {
-	color: #9ca3af;
-}
-
-.bible-here-reader.theme-dark .search-cancel:hover,
-.bible-here-reader.theme-dark .search-cancel-btn:hover {
-	background: rgba(156, 163, 175, 0.1);
-	color: #f3f4f6;
-}
+/* Old search input styles removed - now using SearchModal */
 
 /* ===== VERSIONS BUTTON ===== */
 .btn-versions {
@@ -741,34 +596,7 @@
 		padding: 0;
 	}
 
-	/* Tablet search input overlay */
-	.search-input-container {
-		position: fixed;
-		top: 10px;
-		left: 10px;
-		right: 10px;
-		width: calc(100% - 20px);
-		height: 40px;
-		z-index: 9999;
-		border-radius: 20px;
-		padding: 0 12px;
-		box-shadow: 0 4px 16px rgba(0, 124, 186, 0.35);
-	}
-
-	.bible-here-reader.theme-dark .search-input-container {
-		box-shadow: 0 4px 16px rgba(96, 165, 250, 0.35);
-	}
-
-	.bible-here-reader .search-input-container .search-input#bible-here-search-input {
-		font-size: 15px;
-		height: 18px;
-		padding: 6px 0;
-	}
-
-	.search-submit-btn {
-		width: 30px;
-		height: 30px;
-	}
+	/* Tablet search styles removed - now using SearchModal */
 
 	.bible-reader-nav {
 		padding: 0;
@@ -873,40 +701,7 @@
 		border-right: none;
 	}
 
-	/* Mobile search input overlay */
-	.search-input-container {
-		position: fixed;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		width: calc(100% - 16px);
-		height: 44px;
-		z-index: 9999;
-		border-radius: 22px;
-		padding: 0 16px;
-		box-shadow: 0 4px 20px rgba(0, 124, 186, 0.4);
-		border: 2px solid #007cba;
-	}
-
-	.bible-here-reader.theme-dark .search-input-container {
-		border-color: #60a5fa;
-		box-shadow: 0 4px 20px rgba(96, 165, 250, 0.4);
-	}
-
-	.bible-here-reader .search-input-container .search-input#bible-here-search-input {
-		font-size: 16px;
-		height: 20px;
-		padding: 8px 0;
-	}
-
-	.search-submit-btn {
-		width: 32px;
-		height: 32px;
-	}
-
-	.search-icon {
-		font-size: 16px;
-	}
+	/* Mobile search styles removed - now using SearchModal */
 
 	.bible-reader-nav {
 		padding: 8px 8px;
@@ -921,7 +716,7 @@
 	}
 
 	.btn-nav {
-		padding: 8px 12px;
+		/* padding: 8px 12px; */
 		font-size: 12px;
 		min-height: 36px;
 		border-radius: 20px;
@@ -929,15 +724,15 @@
 
 	.btn-prev,
 	.btn-next {
-		min-width: 32px;
-		padding: 6px 8px;
+		/* min-width: 32px; */
+		/* padding: 6px 8px; */
 		border-radius: 50%;
 	}
 
 	.btn-search,
 	.btn-settings {
-		min-width: 32px;
-		padding: 6px 8px;
+		/* min-width: 32px; */
+		/* padding: 6px 8px; */
 		border-radius: 50%;
 	}
 
@@ -2770,6 +2565,361 @@ body .bible-here-reader.theme-dark .verses-container {
     }
     
     .cross-ref-text {
+        font-size: 13px;
+    }
+}
+
+/* ===== SEARCH MODAL ===== */
+.search-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+}
+
+.search-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.search-modal .modal-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.search-modal .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.search-modal .modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.search-modal .modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.search-modal .modal-close:hover {
+    background: #f3f4f6;
+}
+
+.search-modal .modal-close:active {
+    background: #e5e7eb;
+    transform: scale(0.95);
+}
+
+.search-modal .modal-close .close-icon {
+    font-size: 20px;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.search-modal .modal-close:hover .close-icon {
+    color: #374151;
+}
+
+.search-modal .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+}
+
+.search-form {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.search-modal .search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-modal .search-input:focus {
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+}
+
+.search-modal .search-btn {
+    padding: 12px 16px;
+    background: #007cba;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-modal .search-btn:hover {
+    background: #005a87;
+}
+
+.search-modal .search-btn:active {
+    transform: scale(0.98);
+}
+
+.search-options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-modal .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.search-modal .checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #007cba;
+}
+
+.search-results {
+    padding: 20px 24px;
+}
+
+.search-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.search-result-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+    border-color: #007cba;
+    box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+}
+
+.search-result-link {
+    display: block;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.search-result-link:hover {
+    background: #f8fafc;
+    text-decoration: none;
+    color: inherit;
+}
+
+.search-result-reference {
+    display: block;
+    font-weight: 600;
+    color: #007cba;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.search-result-text {
+    display: block;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.search-loading,
+.search-error,
+.search-no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 16px;
+}
+
+.search-error {
+    color: #dc2626;
+}
+
+/* Dark theme styles for search modal */
+.bible-here-reader.theme-dark .search-modal .modal-container {
+    background: #1f2937;
+    border: 1px solid #374151;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-header {
+    border-bottom-color: #374151;
+}
+
+.bible-here-reader.theme-dark .search-form {
+    border-bottom-color: #374151;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-title {
+    color: #f9fafb;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-close:hover {
+    background: #374151;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-close:active {
+    background: #4b5563;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-close .close-icon {
+    color: #9ca3af;
+}
+
+.bible-here-reader.theme-dark .search-modal .modal-close:hover .close-icon {
+    color: #d1d5db;
+}
+
+.bible-here-reader.theme-dark .search-modal .search-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.bible-here-reader.theme-dark .search-modal .search-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.bible-here-reader.theme-dark .search-modal .search-input::placeholder {
+    color: #9ca3af;
+}
+
+.bible-here-reader.theme-dark .search-modal .search-btn {
+    background: #007cba;
+}
+
+.bible-here-reader.theme-dark .search-modal .search-btn:hover {
+    background: #60a5fa;
+}
+
+.bible-here-reader.theme-dark .search-modal .checkbox-group {
+    color: #d1d5db;
+}
+
+.bible-here-reader.theme-dark .search-result-item {
+    border-color: #374151;
+    background: #111827;
+}
+
+.bible-here-reader.theme-dark .search-result-item:hover {
+    border-color: #007cba;
+    background: #1f2937;
+}
+
+.bible-here-reader.theme-dark .search-result-link:hover {
+    background: #374151;
+}
+
+.bible-here-reader.theme-dark .search-result-text {
+    color: #d1d5db;
+}
+
+.bible-here-reader.theme-dark .search-loading,
+.bible-here-reader.theme-dark .search-no-results {
+    color: #9ca3af;
+}
+
+.bible-here-reader.theme-dark .search-error {
+    color: #f87171;
+}
+
+/* Mobile responsive adjustments for search modal */
+@media (max-width: 768px) {
+    .search-modal .modal-container {
+        width: 95%;
+        max-height: 85vh;
+        border-radius: 8px;
+    }
+    
+    .search-modal .modal-header {
+        padding: 16px 20px 12px;
+    }
+    
+    .search-modal .modal-title {
+        font-size: 16px;
+    }
+    
+    .search-form {
+        padding: 16px 20px;
+    }
+    
+    .search-results {
+        padding: 16px 20px;
+    }
+    
+    .search-result-link {
+        padding: 12px;
+    }
+    
+    .search-result-reference {
+        font-size: 13px;
+    }
+    
+    .search-result-text {
         font-size: 13px;
     }
 }

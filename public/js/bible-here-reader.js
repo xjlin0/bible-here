@@ -153,6 +153,9 @@ class BibleHereReader {
 		// Initialize strong number modal
 		this.initializeStrongNumberModal();
 
+		// Initialize search modal
+		this.initializeSearchModal();
+
 		// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
 		this.loadChapter();
 
@@ -219,6 +222,18 @@ class BibleHereReader {
 			console.log('✅ [BibleHereReader] Strong number modal initialized');
 		} catch (error) {
 			console.warn('⚠️ [BibleHereReader] Failed to initialize strong number modal:', error);
+		}
+	}
+
+	/**
+	 * Initialize search modal
+	 */
+	initializeSearchModal() {
+		try {
+			this.searchModal = new SearchModal(this);
+			console.log('✅ [BibleHereReader] Search modal initialized');
+		} catch (error) {
+			console.warn('⚠️ [BibleHereReader] Failed to initialize search modal:', error);
 		}
 	}
 
@@ -354,53 +369,20 @@ class BibleHereReader {
 		// Search container events (click for mobile, hover for desktop)
 		const searchContainer = this.container.querySelector('.search-container');
 		if (searchContainer) {
-			// Click event to toggle search input
+			// Click event to show search modal
 			const searchBtn = searchContainer.querySelector('.btn-search');
 			if (searchBtn) {
 				searchBtn.addEventListener('click', (e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					const searchInputContainer = searchContainer.querySelector('.search-input-container');
-					if (searchInputContainer && (searchInputContainer.style.display === 'flex' || searchInputContainer.style.display === 'block')) {
-						this.hideSearchInput();
-					} else {
-						this.showSearchInput();
+					if (this.searchModal) {
+						this.searchModal.show();
 					}
 				});
 			}
 		}
 
-		// Search input events
-		const searchInput = this.container.querySelector('.search-input');
-		if (searchInput) {
-			searchInput.addEventListener('keypress', (e) => {
-				if (e.key === 'Enter') {
-					e.preventDefault();
-					this.performSearch();
-				}
-			});
-			
-			// Remove blur event that auto-hides search input
-			// Now search input will only hide on explicit actions
-		}
-
-		// Search submit button
-		const searchSubmitBtn = this.container.querySelector('.search-submit-btn');
-		if (searchSubmitBtn) {
-			searchSubmitBtn.addEventListener('click', (e) => {
-				e.preventDefault();
-				this.performSearch();
-			});
-		}
-
-		// Search cancel button
-		const searchCancelBtn = this.container.querySelector('.search-cancel-btn');
-		if (searchCancelBtn) {
-			searchCancelBtn.addEventListener('click', (e) => {
-				e.preventDefault();
-				this.hideSearchInput();
-			});
-		}
+		// Old search input events removed - now using SearchModal
 
 		// Search results modal close button
 		const searchModalCloseBtn = this.container.querySelector('.search-results-modal .modal-close');
@@ -448,15 +430,6 @@ class BibleHereReader {
 
 		// Close menus when clicking outside
 		document.addEventListener('click', (e) => {
-			// Close search input
-			const searchContainer = this.container.querySelector('.search-container');
-			if (searchContainer && !searchContainer.contains(e.target)) {
-				const searchInputContainer = searchContainer.querySelector('.search-input-container');
-				if (searchInputContainer && searchInputContainer.style.display === 'flex') {
-					this.hideSearchInput();
-				}
-			}
-			
 			// Close theme menu
 			if (this.elements.themeMenu && 
 				!this.elements.themeMenu.contains(e.target) && 
@@ -1396,74 +1369,55 @@ console.log("loadVersions() 494, params: ", this.params)
 	// 	// The actual search functionality is handled by hover events
 	// }
 	
-	/**
-	 * Show search input on hover
-	 */
-	showSearchInput() {
-		const searchContainer = this.container.querySelector('.search-container');
-		if (!searchContainer) return;
-		
-		const searchBtn = searchContainer.querySelector('.btn-search');
-		const searchInputContainer = searchContainer.querySelector('.search-input-container');
-		const searchInput = searchContainer.querySelector('.search-input');
-		
-		if (searchBtn && searchInputContainer && searchInput) {
-			// Hide button and show input container
-			searchBtn.style.display = 'none';
-			searchInputContainer.style.display = 'flex';
-			
-			// Focus on input
-			searchInput.focus();
-		}
-	}
-	
-	/**
-	 * Hide search input
-	 */
-	hideSearchInput() {
-		const searchContainer = this.container.querySelector('.search-container');
-		if (!searchContainer) return;
-		
-		const searchBtn = searchContainer.querySelector('.btn-search');
-		const searchInputContainer = searchContainer.querySelector('.search-input-container');
-		const searchInput = searchContainer.querySelector('.search-input');
-		
-		if (searchBtn && searchInputContainer && searchInput) {
-			// Clear input and hide container
-			searchInput.value = '';
-			searchInputContainer.style.display = 'none';
-			searchBtn.style.display = 'block';
-		}
-	}
+
 	
 	/**
 	 * Perform search
+	 * @param {string} searchTerm - The search term (optional, will use input value if not provided)
+	 * @param {boolean} exactMatch - Whether to perform exact match search
 	 */
-	async performSearch() {
-		const searchInput = this.container.querySelector('.search-input');
-		if (!searchInput) return;
-		
-		const searchTerm = searchInput.value.trim();
+	async performSearch(searchTerm = null, exactMatch = false) {
+		// If searchTerm is not provided, get it from the search input (legacy behavior)
+		if (!searchTerm) {
+			const searchInput = this.container.querySelector('.search-input');
+			if (!searchInput) return;
+			searchTerm = searchInput.value.trim();
+		}
 		
 		if (!searchTerm || searchTerm.length < 2) {
-			alert('請輸入至少2個字符進行搜索');
+			if (!searchTerm) {
+				alert('請輸入至少2個字符進行搜索');
+			}
 			return;
 		}
+		
+		// Create cache key that includes exact match option
+		const cacheKey = `${searchTerm}_${exactMatch ? 'exact' : 'normal'}`;
 		
 		// Check cache first
-		if (this.searchCache && this.searchCache[searchTerm]) {
-			console.log('使用緩存的搜索結果:', searchTerm);
-			this.displaySearchResults(searchTerm, this.searchCache[searchTerm]);
-			this.hideSearchInput();
-			return;
+		if (this.searchCache && this.searchCache[cacheKey]) {
+			console.log('使用緩存的搜索結果:', cacheKey);
+			const results = this.searchCache[cacheKey];
+			// Only display results if this is legacy call (no searchTerm parameter)
+			if (arguments.length === 0) {
+				this.displaySearchResults(searchTerm, results);
+			}
+			return results;
 		}
 		
-		// Show loading
-		this.showLoading();
+		// Show loading only for legacy calls
+		if (arguments.length === 0) {
+			this.showLoading();
+		}
 		
 		try {
 			// Build search URL with all books and chapters for full text search
-			const searchUrl = `${bibleHereAjax.ajaxurl}?action=bible_here_public_get_verses&version1_bible=${encodeURIComponent(this.currentVersion1)}&search=${encodeURIComponent(searchTerm)}`;
+			let searchUrl = `${bibleHereAjax.ajaxurl}?action=bible_here_public_get_verses&version1_bible=${encodeURIComponent(this.currentVersion1)}&search=${encodeURIComponent(searchTerm)}`;
+			
+			// Add exact match parameter if requested
+			if (exactMatch) {
+				searchUrl += '&exact_match=1';
+			}
 			
 			const response = await fetch(searchUrl, {
 				method: 'GET',
@@ -1480,22 +1434,33 @@ console.log("loadVersions() 494, params: ", this.params)
 			const data = await response.json();
 			
 			if (data.success && data.data && data.data.version1) {
-				// Cache the results
+				// Cache the results with the cache key that includes exact match option
 				if (!this.searchCache) {
 					this.searchCache = {};
 				}
-				this.searchCache[searchTerm] = data.data.version1;
+				this.searchCache[cacheKey] = data.data.version1;
 				
+				// Only display results for legacy calls
+			if (arguments.length === 0) {
 				this.displaySearchResults(searchTerm, data.data.version1);
+			}
+				
+				return data.data.version1;
 			} else {
 				throw new Error(data.data || '未找到搜索結果');
 			}
 		} catch (error) {
 			console.error('搜索錯誤:', error);
-			this.showError(`搜索失敗: ${error.message}`);
+			// Only show error for legacy calls
+			if (arguments.length === 0) {
+				this.showError(`搜索失敗: ${error.message}`);
+			}
+			throw error; // Re-throw for SearchModal to handle
 		} finally {
-			this.hideLoading();
-			this.hideSearchInput();
+			// Only hide loading for legacy calls
+			if (arguments.length === 0) {
+				this.hideLoading();
+			}
 		}
 	}
 	
@@ -3649,15 +3614,15 @@ class CrossReferenceModal {
 		const version = element.closest("div.verses-container").dataset.tableName; // Get the version from the parent of the clicked element
 		const languageNumber = element.closest("div.bible-version").dataset.languageNumber;
 		const bookNameShort = this.readerInstance.elements['bookChapterText'+languageNumber].dataset.bookNameShort;
-		console.log('📖 [handleCrossReferenceClick 3333] 點擊的交叉引用 by languageNumber: ', languageNumber, ' version: ', version, ' please check version: ', element.dataset);
-		this.modalTitle.textContent = `${bookNameShort} ${chapter}:${verse} - ${verseText}`;
+		console.log('📖 [handleCrossReferenceClick 33617] cliked cross reference by languageNumber: ', languageNumber, ' version: ', version, ' please check version: ', element.dataset);
+		this.modalTitle.textContent = `Cross Refs: ${bookNameShort} ${chapter}:${verse} - ${verseText}`;
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-cross-refs">Loading cross references...</div>';
 		this.show();
 
 		try {  // Call API to get cross references with the specific version
 			const crossRefs = await this.fetchCrossReferences(book, chapter, verse, version);
-			console.log('📖 [handleCrossReferenceClick 3341] 獲取到的交叉引用:', crossRefs);
+			console.log('📖 [handleCrossReferenceClick 3625] fetched cross references:', crossRefs);
 			this.displayCrossReferences(crossRefs);
 		} catch (error) {
 			console.error('Error fetching cross references:', error);
@@ -3804,6 +3769,136 @@ class CrossReferenceModal {
 }
 
 // Note: CrossReferenceModal is now initialized by each BibleHereReader instance
+
+// Search Modal functionality
+class SearchModal {
+	constructor(readerInstance) {
+		this.modal = document.getElementById('search-modal');
+		this.modalContent = this.modal.querySelector('.search-modal-results');
+		this.closeBtn = this.modal.querySelector('.modal-close');
+		this.overlay = this.modal.querySelector('.modal-overlay');
+		this.searchInput = this.modal.querySelector('#search-modal-input');
+		this.exactMatchCheckbox = this.modal.querySelector('#exact-match-checkbox');
+		this.searchBtn = this.modal.querySelector('.search-modal-btn');
+		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
+		this.bindEvents();
+	}
+	
+	bindEvents() {
+		// Close modal events
+		this.closeBtn.addEventListener('click', () => this.close());
+		this.overlay.addEventListener('click', () => this.close());
+		
+		// ESC key to close
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && this.modal.style.display !== 'none') {
+				this.close();
+			}
+		});
+		
+		// Search input Enter key
+		this.searchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				this.performSearch();
+			}
+		});
+		
+		// Search button click
+		this.searchBtn.addEventListener('click', () => {
+			this.performSearch();
+		});
+	}
+	
+	async performSearch() {
+		const searchTerm = this.searchInput.value.trim();
+		if (!searchTerm) {
+			return;
+		}
+		
+		const exactMatch = this.exactMatchCheckbox.checked;
+		
+		// Show loading state
+		this.modalContent.innerHTML = '<div class="loading-search-results">Searching...</div>';
+		
+		try {
+			// Call the existing performSearch function with exact match option
+			const results = await this.readerInstance.performSearch(searchTerm, exactMatch);
+			this.displaySearchResults(results, searchTerm);
+		} catch (error) {
+			console.error('Error performing search:', error);
+			this.modalContent.innerHTML = '<div class="error-search-results">Error performing search. Please try again.</div>';
+		}
+	}
+	
+	displaySearchResults(results, searchTerm) {
+		if (!results || !results.verses || results.verses.length === 0) {
+			this.modalContent.innerHTML = '<div class="no-search-results">No search results found.</div>';
+			return;
+		}
+		
+		const resultCounts = results.verses.length;
+		
+		// Generate results HTML
+		let html = '<div class="search-results-container">';
+		
+		const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+		results.verses.forEach(verse => {
+			// Highlight search term in verse text
+			let highlightedText = verse.text;
+			if (searchTerm && searchTerm.trim()) {
+				highlightedText = verse.text.replace(regex, '<strong>$1</strong>');
+			}
+			
+			// Generate dynamic URL with book and chapter parameters
+			const currentUrl = new URL(window.location);
+			currentUrl.searchParams.set('book', verse.book_number);
+			currentUrl.searchParams.set('chapter', verse.chapter_number);
+			if (verse.verse_number) {
+				currentUrl.searchParams.set('verse', verse.verse_number);
+			}
+			const dynamicHref = currentUrl.toString();
+			
+			html += `<div class="search-result-item">`;
+			html += `<a href="${dynamicHref}" class="search-result-link" data-book="${verse.book_number}" data-chapter="${verse.chapter_number}" data-verse="${verse.verse_number}">`;
+			html += `<span class="search-result-reference">${verse.title_full} ${verse.chapter_number}:${verse.verse_number}</span>`;
+			html += `<span class="search-result-text">${highlightedText}</span>`;
+			html += `</a>`;
+			html += `</div>`;
+		});
+		
+		html += '</div>';
+		
+		this.modalContent.innerHTML = html;
+		
+		// Add click event listeners to search result links
+		const searchResultLinks = this.modalContent.querySelectorAll('.search-result-link');
+		searchResultLinks.forEach(link => {
+			link.addEventListener('click', (e) => {
+				// Close the search modal when clicking
+				this.close();
+				// Let the browser handle the navigation via the href URL
+			});
+		});
+	}
+	
+	show() {
+		this.modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+		// Focus on search input
+		setTimeout(() => {
+			this.searchInput.focus();
+		}, 100);
+	}
+	
+	close() {
+		this.modal.style.display = 'none';
+		document.body.style.overflow = '';
+		// Clear search input
+		this.searchInput.value = '';
+		this.modalContent.innerHTML = '';
+	}
+}
 
 // Strong Number Modal functionality
 class StrongNumberModal {

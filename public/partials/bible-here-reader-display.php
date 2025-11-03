@@ -81,12 +81,6 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			<button type="button" class="btn-search" title="<?php _e( 'Search', 'bible-here' ); ?>">
 				<span class="search-icon">🔍</span>
 			</button>
-			<div class="search-input-container" style="display: none;">
-				<input type="search" id="bible-here-search-input" class="search-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
-				<button type="button" class="search-submit-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
-					<span class="search-icon">🔍</span>
-				</button>
-			</div>
 		</div>
 
 		<!-- Navigation Group: Previous, Book+Chapter, Version, Next (grouped together) -->
@@ -322,6 +316,33 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
 			<div class="modal-content">
 				<div class="strong-numbers-list">
 					<!-- Strong numbers will be loaded here -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Search Modal -->
+	<div id="search-modal" class="search-modal" style="display: none;">
+		<div class="modal-overlay"></div>
+		<div class="modal-container">
+			<div class="modal-header">
+				<div class="search-header-controls">
+					<input type="search" id="search-modal-input" class="search-modal-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
+					<label class="exact-match-label">
+						<input type="checkbox" id="exact-match-checkbox" class="exact-match-checkbox" checked="checked" disabled="disabled">
+						<span><?php _e( 'Exact match?', 'bible-here' ); ?></span>
+					</label>
+					<button type="button" class="search-modal-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
+						<span class="search-icon">🔍</span>
+					</button>
+				</div>
+				<button type="button" class="modal-close" title="<?php _e( 'Close', 'bible-here' ); ?>">
+					<span class="close-icon">X</span>
+				</button>
+			</div>
+			<div class="modal-content">
+				<div class="search-modal-results">
+					<!-- Search results will be loaded here -->
 				</div>
 			</div>
 		</div>
