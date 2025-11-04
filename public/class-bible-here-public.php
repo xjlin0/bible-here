@@ -356,7 +356,7 @@ class Bible_Here_Public {
 	 */
 	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search = '' ) {
 		global $wpdb;
-error_log('got get_version_verses here is $search: ' . $search);
+// error_log('got get_version_verses here is $search: ' . $search);
 		// Check if bible table exists
 		$table_exists = $wpdb->get_var( $wpdb->prepare( 
 			"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s",
@@ -373,7 +373,7 @@ error_log('got get_version_verses here is $search: ' . $search);
 		// Remove wp_ prefix from $bible_table to query versions table
 		$table_name_for_query = str_replace($wpdb->prefix, '', $bible_table);		
 		$version_info = $wpdb->get_row( $wpdb->prepare(
-			"SELECT name, language FROM $versions_table WHERE table_name = %s",
+			"SELECT name, language, type FROM $versions_table WHERE table_name = %s",
 			$table_name_for_query
 		), ARRAY_A );
 		

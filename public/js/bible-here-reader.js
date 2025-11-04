@@ -1374,9 +1374,9 @@ console.log("loadVersions() 494, params: ", this.params)
 	/**
 	 * Perform search
 	 * @param {string} searchTerm - The search term (optional, will use input value if not provided)
-	 * @param {boolean} exactMatch - Whether to perform exact match search
+	 * @param {string} searchStrong - Whether to perform exact match search
 	 */
-	async performSearch(searchTerm = null, exactMatch = false) {
+	async performSearch(searchTerm = null, searchStrong = null) {
 		// If searchTerm is not provided, get it from the search input (legacy behavior)
 		if (!searchTerm) {
 			const searchInput = this.container.querySelector('.search-input');
@@ -1392,18 +1392,18 @@ console.log("loadVersions() 494, params: ", this.params)
 		}
 		
 		// Create cache key that includes exact match option
-		const cacheKey = `${searchTerm}_${exactMatch ? 'exact' : 'normal'}`;
+		// const cacheKey = `${searchTerm}_${exactMatch ? 'exact' : 'normal'}`;
 		
-		// Check cache first
-		if (this.searchCache && this.searchCache[cacheKey]) {
-			console.log('使用緩存的搜索結果:', cacheKey);
-			const results = this.searchCache[cacheKey];
-			// Only display results if this is legacy call (no searchTerm parameter)
-			if (arguments.length === 0) {
-				this.displaySearchResults(searchTerm, results);
-			}
-			return results;
-		}
+		// // Check cache first
+		// if (this.searchCache && this.searchCache[cacheKey]) {
+		// 	console.log('使用緩存的搜索結果:', cacheKey);
+		// 	const results = this.searchCache[cacheKey];
+		// 	// Only display results if this is legacy call (no searchTerm parameter)
+		// 	if (arguments.length === 0) {
+		// 		this.displaySearchResults(searchTerm, results);
+		// 	}
+		// 	return results;
+		// }
 		
 		// Show loading only for legacy calls
 		if (arguments.length === 0) {
@@ -1415,9 +1415,9 @@ console.log("loadVersions() 494, params: ", this.params)
 			let searchUrl = `${bibleHereAjax.ajaxurl}?action=bible_here_public_get_verses&version1_bible=${encodeURIComponent(this.currentVersion1)}&search=${encodeURIComponent(searchTerm)}`;
 			
 			// Add exact match parameter if requested
-			if (exactMatch) {
-				searchUrl += '&exact_match=1';
-			}
+			// if (exactMatch) {
+			// 	searchUrl += '&exact_match=1';
+			// }
 			
 			const response = await fetch(searchUrl, {
 				method: 'GET',
@@ -1435,10 +1435,10 @@ console.log("loadVersions() 494, params: ", this.params)
 			
 			if (data.success && data.data && data.data.version1) {
 				// Cache the results with the cache key that includes exact match option
-				if (!this.searchCache) {
-					this.searchCache = {};
-				}
-				this.searchCache[cacheKey] = data.data.version1;
+				// if (!this.searchCache) {
+				// 	this.searchCache = {};
+				// }
+				// this.searchCache[cacheKey] = data.data.version1;
 				
 				// Only display results for legacy calls
 			if (arguments.length === 0) {
@@ -1447,13 +1447,13 @@ console.log("loadVersions() 494, params: ", this.params)
 				
 				return data.data.version1;
 			} else {
-				throw new Error(data.data || '未找到搜索結果');
+				throw new Error(data.data || 'Not found');
 			}
 		} catch (error) {
-			console.error('搜索錯誤:', error);
+			console.error('Search error:', error);
 			// Only show error for legacy calls
 			if (arguments.length === 0) {
-				this.showError(`搜索失敗: ${error.message}`);
+				this.showError(`Search fail: ${error.message}`);
 			}
 			throw error; // Re-throw for SearchModal to handle
 		} finally {
@@ -3778,8 +3778,9 @@ class SearchModal {
 		this.closeBtn = this.modal.querySelector('.modal-close');
 		this.overlay = this.modal.querySelector('.modal-overlay');
 		this.searchInput = this.modal.querySelector('#search-modal-input');
-		this.exactMatchCheckbox = this.modal.querySelector('#exact-match-checkbox');
+		// this.exactMatchCheckbox = this.modal.querySelector('#exact-match-checkbox');
 		this.searchBtn = this.modal.querySelector('.search-modal-btn');
+		this.clearBtn = this.modal.querySelector('.search-clear-btn');
 		this.readerInstance = readerInstance; // Store reference to BibleHereReader instance
 		this.bindEvents();
 	}
@@ -3803,6 +3804,22 @@ class SearchModal {
 				this.performSearch();
 			}
 		});
+
+		// Toggle clear button visibility
+		this.searchInput.addEventListener('input', () => {
+			if (!this.clearBtn) return;
+			const hasValue = this.searchInput.value.trim().length > 0;
+			this.clearBtn.style.display = hasValue ? '' : 'none';
+		});
+		
+		// Clear button click
+		if (this.clearBtn) {
+			this.clearBtn.addEventListener('click', () => {
+				this.searchInput.value = '';
+				this.clearBtn.style.display = 'none';
+				this.searchInput.focus();
+			});
+		}
 		
 		// Search button click
 		this.searchBtn.addEventListener('click', () => {
@@ -3816,14 +3833,14 @@ class SearchModal {
 			return;
 		}
 		
-		const exactMatch = this.exactMatchCheckbox.checked;
+		// const exactMatch = this.exactMatchCheckbox.checked;
 		
 		// Show loading state
 		this.modalContent.innerHTML = '<div class="loading-search-results">Searching...</div>';
 		
 		try {
 			// Call the existing performSearch function with exact match option
-			const results = await this.readerInstance.performSearch(searchTerm, exactMatch);
+			const results = await this.readerInstance.performSearch(searchTerm, null);
 			this.displaySearchResults(results, searchTerm);
 		} catch (error) {
 			console.error('Error performing search:', error);
@@ -3897,6 +3914,10 @@ class SearchModal {
 		// Clear search input
 		this.searchInput.value = '';
 		this.modalContent.innerHTML = '';
+		// Hide clear button when closing
+		if (this.clearBtn) {
+			this.clearBtn.style.display = 'none';
+		}
 	}
 }
 

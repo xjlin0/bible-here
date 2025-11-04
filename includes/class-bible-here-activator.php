@@ -170,8 +170,8 @@ class Bible_Here_Activator {
 			book_number tinyint(1) unsigned NOT NULL,
 			chapter_number tinyint(1) unsigned NOT NULL,
 			verse_number tinyint(1) unsigned NOT NULL,
-			verse_text text COMMENT 'some verse are empty due to translation syntax',
-			label VARCHAR(50) COMMENT 'label before the verse',
+			verse_text_strong VARCHAR(1000) COMMENT 'optional, for verse with strong numbers',
+			verse_text VARCHAR(500) COMMENT 'some verse are empty due to translation syntax',
 			PRIMARY KEY (verse_id),
 			UNIQUE KEY {$index_name} (book_number, chapter_number, verse_number)
 		) {$charset_collate} {$comment};";
