@@ -445,6 +445,7 @@ error_log('got get_version_verses here is $commentary_table: ' . $commentary_tab
 		$sql = "SELECT 
 				CAST(verse_number AS UNSIGNED) as verse_number,
 				verse_text as text,
+				verse_text_strong as strong_text,
 				h.book_number,
 				h.chapter_number,
 				h.verse_number,

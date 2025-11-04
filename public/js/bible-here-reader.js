@@ -730,7 +730,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			}
 				
 				// 從 API 獲取
-			console.log('🌐 673 async loadChapter() 從 API 獲取章節內容');
+			console.log('🌐 733 async loadChapter() Obtain chapter content from API');
 			
 			// 構建 URL 參數
 			const url = new URL(bibleHereAjax.ajaxurl);
@@ -740,16 +740,16 @@ console.log("loadVersions() 494, params: ", this.params)
 			url.searchParams.set('chapter_number_start', this.currentChapter);
 			url.searchParams.set('chapter_number_end', this.currentChapter);  // Todo: preload the next chapter but that need change of get_verses API shape change (move book&chapter number to verse Array)
 			url.searchParams.set('version1_bible', this.currentVersion1);
-			console.log(`🌐 683 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
+			console.log(`🌐 743 async loadChapter() this.isDualMode: ${this.isDualMode}, this.currentVersion1: ${this.currentVersion1} , this.currentVersion2: ${this.currentVersion2}`);
 
 			if (this.currentVersion2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
 				url.searchParams.set('version2_bible', this.currentVersion2);
-				console.log('🔄 雙版本模式，載入第二個版本:', this.currentVersion2);
+				console.log('🔄 Dual version mode, loading the second version:', this.currentVersion2);
 			}
 
 			if (this.currentLanguage2) {  // 如果是雙版本模式且有第二個版本，添加第二個版本參數
 				url.searchParams.set('language2', this.currentLanguage2);
-				console.log('🔄 雙版本模式，載入第二個語言:', this.currentLanguage2);
+				console.log('🔄 Dual version mode, loading the second language:', this.currentLanguage2);
 			}
 			
 			const response = await fetch(url, {
@@ -766,7 +766,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			const data = await response.json();
 			
 			// 添加詳細的 API 回應日誌
-			console.log('📋 [BibleHereReader709] async loadChapter() API 完整回應:', {
+			console.log('📋 [BibleHereReader769] async loadChapter() API complete response:', {
 				success: data.success,
 				data: data.data,
 				message: data.message,
@@ -774,7 +774,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			});
 			
 			// 檢查回應條件並添加日誌
-			console.log('🔍 [BibleHereReader] async loadChapter() 檢查回應條件:', {
+			console.log('🔍 [BibleHereReader] async loadChapter() check response conditions:', {
 				hasSuccess: !!data.success,
 				hasData: !!data.data,
 				hasVersion1: !!(data.data && data.data.version1),
@@ -810,7 +810,7 @@ console.log("loadVersions() 494, params: ", this.params)
 							// book_number: this.currentBook,
 							// chapter_number: this.currentChapter,
 							verse_number: verse.verse_number,
-							text: verse.text,
+							text: verse.strong_text || verse.text,
 							reference: null,
 							verse_id: verse.verse_id
 						}));
@@ -835,7 +835,7 @@ console.log("loadVersions() 494, params: ", this.params)
 							// book_number: this.currentBook,
 							// chapter_number: this.currentChapter,
 							verse_number: verse.verse_number,
-							text: verse.text,
+							text: verse.strong_text || verse.text,
 							reference: null,
 							verse_id: verse.verse_id
 						}));
@@ -896,7 +896,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			data.version1.verses.forEach(verse => {
 				html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html1 += `<span class="verse-number unselectable-list  ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-				html1 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
+				html1 += `<span class="verse-text">${this.processStrongNumbers(verse.strong_text || verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html1 += `</p>`;
 			});
 			version1Container.innerHTML = html1;
@@ -971,12 +971,12 @@ console.log("loadVersions() 494, params: ", this.params)
 			container.innerHTML = '<p class="no-content">No content available for this chapter.</p>';
 			return;
 		}
-		console.log("hi 924 here is referenceInstalled: ", referenceInstalled);
+		console.log("hi 974 here is referenceInstalled: ", referenceInstalled);
 		let html = '';
 		Object.values(chapterData.verses).forEach(verse => {
 			html += `<p class="verse" data-verse="${verse.verse_id}">`;
 			html += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-			html += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
+			html += `<span class="verse-text">${this.processStrongNumbers(verse.strong_text || verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 			html += `</p>`;
 		});
 
