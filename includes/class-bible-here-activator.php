@@ -906,17 +906,38 @@ class Bible_Here_Activator {
 	/**
 	 * Parse CSV file and return associative array.
 	 *
+	 * Note: Strengthen escape handling to convert backslash-escaped quotes (\")
+	 * to plain quotes (") for sources that use JSON-style escaping inside CSV.
+	 * Also remove strict length limit to avoid truncation on long rows.
+	 *
 	 * @since    1.0.0
 	 * @param    string    $file_path    Path to CSV file
 	 * @return   array                   Parsed CSV data
 	 */
 	private static function parse_csv($file_path) {
 		$data = [];
+		$sanitized_count = 0;
 		if (($handle = fopen($file_path, 'r')) !== FALSE) {
-			$header = fgetcsv($handle, 1000, ',');
+			// Use explicit delimiter, enclosure and escape for reliability
+			$header = fgetcsv($handle, 0, ',', '"', '\\');
 			if ($header !== FALSE && !empty($header)) {
-				while (($row = fgetcsv($handle, 1000, ',')) !== FALSE) {
+				while (($row = fgetcsv($handle, 0, ',', '"', '\\')) !== FALSE) {
 					if (count($header) === count($row) && !empty($row)) {
+						// Sanitize each cell: convert \" to "
+						foreach ($row as $idx => $cell) {
+							if (is_string($cell)) {
+								$before = $cell;
+								// Convert backslash-escaped double quotes to actual quotes
+								$cell = str_replace('\\"', '"', $cell);
+								// Normalize Windows-style line endings inside cell
+								$cell = str_replace("\r\n", "\n", $cell);
+								if ($cell !== $before) {
+									$sanitized_count++;
+								}
+								$row[$idx] = $cell;
+							}
+						}
+
 						$combined = array_combine($header, $row);
 						if ($combined !== FALSE) {
 							$data[] = $combined;
@@ -926,6 +947,13 @@ class Bible_Here_Activator {
 			}
 			fclose($handle);
 		}
+
+		// Log a summary of sanitization for diagnostics
+		if ($sanitized_count > 0) {
+			// Use basename to avoid leaking full path
+			error_log('[Bible Here] INFO: CSV import sanitized ' . $sanitized_count . ' escaped sequences in ' . basename($file_path));
+		}
+
 		return $data;
 	}
 
