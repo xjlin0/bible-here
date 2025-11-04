@@ -638,7 +638,7 @@ class Bible_Here_XML_Importer {
 		$versions_table = $wpdb->prefix . 'bible_here_versions';
 		$version_info = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT table_name, trim FROM {$versions_table} WHERE abbreviation = %s",
+				"SELECT table_name, trim, type FROM {$versions_table} WHERE abbreviation = %s",
 				$version_abbreviation
 			)
 		);
@@ -675,6 +675,20 @@ class Bible_Here_XML_Importer {
 			error_log('Bible_Here_XML_Importer: Processing batch ' . $batch_number . '/' . $total_batches . ', containing ' . count($batch) . ' verses');
 			
 			// Build batch insert query
+			$is_bible_strong = (isset($version_info->type) && $version_info->type === 'Bible+Strong');
+			$has_strong_column = false;
+			if ($is_bible_strong) {
+				// Verify table has verse_text_strong column to avoid SQL errors
+				$col_check_sql = "SHOW COLUMNS FROM {$table_name} LIKE 'verse_text_strong'";
+				$col_exists = $wpdb->get_results($col_check_sql);
+				$has_strong_column = !empty($col_exists);
+				if (!$has_strong_column) {
+					error_log('Bible_Here_XML_Importer: Warning - Bible+Strong detected but verse_text_strong column missing in ' . $table_name . '; fallback to verse_text only');
+					$is_bible_strong = false;
+				} else {
+					error_log('Bible_Here_XML_Importer: Detected Bible+Strong type; will store strong-tagged text into verse_text_strong and plain text into verse_text');
+				}
+			}
 			$values = array();
 			$placeholders = array();
 			
@@ -692,11 +706,27 @@ class Bible_Here_XML_Importer {
 					// Remove all whitespace characters (spaces, tabs, newlines, etc.)
 					$verse_text = preg_replace('/\s+/', '', $verse_text);
 				}
-				$values[] = $verse_text;
-				$placeholders[] = '(%s, %d, %d, %d, %s)';
+
+				if ($is_bible_strong) {
+					// For Bible+Strong: keep original (trimmed) text with strong numbers, and also store a plain-text version
+					$verse_text_strong = $verse_text;
+					// Remove all {H12345} or {G12345} occurrences
+					$plain_text = preg_replace('/\{[HG]\d+\}/u', '', $verse_text_strong);
+					$values[] = $verse_text_strong;
+					$values[] = $plain_text;
+					$placeholders[] = '(%s, %d, %d, %d, %s, %s)';
+				} else {
+					// For normal Bible types, only store verse_text
+					$values[] = $verse_text;
+					$placeholders[] = '(%s, %d, %d, %d, %s)';
+				}
 			}
-			
-			$sql = "REPLACE INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+
+			if ($is_bible_strong) {
+				$sql = "REPLACE INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text_strong, verse_text) VALUES " . implode(', ', $placeholders);
+			} else {
+				$sql = "REPLACE INTO {$table_name} (verse_id, book_number, chapter_number, verse_number, verse_text) VALUES " . implode(', ', $placeholders);
+			}
 			$prepared_sql = $wpdb->prepare($sql, $values);
 			
 			$result = $wpdb->query($prepared_sql);
