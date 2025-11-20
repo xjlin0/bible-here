@@ -991,17 +991,28 @@ console.log("loadVersions() 494, params: ", this.params)
 	 */
 	processStrongNumbers(text) {
 		if (!text) return text;
-		
-		// 正則表達式匹配 Strong Numbers: 詞語後面跟著 {H123} 或 {G456}
-		// 匹配模式：任何非空白字符 + 一個或多個 {H/G數字} 標記
+
+		// Match a leading run of Strong tags (optionally preceded by whitespace)
 		const strongNumberRegex = /(\S+?)((?:\{[HG]\d{1,5}\})+)/g;
-		
-		return text.replace(strongNumberRegex, (match, word, strongNumbers) => {
-			// 提取所有 Strong Numbers，移除大括號
+		const leadingStrongRegex = /^(\s*)((?:\{[HG]\d{1,5}\})+)/;
+
+		const leadingMatch = text.match(leadingStrongRegex);
+		if (leadingMatch) {
+			const leadingWS = leadingMatch[1] || '';
+			const strongNumbers = leadingMatch[2] || '';
 			const numbers = strongNumbers.match(/\{([HG]\d{1,5})\}/g) || [];
-			const cleanNumbers = numbers.map(num => num.slice(1, -1)); // 移除 {}
-			
-			// 創建帶有虛線底線的鏈接，只顯示詞語本身
+			const cleanNumbers = numbers.map(num => num.slice(1, -1));
+			const prefixHTML = `${leadingWS}<span class="strong-number-link" data-strong-numbers="${cleanNumbers.join(',')}" title="Strong Numbers: ${cleanNumbers.join(', ')}">&dagger;</span>`;
+			const rest = text.slice(leadingMatch[0].length);
+			return prefixHTML + rest.replace(strongNumberRegex, (match, word, strongs) => {
+				const nums = (strongs.match(/\{([HG]\d{1,5})\}/g) || []).map(num => num.slice(1, -1));
+				return `<span class="strong-number-link" data-strong-numbers="${nums.join(',')}" title="Strong Numbers: ${nums.join(', ')}">${word}</span>`;
+			});
+		}
+
+		return text.replace(strongNumberRegex, (match, word, strongNumbers) => {
+			const numbers = strongNumbers.match(/\{([HG]\d{1,5})\}/g) || [];
+			const cleanNumbers = numbers.map(num => num.slice(1, -1));
 			return `<span class="strong-number-link" data-strong-numbers="${cleanNumbers.join(',')}" title="Strong Numbers: ${cleanNumbers.join(', ')}">${word}</span>`;
 		});
 	}
