@@ -3947,8 +3947,14 @@ class StrongNumberModal {
 			}
 		});
 		
-		// Add event delegation for strong-number-reference clicks
+		// Add event delegation for strong-number-reference and book icon clicks
 		this.modalContent.addEventListener('click', (e) => {
+			if (e.target.classList.contains('strong-number-book-icon')) {
+				e.preventDefault();
+				e.stopPropagation();
+				this.handleStrongNumberBookIconClick(e.target);
+				return;
+			}
 			if (e.target.classList.contains('strong-number-reference')) {
 				e.preventDefault();
 				this.handleStrongNumberReferenceClick(e.target);
@@ -4130,10 +4136,10 @@ class StrongNumberModal {
 		// Regular expression to match G12345 or H12345 format
 		const strongNumberRegex = /([GH]\d{1,5})/g;
 		
+		// Render reference and an adjacent book icon button
 		return text.replace(strongNumberRegex, (match) => {
-			return `<span class="strong-number-reference" data-strong-number="${match}">${match}</span>`;
-			// return `<strong class="strong-number-reference" data-strong-number="${match}">${match}</strong>`;
-
+			return `<span class="strong-number-reference" data-strong-number="${match}">${match}</span>` +
+				   ` <button type="button" class="strong-number-book-icon" data-strong-number="${match}" title="Show verses 📖" aria-label="Show verses">📖</button>`;
 		});
 	}
 	
@@ -4178,8 +4184,9 @@ class StrongNumberModal {
 			html += `<div class="strong-number-item">`;
 			html += `<div class="strong-number-link">`;
 			
-			// Strong Number Reference
+			// Strong Number Reference with book icon
 			html += `<span class="strong-number-reference">${item.strong_number}</span>`;
+			html += `<button type="button" class="strong-number-book-icon" data-strong-number="${item.strong_number}" title="Show verses 📖" aria-label="Show verses">📖</button>`;
 			
 			// Original Text
 			if (item.original) {
@@ -4191,19 +4198,6 @@ class StrongNumberModal {
 				const translationText = (item[language] || item.en || 'Missing data...').replace(/\n/g, '<br>');
 				html += `<div class="strong-number-text">${this.processStrongNumberReferences(translationText)}</div>`;
 			}
-
-			// Additional translations if available
-			// if (item.kjv_translation) {
-			// 	html += `<div class="strong-number-text"><strong>KJV:</strong> ${item.kjv_translation}</div>`;
-			// }
-			
-			// if (item.transliteration) {
-			// 	html += `<div class="strong-number-text"><strong>Transliteration:</strong> ${item.transliteration}</div>`;
-			// }
-			
-			// if (item.pronunciation) {
-			// 	html += `<div class="strong-number-text"><strong>Pronunciation:</strong> ${item.pronunciation}</div>`;
-			// }
 			
 			html += `</div>`;
 			html += `</div>`;
@@ -4211,6 +4205,208 @@ class StrongNumberModal {
 		html += '</div>';
 		
 		this.modalContent.innerHTML = html;
+	}
+
+	// Create / show / close popover for Strong number verses
+	ensurePopoverElements() {
+		// Overlay sits above modal content but below popover
+		if (!this.popoverOverlay) {
+			this.popoverOverlay = document.createElement('div');
+			this.popoverOverlay.className = 'modal-overlay strong-popover-overlay';
+			this.popoverOverlay.addEventListener('click', () => this.closePopover());
+			// Append to body to ensure stacking context above modal
+			document.body.appendChild(this.popoverOverlay);
+			// Inline styles for proper positioning
+			this.popoverOverlay.style.position = 'fixed';
+			this.popoverOverlay.style.left = '0';
+			this.popoverOverlay.style.top = '0';
+			this.popoverOverlay.style.width = '100%';
+			this.popoverOverlay.style.height = '100%';
+			this.popoverOverlay.style.zIndex = '9998';
+			this.popoverOverlay.style.background = 'transparent';
+			// Allow user to scroll/read while popover is open
+			this.popoverOverlay.style.pointerEvents = 'none';
+		}
+		// Popover floats next to the clicked icon
+		if (!this.popover) {
+			this.popover = document.createElement('div');
+			this.popover.className = 'strong-popover';
+			this.popover.innerHTML = `
+				<div class="strong-popover-header">
+					<span class="strong-popover-title"></span>
+					<button type="button" class="modal-close close-button strong-popover-close" aria-label="Close">×</button>
+				</div>
+				<div class="strong-popover-body cross-refs-container"></div>
+			`;
+			// Append to body to avoid affecting modal layout and use viewport positioning
+            document.body.appendChild(this.popover);
+            // Inline styles to ensure it overlays above modal and stays fixed on screen
+            this.popover.style.position = 'fixed';
+            this.popover.style.zIndex = '9999';
+            this.popover.style.display = 'none';
+            const closeBtn = this.popover.querySelector('.strong-popover-close');
+            closeBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.closePopover(); });
+            // Make body scrollable for long result lists
+            const body = this.popover.querySelector('.strong-popover-body');
+            body.style.overflowY = 'auto';
+		}
+	}
+
+	showPopover(title, triggerEl) {
+		this.ensurePopoverElements();
+		this.popover.querySelector('.strong-popover-title').textContent = title;
+		this.currentPopoverTrigger = triggerEl;
+		const margin = 8; // space between icon and popover
+
+		// Responsive size: half of modal width on desktop, 90% viewport on mobile
+        const modalRect = this.modal.getBoundingClientRect();
+        const isMobile = window.innerWidth <= 768;
+        const desiredWidth = Math.floor(modalRect.width * 0.5);
+        const width = isMobile ? Math.min(Math.floor(window.innerWidth * 0.9), modalRect.width - 16) : Math.min(Math.max(desiredWidth, 380), 480);
+        this.popover.style.width = `${width}px`;
+        this.popover.style.maxWidth = `${width}px`;
+        this.popover.style.minWidth = isMobile ? '240px' : '380px';
+        // Height: allow comfortable reading with scroll
+        const desiredBodyMaxHeight = isMobile ? Math.floor(window.innerHeight * 0.55) : Math.floor(modalRect.height * 0.6);
+        const body = this.popover.querySelector('.strong-popover-body');
+        body.style.maxHeight = `${Math.max(280, desiredBodyMaxHeight)}px`;
+        body.style.overflowY = 'auto';
+        body.style.padding = '12px 16px';
+        body.style.lineHeight = '1.5';
+
+		// Visual styles
+		this.popover.style.background = '#fff';
+		this.popover.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+		this.popover.style.borderRadius = '8px';
+		this.popover.style.border = '1px solid rgba(0,0,0,0.08)';
+		this.popover.style.padding = '8px 0';
+		this.popover.style.display = 'block';
+		this.popoverOverlay.style.display = 'block';
+
+		// Reposition function to follow the icon while scrolling/resizing relative to viewport
+		this.popoverRepositionHandler = () => {
+			if (!this.currentPopoverTrigger || this.popover.style.display === 'none') { return; }
+			const rect = this.currentPopoverTrigger.getBoundingClientRect();
+			let left = rect.left + rect.width + margin;
+			let top = rect.top;
+			const popoverRect = this.popover.getBoundingClientRect();
+
+			// Clamp within viewport horizontally
+			const viewportWidth = window.innerWidth;
+			if (left + popoverRect.width + margin > viewportWidth) {
+				left = rect.left - popoverRect.width - margin;
+			}
+			if (left < margin) { left = margin; }
+
+			// Clamp within viewport vertically
+			const viewportHeight = window.innerHeight;
+			if (top + popoverRect.height + margin > viewportHeight) {
+				top = Math.max(rect.top - popoverRect.height - margin, margin);
+			}
+			if (top < margin) { top = margin; }
+
+			this.popover.style.left = `${Math.round(left)}px`;
+			this.popover.style.top = `${Math.round(top)}px`;
+		};
+
+		// Initial position
+		this.popoverRepositionHandler();
+		// Follow scrolls/resizes (capture to catch nested scroll containers)
+		window.addEventListener('scroll', this.popoverRepositionHandler, true);
+		window.addEventListener('resize', this.popoverRepositionHandler, true);
+		if (this.modalContent) {
+			this.modalContent.removeEventListener('scroll', this.popoverRepositionHandler, true);
+		}
+	}
+
+	closePopover() {
+		if (this.popover) { this.popover.style.display = 'none'; }
+		if (this.popoverOverlay) { this.popoverOverlay.style.display = 'none'; }
+		// Detach listeners
+		if (this.popoverRepositionHandler) {
+			window.removeEventListener('scroll', this.popoverRepositionHandler, true);
+			window.removeEventListener('resize', this.popoverRepositionHandler, true);
+			if (this.modalContent) {
+				this.modalContent.removeEventListener('scroll', this.popoverRepositionHandler, true);
+			}
+			this.popoverRepositionHandler = null;
+		}
+		this.currentPopoverTrigger = null;
+	}
+
+	renderStrongPopover(verses, strongNumber) {
+		this.ensurePopoverElements();
+		const body = this.popover.querySelector('.strong-popover-body');
+
+		// Normalize: some callers may pass the whole version object
+		if (!Array.isArray(verses)) {
+			if (verses && Array.isArray(verses.verses)) {
+				verses = verses.verses;
+			} else {
+				body.innerHTML = '<div class="no-cross-refs">No verses found for this Strong number.</div>';
+				return;
+			}
+		}
+
+		if (!verses || verses.length === 0) {
+			body.innerHTML = '<div class="no-cross-refs">No verses found for this Strong number.</div>';
+			return;
+		}
+		// Header with total count
+		let html = `<div class="cross-refs-header" style="padding:8px 12px; font-weight:600; border-bottom:1px solid rgba(0,0,0,0.06);">Found ${verses.length} verses</div>`;
+		verses.forEach(ref => {
+			const url = new URL(window.location.href);
+			url.searchParams.set('book', ref.book_number);
+			url.searchParams.set('chapter', ref.chapter_number);
+			url.searchParams.set('verse', ref.verse_number);
+			html += `<div class="cross-ref-item" style="padding:10px 12px; border-bottom:1px solid rgba(0,0,0,0.06);">`;
+			html += `<a href="${url.href}" class="cross-ref-link">`;
+			html += `<span class="cross-ref-reference" style="display:block; font-weight:600; margin-bottom:6px;">${ref.title_full} ${ref.chapter_number}:${ref.verse_number}</span>`;
+			html += `<span class="cross-ref-text" style="display:block; white-space:normal;">${ref.strong_text || ref.text}</span>`;
+			html += `</a>`;
+			html += `</div>`;
+		});
+		body.innerHTML = html;
+		// Ensure body remains scrollable after content update
+		body.style.overflowY = 'auto';
+	}
+
+	async handleStrongNumberBookIconClick(element) {
+		try {
+			const strongNumber = element.dataset.strongNumber;
+			if (!strongNumber) { return; }
+			console.log('📖 [StrongNumberModal] Book icon clicked for:', strongNumber);
+			this.showPopover(`Strong: ${strongNumber}`, element);
+			this.popover.querySelector('.strong-popover-body').innerHTML = '<div class="loading-cross-refs">Loading verses...</div>';
+			const version1 = this.readerInstance.currentVersion1;
+			const params = new URLSearchParams({
+				action: 'bible_here_public_get_verses',
+				version1_bible: version1,
+				strong_search: strongNumber,
+				book_number_start: 1,
+				book_number_end: 66,
+				chapter_number_start: 1,
+				chapter_number_end: 150
+			});
+			const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': bibleHereAjax.nonce }
+			});
+			if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+			const data = await response.json();
+			const versesArray = (data && data.data && data.data.version1 && Array.isArray(data.data.version1.verses))
+				? data.data.version1.verses
+				: null;
+			if (data.success && versesArray) {
+				this.renderStrongPopover(versesArray, strongNumber);
+			} else {
+				console.error('❌ [StrongNumberModal] Invalid verses response:', data);
+				this.popover.querySelector('.strong-popover-body').innerHTML = '<div class="error-cross-refs">Error loading verses. Please try again.</div>';
+			}
+		} catch (error) {
+			console.error('❌ [StrongNumberModal] Error fetching verses for Strong number:', error);
+			this.popover.querySelector('.strong-popover-body').innerHTML = '<div class="error-cross-refs">Error loading verses. Please try again.</div>';
+		}
 	}
 	
 	show() {
