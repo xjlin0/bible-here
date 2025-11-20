@@ -705,6 +705,7 @@ class Bible_Here_XML_Importer {
 				if ($should_trim) {
 					// Remove all whitespace characters (spaces, tabs, newlines, etc.)
 					$verse_text = preg_replace('/\s+/', '', $verse_text);
+					$verse_text = preg_replace('/(?:\x{FEFF}|\x{200B}|\x{00B6})+/u', '', $verse_text);
 				}
 
 				if ($is_bible_strong) {
