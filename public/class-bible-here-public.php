@@ -304,6 +304,7 @@ class Bible_Here_Public {
 		$verse_number_start = intval( $_GET['verse_number_start'] ?? 0 );
 		$verse_number_end = intval( $_GET['verse_number_end'] ?? 0 );
 		$search = sanitize_text_field( $_GET['search'] ?? '' );
+		$strong_search = sanitize_text_field( $_GET['strong_search'] ?? '' );
 
 		// Validate required parameters
 		if ( empty( $version1_bible_raw ) ) {
@@ -319,7 +320,7 @@ class Bible_Here_Public {
 		$response_data = array();
 
 		// Process version1
-		$version1_data = $this->get_version_verses( $version1_bible, $version1_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search );
+		$version1_data = $this->get_version_verses( $version1_bible, $version1_commentary, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search, $strong_search );
 		if ( is_wp_error( $version1_data ) ) {
 			wp_send_json_error( array( 'message' => $version1_data->get_error_message() ) );
 		}
@@ -354,7 +355,7 @@ class Bible_Here_Public {
 	 *
 	 * @since    1.0.0
 	 */
-	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search = '' ) {
+	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search = '', $strong_search = '' ) {
 		global $wpdb;
 // error_log('got get_version_verses here is $search: ' . $search);
 		// Check if bible table exists
@@ -421,6 +422,11 @@ class Bible_Here_Public {
 			$query_params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
+		if ( ! empty( $strong_search ) ) {
+			$where_conditions[] = 'LOWER(verse_text_strong) LIKE LOWER(%s)';
+			$query_params[] = '%' . $wpdb->esc_like( $strong_search ) . '%';
+		}
+
 		// Verse range (optional)
 		if ( $verse_number_start > 0 && $verse_number_end > 0 ) {
 			if ( $verse_number_start === $verse_number_end ) {
@@ -438,7 +444,7 @@ class Bible_Here_Public {
 		// 	$where_conditions[] = 'verse_text LIKE %s';
 		// 	$query_params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		// }
-		error_log('435 here is the $where_conditions '); error_log(print_r($where_conditions, true));
+		error_log('441 here is the $where_conditions '); error_log(print_r($where_conditions, true));
 		$where_clause = implode( ' AND ', $where_conditions );
 error_log('got get_version_verses here is $commentary_table: ' . $commentary_table);
 		// Build main query

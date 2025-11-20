@@ -4222,10 +4222,10 @@ class StrongNumberModal {
 			this.popoverOverlay.style.top = '0';
 			this.popoverOverlay.style.width = '100%';
 			this.popoverOverlay.style.height = '100%';
-			this.popoverOverlay.style.zIndex = '9998';
+			this.popoverOverlay.style.zIndex = '10000';
 			this.popoverOverlay.style.background = 'transparent';
-			// Allow user to scroll/read while popover is open
-			this.popoverOverlay.style.pointerEvents = 'none';
+			// Allow closing by tapping outside while keeping scrollable experience
+			this.popoverOverlay.style.pointerEvents = 'auto';
 		}
 		// Popover floats next to the clicked icon
 		if (!this.popover) {
@@ -4241,9 +4241,9 @@ class StrongNumberModal {
 			// Append to body to avoid affecting modal layout and use viewport positioning
             document.body.appendChild(this.popover);
             // Inline styles to ensure it overlays above modal and stays fixed on screen
-            this.popover.style.position = 'fixed';
-            this.popover.style.zIndex = '9999';
-            this.popover.style.display = 'none';
+			this.popover.style.position = 'fixed';
+			this.popover.style.zIndex = '10001';
+			this.popover.style.display = 'none';
             const closeBtn = this.popover.querySelector('.strong-popover-close');
             closeBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.closePopover(); });
             // Make body scrollable for long result lists
@@ -4352,9 +4352,13 @@ class StrongNumberModal {
 			body.innerHTML = '<div class="no-cross-refs">No verses found for this Strong number.</div>';
 			return;
 		}
+
+		const regex = strongNumber && strongNumber.trim() ? new RegExp(`(${strongNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
+
 		// Header with total count
 		let html = `<div class="cross-refs-header" style="padding:8px 12px; font-weight:600; border-bottom:1px solid rgba(0,0,0,0.06);">Found ${verses.length} verses</div>`;
 		verses.forEach(ref => {
+			const highlightedText = regex ? (ref.strong_text || ref.text).replace(regex, '<strong>$1</strong>') : ref.strong_text || ref.text;
 			const url = new URL(window.location.href);
 			url.searchParams.set('book', ref.book_number);
 			url.searchParams.set('chapter', ref.chapter_number);
@@ -4362,7 +4366,7 @@ class StrongNumberModal {
 			html += `<div class="cross-ref-item" style="padding:10px 12px; border-bottom:1px solid rgba(0,0,0,0.06);">`;
 			html += `<a href="${url.href}" class="cross-ref-link">`;
 			html += `<span class="cross-ref-reference" style="display:block; font-weight:600; margin-bottom:6px;">${ref.title_full} ${ref.chapter_number}:${ref.verse_number}</span>`;
-			html += `<span class="cross-ref-text" style="display:block; white-space:normal;">${ref.strong_text || ref.text}</span>`;
+			html += `<span class="cross-ref-text" style="display:block; white-space:normal;">${highlightedText}</span>`;
 			html += `</a>`;
 			html += `</div>`;
 		});

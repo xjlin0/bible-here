@@ -3016,11 +3016,30 @@ body .bible-here-reader.theme-dark .verses-container {
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
+    z-index: 10001;
     max-width: 350px;
     min-width: 250px;
     font-size: 14px;
     line-height: 1.4;
+}
+
+.strong-popover .cross-refs-container {
+    display: block;
+}
+
+.strong-popover .cross-ref-item {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+}
+
+.strong-popover .cross-ref-link {
+    display: block;
+}
+
+.strong-popover .cross-ref-text {
+    white-space: normal;
+    line-height: 1.5;
 }
 
 .strong-popover-content {
