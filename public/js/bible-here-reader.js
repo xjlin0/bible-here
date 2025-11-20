@@ -916,7 +916,7 @@ console.log("loadVersions() 494, params: ", this.params)
 			data.version2.verses.forEach(verse => {
 				html2 += `<p class="verse" data-verse="${verse.verse_id}">`;
 				html2 += `<span class="verse-number unselectable-list ${referenceInstalled ? 'cross-reference-link':''}">${verse.verse_number}</span>`;
-				html2 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
+                html2 += `<span class="verse-text">${this.processStrongNumbers(verse.strong_text || verse.text)}</span>`;  // immediately after span.verse-number because nextElementSibling will be used.
 				html2 += `</p>`;
 			});
 			version2Container.innerHTML = html2;
@@ -932,7 +932,7 @@ console.log("loadVersions() 494, params: ", this.params)
 				data.version1.verses.forEach(verse => {
 					html1 += `<p class="verse" data-verse="${verse.verse_id}">`;
 					html1 += `<span class="verse-number unselectable-list cross-reference-link">${verse.verse_number}</span>`;
-					html1 += `<span class="verse-text">${this.processStrongNumbers(verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
+                    html1 += `<span class="verse-text">${this.processStrongNumbers(verse.strong_text || verse.text)}</span>`;   // immediately after span.verse-number because nextElementSibling will be used.
 					html1 += `</p>`;
 				});
 				version2Container.innerHTML = html1;
