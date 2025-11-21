@@ -1,11 +1,19 @@
 .bible-here-dashboard {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: block;
+    width: 100%;
     margin-top: 20px;
 }
 
-/* Stronger selectors for WordPress admin compatibility */
+.wrap .bible-here-dashboard,
+.wrap .bible-here-dashboard .bible-here-label-settings {
+    width: 100%;
+}
+
+.bible-here-label-settings {
+    display: block;
+}
+
+/* Stronger selectors for WordPress admin compatibility
 .wrap .bible-here-dashboard .bible-here-stats,
 .wrap .bible-here-dashboard .bible-here-settings,
 .wrap .bible-here-dashboard .bible-here-quick-actions,
@@ -49,7 +57,7 @@
     font-weight: bold;
     color: #0073aa;
     margin: 5px 0;
-}
+} */
 
 .action-buttons {
     margin-top: 15px;
@@ -68,8 +76,8 @@
 }
 
 .versions-table thead th {
-    background-color: #f0f0f0 !important;
-    color: #000000 !important;
+    background-color: #f0f0f0;
+    color: #000000;
     padding: 12px 8px;
     text-align: left;
     font-weight: bold;
@@ -156,7 +164,7 @@
 
 /* Delete content button override */
 .btn-download[data-action="delete"] {
-    background: #d63638 !important;
+    background: #d63638;
 }
 
 /* Install button override */
@@ -420,4 +428,21 @@
     color: #055160;
     background: #cff4fc;
     border: 1px solid #b6effb;
+}
+
+div.bible-here-page-selection-div {
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+}
+
+input[type="submit"].button-enable-all {
+    background:green;
+    color:white;
+}
+input[type="submit"].button-disable-all {
+    background:red;color:white;
 }

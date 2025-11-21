@@ -66,6 +66,27 @@
 				reloadCSVData();
 			}
 		});
+
+
+		var selectAllBtn = document.getElementById('select-all-disabled');
+		if (selectAllBtn) {
+			selectAllBtn.addEventListener('click', function() {
+				var container = document.querySelector('.bible-here-label-settings');
+				if (!container) return;
+				var boxes = container.querySelectorAll('input[type="checkbox"][name="disabled_pages[]"]');
+				boxes.forEach(function(box){ box.checked = true; });
+			});
+		}
+
+		var unselectAllBtn = document.getElementById('unselect-all-disabled');
+		if (unselectAllBtn) {
+			unselectAllBtn.addEventListener('click', function() {
+				var container = document.querySelector('.bible-here-label-settings');
+				if (!container) return;
+				var boxes = container.querySelectorAll('input[type="checkbox"][name="disabled_pages[]"]');
+				boxes.forEach(function(box){ box.checked = false; });
+			});
+		}
 	});
 
 	/**

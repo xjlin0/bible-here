@@ -167,39 +167,60 @@ class Bible_Here_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function display_admin_page() {
-		// Check user permissions
-		if (!current_user_can('manage_options')) {
-			wp_die(__('You do not have sufficient permissions to access this page.'));
-		}
-		
-		global $wpdb;
+    public function display_admin_page() {
+        // Check user permissions
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.'));
+        }
 
-		// Handle settings form submission
-		if (isset($_POST['submit']) && isset($_POST['bible_here_default_version'])) {
-			check_admin_referer('bible_here_settings_nonce');
-			update_option('bible_here_default_version', sanitize_text_field($_POST['bible_here_default_version']));
-			echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
-		}
+        global $wpdb;
 
-		// Get statistics
-		$books_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_books");
-		$genres_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_genres");
-		$versions_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}bible_here_versions");
+        $disabled_pages_option = get_option('bible_here_label_disabled_pages');
 
-		// Get all Bible versions for settings
-		$versions = $wpdb->get_results(
-			"SELECT * FROM {$wpdb->prefix}bible_here_versions WHERE rank IS NOT NULL ORDER BY rank ASC"
-		);
-		
-		// Get current default version setting
-		$current_default = get_option('bible_here_default_version');
-		if (empty($current_default) && !empty($versions)) {
-			$current_default = $versions[0]->abbreviation;
-		}
+        if (isset($_POST['bible_here_action'])) {
+            $action = sanitize_text_field($_POST['bible_here_action']);
+            if ($action === 'save_disabled_pages') {
+                check_admin_referer('bible_here_label_settings_nonce');
+                $ids = isset($_POST['disabled_pages']) && is_array($_POST['disabled_pages']) ? array_map('intval', $_POST['disabled_pages']) : array();
+                update_option('bible_here_label_disabled_pages', $ids);
+                $disabled_pages_option = $ids;
+                echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
+            } elseif ($action === 'disable_all') {
+                check_admin_referer('bible_here_label_settings_nonce');
+                update_option('bible_here_label_disabled_pages', null);
+                $disabled_pages_option = null;
+                echo '<div class="notice notice-success is-dismissible"><p>Disabled scripture reference linking across all pages.</p></div>';
+            } elseif ($action === 'enable_all') {
+                check_admin_referer('bible_here_label_settings_nonce');
+                update_option('bible_here_label_disabled_pages', array());
+                $disabled_pages_option = array();
+                echo '<div class="notice notice-success is-dismissible"><p>Enabled scripture reference linking across all pages.</p></div>';
+            }
+        }
 
-		include_once 'partials/bible-here-admin-display.php';
-	}
+        $dynamic_post_types = get_post_types(
+            array(
+                'public' => true,
+                'show_ui' => true,
+                'publicly_queryable' => true
+            ),
+            'names'
+        );
+        $dynamic_post_types = array_values(array_diff($dynamic_post_types, array('attachment')));
+
+        $posts = get_posts(array(
+            'post_type' => $dynamic_post_types,
+            'post_status' => 'any',
+            'numberposts' => -1,
+            'orderby' => array(
+				'post_title' => 'ASC',   // 先按照 post type
+				'date'       => 'ASC'   // 再按照 post date
+			),
+            'order' => 'ASC'
+        ));
+
+        include_once 'partials/bible-here-admin-display.php';
+    }
 
 	/**
 	 * Display the Bible versions page.
