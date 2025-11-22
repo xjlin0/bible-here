@@ -1,6 +1,6 @@
 (function() {
 	'use strict';
-
+	console.log("hi bible-here-public.js started")
 	/**
 	 * All of the code for your public-facing JavaScript source
 	 * should reside in this file.

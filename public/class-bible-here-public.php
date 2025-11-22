@@ -817,7 +817,7 @@ error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
 		$sql = "SELECT book_number, abbreviation, language
 			FROM $abbreviations_table
 			$where_clause
-			ORDER BY language, book_number";
+			ORDER BY id";
 		
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $sanitized_languages ), ARRAY_A );
 		
@@ -1047,6 +1047,52 @@ error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/bible-here-public.js', array( 'jquery' ), $this->version, false );
+
+		// Global reference management scripts to prepare IndexedDB and abbreviations on any page
+		wp_enqueue_script(
+			$this->plugin_name . '-dexie',
+			'https://unpkg.com/dexie@3.2.4/dist/dexie.min.js',
+			array(),
+			'3.2.4',
+			true
+		);
+
+		wp_enqueue_script(
+			$this->plugin_name . '-cache',
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-cache.js',
+			array( $this->plugin_name . '-dexie' ),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->plugin_name . '-seed-data',
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-seed-data.js',
+			array(),
+			$this->version,
+			true
+		);
+
+		wp_enqueue_script(
+			$this->plugin_name . '-reference',
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-reference.js',
+			array( $this->plugin_name . '-cache', $this->plugin_name . '-seed-data' ),
+			$this->version,
+			true
+		);
+
+		$disabled_pages_option = get_option( 'bible_here_label_disabled_pages' );
+		$current_post_id = get_queried_object_id();
+		wp_localize_script(
+			$this->plugin_name . '-reference',
+			'bibleHereAjax',
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'bible_here_nonce' ),
+				'currentPostId' => $current_post_id,
+				'labelDisabledPages' => is_array( $disabled_pages_option ) ? array_map( 'intval', $disabled_pages_option ) : ( is_null( $disabled_pages_option ) ? null : array() )
+			)
+		);
 
 	}
 

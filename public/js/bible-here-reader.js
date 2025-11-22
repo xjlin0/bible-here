@@ -575,7 +575,7 @@ class BibleHereReader {
 			action: 'bible_here_public_get_versions',
 			language: this.currentLanguage1 || this.currentLanguage2,
 		});
-console.log("loadVersions() 494, params: ", this.params)
+console.log("loadVersions() 578, params: ", this.params)
 		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 			method: 'GET',
 			headers: {
@@ -725,7 +725,7 @@ console.log("loadVersions() 494, params: ", this.params)
 						return;
 					}
 				} else {
-					console.log('⚠️ [BibleHereReader668] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
+					console.log('⚠️ [BibleHereReader728] async loadChapter() 快取中沒有找到足夠章節內容，將從 API 獲取');
 				}
 			}
 				

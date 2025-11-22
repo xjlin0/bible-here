@@ -32,8 +32,11 @@ class BibleHereDB extends Dexie {
             // Versions table: primary key table_name, value as object with updatedAt
             versions: 'table_name&, updatedAt',
 
-            // Versions table: primary key table_name, value as object with updatedAt
-            strongs: 'strong_number&, updatedAt'
+            // Strong dictionary table: primary key strong_number, value as object with updatedAt
+            strongs: 'strong_number&, updatedAt',
+
+            // Strong dictionary table: primary key strong_number, value as object with updatedAt
+            abbreviations: '[abbreviation+language], updatedAt'
         });
         
         // // Version 2: Add bookmark field to verses table
