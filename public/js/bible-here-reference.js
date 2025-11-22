@@ -286,44 +286,61 @@ function bindReferenceClicks(ctx){
 
 function ensurePopover(){
     if (!refState.overlay) {
-        var ov = document.createElement('div');
+        const ov = document.createElement('div');
         ov.className = 'bh-ref-overlay';
         document.body.appendChild(ov);
         ov.addEventListener('click', closePopover);
         refState.overlay = ov;
     }
     if (!refState.openPopover) {
-        var pop = document.createElement('div');
+        const pop = document.createElement('div');
         pop.className = 'bh-ref-popover';
         pop.style.display = 'none';
-        var header = document.createElement('div');
+        const header = document.createElement('div');
         header.className = 'bh-ref-header';
-        var title = document.createElement('div'); title.className = 'bh-ref-title';
-        var controls = document.createElement('div'); controls.className = 'bh-ref-controls';
-        var btnPrev = document.createElement('button'); btnPrev.textContent = '<'; btnPrev.className = 'bh-ref-prev';
-        var btnNext = document.createElement('button'); btnNext.textContent = '>'; btnNext.className = 'bh-ref-next';
-        var btnClose = document.createElement('button'); btnClose.textContent = 'X'; btnClose.className = 'bh-ref-close';
-        controls.appendChild(btnPrev); controls.appendChild(btnNext); controls.appendChild(btnClose);
+        const title = document.createElement('div');
+        title.className = 'bh-ref-title';
+        const controls = document.createElement('div');
+        controls.className = 'bh-ref-controls';
+        const btnPrev = document.createElement('button');
+        btnPrev.textContent = '<';
+        btnPrev.title = 'Previous Chapter';
+        btnPrev.type = 'button';
+        btnPrev.className = 'bh-ref-prev';
+        const btnNext = document.createElement('button');
+        btnNext.textContent = '>';
+        btnNext.title = 'Next Chapter';
+        btnNext.type = 'button';
+        btnNext.className = 'bh-ref-next';
+        const btnClose = document.createElement('button');
+        btnClose.textContent = 'X';
+        btnClose.title = 'Close';
+        btnClose.type = 'button';
+        btnClose.className = 'bh-ref-close';
+        controls.appendChild(btnPrev); controls.appendChild(btnNext);
+        controls.appendChild(btnClose);
         header.appendChild(title); header.appendChild(controls);
-        var body = document.createElement('div'); body.className = 'bh-ref-body';
+        const body = document.createElement('div');
+        body.className = 'bh-ref-body';
         pop.appendChild(header); pop.appendChild(body);
         document.body.appendChild(pop);
         btnClose.addEventListener('click', closePopover);
         btnPrev.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); navigateChapter(-1); });
         btnNext.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); navigateChapter(1); });
-        refState.openPopover = pop; refState.titleEl = title; refState.bodyEl = body;
+        refState.openPopover = pop;
+        refState.titleEl = title; refState.bodyEl = body;
     }
 }
 
 async function showReferencePopover(el, ctx){
     ensurePopover();
-    var rect = el.getBoundingClientRect();
-    var margin = 8;
-    var width = Math.min(Math.floor(window.innerWidth * 0.9), 520);
+    const rect = el.getBoundingClientRect();
+    const margin = 8;
+    const width = Math.min(Math.floor(window.innerWidth * 0.9), 520);
     refState.openPopover.style.width = width + 'px';
-    var left = rect.left + window.scrollX + rect.width + margin;
-    var top = rect.top + window.scrollY;
-    var popRect = { width: width, height: 300 };
+    let left = rect.left + window.scrollX + rect.width + margin;
+    let top = rect.top + window.scrollY;
+    const popRect = { width: width, height: 300 };
     if (left + popRect.width + margin > window.scrollX + document.documentElement.clientWidth) {
         left = rect.left + window.scrollX - popRect.width - margin;
     }
@@ -337,25 +354,22 @@ async function showReferencePopover(el, ctx){
     refState.overlay.style.display = 'block';
     refState.openPopover.style.display = 'block';
 
-    var langs = [...(el.dataset.languages || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean), ...navigator.languages];
-    var lang = langs[0] || 'en';
-    var book = parseInt(el.dataset.bookNumber, 10);
-    var chapter = parseInt(el.dataset.chapterNumber, 10);
-    var verse = parseInt(el.dataset.verseNumber, 10);
-    var res = await getVersionTableForLanguages(langs);
+    const langs = [...(el.dataset.languages || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean), ...navigator.languages];
+    let lang = langs[0] || 'en';
+    const book = parseInt(el.dataset.bookNumber, 10);
+    const chapter = parseInt(el.dataset.chapterNumber, 10);
+    const verse = parseInt(el.dataset.verseNumber, 10);
+    const res = await getVersionTableForLanguages(langs);
     console.log("getVersionTableForLanguages 332 langs: ", langs);
     console.log("getVersionTableForLanguages 333 res: ", res);
-    var table = res.table;
+    const table = res.table;
     lang = res.language || lang;
-    var data = await fetchChapter(table, book, chapter);
+    const data = await fetchChapter(table, book, chapter);
     refState.current = { lang: lang, table: table, book: book, chapter: chapter, verse: verse, nav: data.navigation };
 
-    var titleFull = await getBookTitleFull(lang, book);
+    const titleFull = await getBookTitleFull(lang, book);
     refState.titleEl.textContent = (titleFull || ('Book ' + book)) + ' ' + chapter;
     renderChapterBody(data.version1 && data.version1.verses ? data.version1.verses : [], verse);
-    if (window.bibleHereCacheManager) {
-        window.bibleHereCacheManager.cacheVerses(data.version1.verses, table);
-    }
 }
 
 function closePopover(){
@@ -374,9 +388,6 @@ async function navigateChapter(dir){
     var titleFull = await getBookTitleFull(refState.current.lang, refState.current.book);
     refState.titleEl.textContent = (titleFull || ('Book ' + refState.current.book)) + ' ' + refState.current.chapter;
     renderChapterBody(data.version1 && data.version1.verses ? data.version1.verses : [], null);
-    if (window.bibleHereCacheManager) {
-        window.bibleHereCacheManager.cacheVerses(data.version1.verses, refState.current.table);
-    }
 }
 
 function renderChapterBody(verses, highlightVerse){
@@ -385,7 +396,7 @@ function renderChapterBody(verses, highlightVerse){
     verses.forEach(function(v){
         var line = document.createElement('div');
         line.style.padding = '6px 0';
-        line.textContent = String(v.verse_number) + ' ' + (v.text || '');
+        line.textContent = String(v.verse_number) + ' ' + (v.text || '').replace(/\{G\d{1,4}\}|\{H\d{1,5}\}/g, "");
         line.dataset.verseNumber = String(v.verse_number);
         if (highlightVerse && parseInt(v.verse_number,10) === highlightVerse) {
             line.style.background = 'rgba(0,124,186,0.08)';
@@ -437,6 +448,24 @@ async function getVersionTableForLanguages(langs){
 }
 
 async function fetchChapter(tableName, book, chapter){
+    let cachedVerses = null;
+    if (!tableName || !book || !chapter) {
+        return cachedVerses;
+    }
+
+    if (window.bibleHereCacheManager) {
+        cachedVerses = await window.bibleHereCacheManager.getVerses(
+            null,
+            [tableName],
+            book,
+            chapter
+        );
+
+        if (Array.isArray(cachedVerses) && cachedVerses.length > 0) {
+            return { version1: { verses: cachedVerses } };
+        }
+    }
+
     const url = new URL(bibleHereAjax.ajaxurl);
     url.searchParams.set('action', 'bible_here_public_get_verses');
     url.searchParams.set('version1_bible', tableName);
@@ -454,6 +483,17 @@ async function fetchChapter(tableName, book, chapter){
     });
     if (!resp.ok) throw new Error('verses HTTP ' + resp.status);
     const data = await resp.json();
+    if (window.bibleHereCacheManager) {
+        const versesToCache = data.data.version1.verses.map(verse => ({
+            verse_number: verse.verse_number,
+            text: verse.strong_text || verse.text,
+            reference: null,
+            verse_id: verse.verse_id
+        }));  // to match the cache in bible-here-reader for strong numbers
+
+        window.bibleHereCacheManager.cacheVerses(versesToCache, tableName);
+    }
+
     return data.data || {};
 }
 
