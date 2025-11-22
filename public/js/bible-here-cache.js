@@ -395,7 +395,7 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('  - verses type:', typeof verses, 'isArray:', Array.isArray(verses));
             console.log('  - verses length:', verses ? verses.length : 'N/A');
             console.log('  - versionTable:', versionTable);
-            console.log('  - verses content (first 3 items):', verses ? verses.slice(0, 3) : 'N/A');
+            console.log('  - verses content (first 2 items):', verses ? verses.slice(0, 2) : 'N/A');
             
             // Validate input parameters
             if (!Array.isArray(verses)) {
