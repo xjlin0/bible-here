@@ -2,3 +2,54 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+/* ===== Bible Here Reference Popover ===== */
+.bh-ref-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 10000;
+    display: none;
+}
+
+.bh-ref-popover {
+    position: absolute;
+    z-index: 10001;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    border-radius: 8px;
+    max-width: 520px;
+    min-width: 280px;
+}
+
+.bh-ref-header {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bh-ref-title {
+    font-weight: 600;
+    flex: 1;
+}
+
+.bh-ref-controls button {
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.bh-ref-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 8px 12px;
+}
+
+.bible-here-reference {
+    text-decoration: underline dotted;
+    cursor: pointer;
+}

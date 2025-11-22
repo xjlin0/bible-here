@@ -264,7 +264,7 @@ class BibleHereCacheManager {
             console.log('  - languageCode: en');
             
             await this.cacheBooks({en: window.BibleHereSeedData.openingBooks});
-            console.log(`✅ [BibleHereCacheManager261] 已載入英文書卷 Seed Data (${window.BibleHereSeedData.openingBooks.length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
+            console.log(`✅ [BibleHereCacheManager267] 已載入英文書卷 Seed Data (${Object.keys(window.BibleHereSeedData.openingBooks).length} 本書卷)`); //  }],"thought":"移除 zh-TW 語言檢查和載入邏輯"}}}
             delete window.BibleHereSeedData.openingBooks
         } catch (error) {
             console.error('❌ [BibleHereCacheManager264] 載入書卷 Seed Data 時發生錯誤:', error);
@@ -497,15 +497,15 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
      */
     async getVersions(languages = [], types = []) {
         try {
-            console.log('🔍 [CacheManager494] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
+            console.log('🔍 [CacheManager500] Searching cached versions:', { languages, types }, ' Todo:  query Indexed DB directly with filters instead of filtering in the memory.');
             languages = [...new Set(languages.flatMap(locale => {
                const [lang] = locale.split('-');
                return locale == lang ? [lang] : [locale, lang];
             }))];
-            console.log('🔍 [CacheManager499] expand languages: ', languages);
+            console.log('🔍 [CacheManager505] expand languages: ', languages);
             const allVersions = await this.db.versions.toArray();
             const validVersions = [];
-            console.log('📖 [CacheManager502] allVersions: ', allVersions);
+            console.log('📖 [CacheManager508] allVersions: ', allVersions);
             for (const versionCache of allVersions) {
                 // Check if version has expired (1-hour expiry)
                 // if (now - versionCache.updatedAt > this.versionsExpiry) {
