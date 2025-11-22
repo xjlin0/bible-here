@@ -446,7 +446,7 @@ class Bible_Here_Public {
 		// }
 		error_log('441 here is the $where_conditions '); error_log(print_r($where_conditions, true));
 		$where_clause = implode( ' AND ', $where_conditions );
-error_log('got get_version_verses here is $commentary_table: ' . $commentary_table);
+// error_log('got get_version_verses here is $commentary_table: ' . $commentary_table);
 		// Build main query
 		$sql = "SELECT 
 				CAST(verse_number AS UNSIGNED) as verse_number,
@@ -462,10 +462,10 @@ error_log('got get_version_verses here is $commentary_table: ' . $commentary_tab
 			    ON b.language = '$language' AND h.book_number = b.book_number
 			WHERE $where_clause
 			ORDER BY h.book_number, h.chapter_number, h.verse_number";
-error_log('got get_version_verses here is $sql: ' . $sql);
+// error_log('got get_version_verses here is $sql: ' . $sql);
 		$prepared_sql = $wpdb->prepare( $sql, $query_params );
 		$verses = $wpdb->get_results( $prepared_sql, ARRAY_A );
-error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
+// error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
 		// Handle database errors
 		if ( $wpdb->last_error ) {
 			return new WP_Error( 'database_error', 'Database error: ' . $wpdb->last_error );

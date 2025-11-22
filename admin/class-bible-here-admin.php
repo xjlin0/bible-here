@@ -202,19 +202,18 @@ class Bible_Here_Admin {
             array(
                 'public' => true,
                 'show_ui' => true,
-                'publicly_queryable' => true
-            ),
+            ),  // publicly_queryable of page is false
             'names'
         );
         $dynamic_post_types = array_values(array_diff($dynamic_post_types, array('attachment')));
 
-        $posts = get_posts(array(
+		$posts = get_posts(array(
             'post_type' => $dynamic_post_types,
             'post_status' => 'any',
             'numberposts' => -1,
             'orderby' => array(
-				'post_title' => 'ASC',   // 先按照 post type
-				'date'       => 'ASC'   // 再按照 post date
+				'post_title' => 'ASC',
+				'post_date'  => 'ASC'
 			),
             'order' => 'ASC'
         ));
