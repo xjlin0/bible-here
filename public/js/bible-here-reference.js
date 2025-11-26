@@ -180,34 +180,34 @@ async function getAbbreviations(db){
 }
 
 function buildRegexContext(items){
-    var list = [];
-    var seen = {};
-    var abbrMap = {};
-    for (var k=0;k<items.length;k++) {
-        var ab = (items[k].abbreviation||'').trim();
+    const list = [];
+    const seen = {};
+    const abbrMap = {};
+    for (let k=0;k<items.length;k++) {
+        const ab = (items[k].abbreviation||'').trim();
         if (!ab) continue;
-        var key = ab.toLowerCase();
+        const key = ab.toLowerCase();
         if (!seen[key]) { seen[key] = true; list.push(ab); }
         if (!abbrMap[key]) abbrMap[key] = [];
         abbrMap[key].push(items[k]);
     }
     list.sort(function(a,b){ return b.length - a.length; });
     function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-    var pattern = '(?:' + list.map(esc).join('|') + ')\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})';
-    var re = new RegExp(pattern,'gi');
+    const pattern = '(?:' + list.map(esc).join('|') + ')\\s*(\\d{1,3})\\s*[:：章]\\s*(\\d{1,3})';
+    const re = new RegExp(pattern,'gi');
     function findInfo(match){
-        var m = match.match(new RegExp('^(' + list.map(esc).join('|') + ')','i'));
+        const m = match.match(new RegExp('^(' + list.map(esc).join('|') + ')','i'));
         if (!m) return null;
-        var key = m[1].toLowerCase();
-        var arr = abbrMap[key] || [];
-        var chosen = arr.length ? arr[0] : null;
+        const key = m[1].toLowerCase();
+        const arr = abbrMap[key] || [];
+        const chosen = arr.length ? arr[0] : null;
         return chosen ? { abbreviation: chosen.abbreviation, book_number: chosen.book_number, language: chosen.language } : null;
     }
     function getLanguagesForAbbreviation(abbr){
-        var key = (abbr || '').toLowerCase();
-        var arr = abbrMap[key] || [];
-        var langs = [];
-        for (var i=0;i<arr.length;i++) {
+        const key = (abbr || '').toLowerCase();
+        const arr = abbrMap[key] || [];
+        const langs = [];
+        for (let i=0;i<arr.length;i++) {
             if (arr[i].language && langs.indexOf(arr[i].language) < 0) langs.push(arr[i].language);
         }
         return langs;
@@ -325,8 +325,8 @@ function ensurePopover(){
         pop.appendChild(header); pop.appendChild(body);
         document.body.appendChild(pop);
         btnClose.addEventListener('click', closePopover);
-        btnPrev.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); navigateChapter(-1); });
-        btnNext.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); navigateChapter(1); });
+        btnPrev.addEventListener('click', function(e){ console.log('btnPrev click'); e.preventDefault(); e.stopPropagation(); navigateChapter(-1); });
+        btnNext.addEventListener('click', function(e){ console.log('btnNext click'); e.preventDefault(); e.stopPropagation(); navigateChapter(1); });
         refState.openPopover = pop;
         refState.titleEl = title; refState.bodyEl = body;
     }
@@ -379,6 +379,7 @@ function closePopover(){
 }
 
 async function navigateChapter(dir){
+    console.log("navigateChapter 382 dir and refState: ", dir, refState);
     if (!refState.current) return;
     var navKey = dir < 0 ? 'prev_chapter' : 'next_chapter';
     var target = refState.current.nav && refState.current.nav[navKey];
