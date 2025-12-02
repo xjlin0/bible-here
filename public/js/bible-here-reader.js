@@ -2527,7 +2527,7 @@ console.log("loadVersions() 578, params: ", this.params)
 	 * Load books tab content using cache manager or API
 	 */
 	async loadBooksTabAndUpdateBookChapterButton(versionNameShort) {
-		console.log('📚 2198 開始載入書卷列表: versionNameShort and this.currentBook: ', versionNameShort, this.currentBook);
+		console.log('📚 2530 開始載入書卷列表: versionNameShort and this.currentBook: ', versionNameShort, this.currentBook);
 		const booksContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="books"]');
 		if (!booksContent) {
 			console.log('❌ 找不到書卷內容容器');
@@ -2559,13 +2559,13 @@ console.log("loadVersions() 578, params: ", this.params)
 			}
 
 			// 從 API 獲取書卷列表
-			console.log('🌐 從 API 獲取書卷列表');
+			console.log('🌐 Fetch book data from API');
 			const params = new URLSearchParams({
 				action: 'bible_here_public_get_books',
 				languages: [...navigator.languages, currentLanguage],
 			});
 
-			console.log('📡 發送 AJAX 請求到:', `${bibleHereAjax.ajaxurl}?${params}`);
+			console.log('📡 initialize AJAX to:', `${bibleHereAjax.ajaxurl}?${params}`);
 
 			const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
 				method: 'GET',
@@ -2575,14 +2575,14 @@ console.log("loadVersions() 578, params: ", this.params)
 			});
 
 			const data = await response.json();
-			console.log('📊 API 回應資料:', data);
+			console.log('📊 API response:', data);
 			
 			if (!data.success) {
 				throw new Error(data.data || 'Failed to load books');
 			}
 
 			// books = data.data.books;
-			console.log('📚 2267 從 API 獲取到書卷資料，當前語言書卷數量:', Object.keys(data.data[currentLanguage]).length);
+			console.log('📚 2585 fetched book data from API, current language number:', Object.keys(data.data[currentLanguage]).length);
 
 			// 渲染書卷列表 - 傳入陣列格式
 			this.renderBooksList(Object.values(data.data[currentLanguage]), booksContent);
@@ -2590,7 +2590,7 @@ console.log("loadVersions() 578, params: ", this.params)
 			// 將書卷資料存入快取 - 轉換物件為陣列格式
 			// const booksArray = Object.values(books);
 			if (this.cacheManager && data.data && Object.keys(data.data).length > 0) {
-				console.log('💾 [BibleHereReader2196] 將書卷資料存入快取');
+				console.log('💾 [BibleHereReader2593] cache fetched book data');
 				// data.data.forEach(language => {
 				// 	console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
 				// 		language: language,   // hi books may be in difference languages

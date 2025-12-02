@@ -35,7 +35,7 @@ class BibleHereDB extends Dexie {
             // Strong dictionary table: primary key strong_number, value as object with updatedAt
             strongs: 'strong_number&, updatedAt',
 
-            // Strong dictionary table: primary key strong_number, value as object with updatedAt
+            // abbreviations table: primary key strong_number, value as object with updatedAt
             abbreviations: '[abbreviation+language], updatedAt'
         });
         
@@ -309,7 +309,7 @@ class BibleHereCacheManager {
         try {
             const now = Date.now();
             const booksCacheEntry = [];
-console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(booksData));
+console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(booksData));
             Object.keys(booksData).forEach(language => {
                 booksCacheEntry.push({
                     language_code: language,
@@ -396,23 +396,23 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('  - verses length:', verses ? verses.length : 'N/A');
             console.log('  - versionTable:', versionTable);
             console.log('  - verses content (first 2 items):', verses ? verses.slice(0, 2) : 'N/A');
-            
+
             // Validate input parameters
             if (!Array.isArray(verses)) {
                 console.error('❌ [CacheManager] verses parameter must be an array, received:', typeof verses, verses);
                 throw new Error('verses parameter must be an array');
             }
-            
+
             if (!versionTable) {
                 console.error('❌ [CacheManager] versionTable parameter is required');
                 throw new Error('versionTable parameter is required');
             }
-            
+
             console.log('💾 [CacheManager] Caching verses for version:', versionTable, 'Count:', verses.length);
-            
+
             const now = Date.now();
             const versesToCache = [];
-            
+
             verses.forEach(verse => {
                 // Use verse_id from seed data if available, otherwise construct it
                 const verseId = verse.verse_id || `${String(verse.book_number).padStart(2, '0')}${String(verse.chapter_number).padStart(3, '0')}${String(verse.verse_number).padStart(3, '0')}`;
@@ -425,22 +425,22 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
                     // chapter_number: verse.chapter_number,
                     verse_number: verse.verse_number,
                     text: verse.text,
-                    reference: verse.reference,
+                    reference: verse.reference,  // add empty reference field in verse cache for store future cross-reference data
                     bookmark: null,  // Add default bookmark value
                     updatedAt: now
                 });
             });
-            
+
             await this.db.verses.bulkPut(versesToCache);
             console.log('✅ [CacheManager] Successfully cached', versesToCache.length, 'verses');
-            
+            if (window.BibleHereReference) {console.log('🔍 [DEBUG] window.BibleHereReference.state.current:', window.BibleHereReference.state.current);}
             return versesToCache.length;
         } catch (error) {
             console.error('❌ [CacheManager] Failed to cache verses:', error);
             throw error;
         }
     }
-    
+
     /**
      * Get cached books (no expiry for books according to technical document)
      */
@@ -449,14 +449,14 @@ console.log('💾 [CacheManager306] Caching books for language: ', Object.keys(b
             console.log('🔍 [CacheManager] Searching cached books for language:', language);
             
             const cachedBooks = await this.db.books.get(language);
-            console.log('🔍 [DEBUG446] getCachedBooks 書卷快取查詢結果:', cachedBooks);
+            console.log('🔍 [DEBUG452] getCachedBooks 書卷快取查詢結果:', cachedBooks);
             
             if (cachedBooks && cachedBooks.value) {
                 // console.log('🔍 [DEBUG] 快取查詢結果 cachedBooks.value:', cachedBooks.value);
                 return cachedBooks.value;
             }
             
-            console.log('📚 [CacheManager453] No cached books found for language:', language);
+            console.log('📚 [CacheManager459] No cached books found for language:', language);
             return {}; // Return empty array for consistency
         } catch (error) {
             console.error('❌ [CacheManager] Failed to get cached books:', error);

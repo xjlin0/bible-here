@@ -8,6 +8,7 @@ class BibleHereReference {
             bodyEl: null,
             current: null
         };
+        this.allLanguagesSet = new Set(["en"]);
         this.db = typeof window.bibleHereDB !== "undefined" ? window.bibleHereDB : null;
         this.cacheManager = typeof window.bibleHereCacheManager !== "undefined" ? window.bibleHereCacheManager : null;
         this.regexContext = null;
@@ -147,7 +148,11 @@ class BibleHereReference {
         const arr = abbrMap[key] || [];
         const langs = [];
         for (let i = 0; i < arr.length; i++) {
-            if (arr[i].language && langs.indexOf(arr[i].language) < 0) langs.push(arr[i].language);
+            const lang = arr[i].language;
+            if (lang && langs.indexOf(lang) < 0) {
+                langs.push(lang);
+                this.allLanguagesSet.add(lang);
+            }
         }
         return langs;
     }
@@ -206,6 +211,45 @@ class BibleHereReference {
             }
             if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
             nodes[n].parentNode.replaceChild(frag, nodes[n]);
+            this.fetchBooksForLanguages();
+        }
+    }
+
+    async fetchBooksForLanguages() {
+        console.log("starting fetchBooksForLanguages here is this.allLanguagesSet: ", this.allLanguagesSet);
+        if (this.cacheManager) {
+            console.log('🌐 Fetching book data from API');
+            const params = new URLSearchParams({
+                action: 'bible_here_public_get_books',
+                languages: Array.from(this.allLanguagesSet),
+            });
+
+            console.log('📡 initialize AJAX to:', `${bibleHereAjax.ajaxurl}?${params}`);
+
+            const response = await fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
+                method: 'GET',
+                headers: {
+                    "X-WP-Nonce": bibleHereAjax.nonce,
+                },
+            });
+
+            const data = await response.json();
+            console.log('📊 API response:', data);
+
+            if (!data.success) {
+                throw new Error(data.data || 'Failed to load books');
+            }
+
+            if (data.data && Object.keys(data.data).length > 0) {
+                console.log('💾 [fetchBooksForLanguages247] cache fetched book data');
+                try {
+                    this.cacheManager.cacheBooks(data.data);
+                    console.log('✅ [BibleHereReader] book data cached successfully');
+                } catch (cacheError) {
+                    console.error('❌ [BibleHereReader] cache book data error:', cacheError);
+                }
+                // })
+            }
         }
     }
 
@@ -297,8 +341,9 @@ class BibleHereReference {
         const res = await this.getVersionTableForLanguages(langs);
         const table = res.table;
         lang = res.language || lang;
-        const data = await this.fetchChapter(table, book, chapter);
-        this.state.current = { lang: lang, table: table, book: book, chapter: chapter, verse: verse, nav: data.navigation };
+        const data = await this.fetchChapter(table, book, chapter, lang);
+        const nav = (data && data.navigation) ? data.navigation : await this.computeNavigation(lang, book, chapter);
+        this.state.current = { lang: lang, table: table, book: book, chapter: chapter, verse: verse, nav: nav };
         const titleFull = await this.getBookTitleFull(lang, book);
         this.state.titleEl.textContent = (titleFull || ("Book " + book)) + " " + chapter;
         this.renderChapterBody(data.version1 && data.version1.verses ? data.version1.verses : [], verse);
@@ -311,12 +356,14 @@ class BibleHereReference {
     }
 
     async navigateChapter(dir) {
-        console.log("314 in navigateChapter");
         if (!this.state.current) return;
+        if (!this.state.current.nav) {
+            this.state.current.nav = await this.computeNavigation(this.state.current.lang, this.state.current.book, this.state.current.chapter);
+        }
         const navKey = dir < 0 ? "prev_chapter" : "next_chapter";
         const target = this.state.current.nav && this.state.current.nav[navKey];
         if (!target) return;
-        const data = await this.fetchChapter(this.state.current.table, target.book_number, target.chapter);
+        const data = await this.fetchChapter(this.state.current.table, target.book_number, target.chapter, this.state.current.lang);
         this.state.current.book = target.book_number;
         this.state.current.chapter = target.chapter;
         this.state.current.nav = data.navigation;
@@ -374,12 +421,15 @@ class BibleHereReference {
         return this.getVersionTableFromCache(langs);
     }
 
-    async fetchChapter(tableName, book, chapter) {
+    async fetchChapter(tableName, book, chapter, language) {
         let cachedVerses = null;
         if (!tableName || !book || !chapter) return cachedVerses;
         if (this.cacheManager) {
             cachedVerses = await this.cacheManager.getVerses(null, [tableName], book, chapter);
-            if (Array.isArray(cachedVerses) && cachedVerses.length > 0) return { version1: { verses: cachedVerses } };
+            if (Array.isArray(cachedVerses) && cachedVerses.length > 0) {
+                const navigation = await this.computeNavigation(language, book, chapter);
+                return { version1: { verses: cachedVerses }, navigation: navigation };
+            }
         }
         const url = new URL(window.bibleHereAjax.ajaxurl);
         url.searchParams.set("action", "bible_here_public_get_verses");
@@ -407,12 +457,36 @@ class BibleHereReference {
         return data.data || {};
     }
 
-    async getBookTitleFull(lang, book) {
+    async computeNavigation(language, bookNumber, chapterNumber) {
         try {
+            const lang = language || (this.state.current && this.state.current.lang) || null;
+            if (!lang || !this.db) return { prev_chapter: null, next_chapter: null };
             const rec = await this.db.books.get(lang);
             const books = rec && rec.value ? rec.value : {};
-            const b = books[book];
-            return b && b.title_full ? b.title_full : null;
+            const current = books[bookNumber];
+            const total = current && (current.total_chapters || current.chapters) ? (current.total_chapters || current.chapters) : null;
+            if (!total) return { prev_chapter: null, next_chapter: null };
+            const prev_chapter = (chapterNumber > 1)
+                ? { book_number: bookNumber, chapter: chapterNumber - 1 }
+                : (books[bookNumber - 1]
+                    ? { book_number: bookNumber - 1, chapter: (books[bookNumber - 1].total_chapters || books[bookNumber - 1].chapters || 1) }
+                    : null);
+            const next_chapter = (chapterNumber < total)
+                ? { book_number: bookNumber, chapter: chapterNumber + 1 }
+                : (books[bookNumber + 1]
+                    ? { book_number: bookNumber + 1, chapter: 1 }
+                    : null);
+            return { prev_chapter: prev_chapter, next_chapter: next_chapter };
+        } catch (e) {
+            return { prev_chapter: null, next_chapter: null };
+        }
+    }
+
+    async getBookTitleFull(lang, book) {
+        try {
+            const cached = await this.cacheManager.getCachedBooks(lang) || {};
+            const bookData = cached[book];
+            return bookData && bookData.title_full ? bookData.title_full : null;
         } catch (e) {
             return null;
         }
@@ -452,14 +526,12 @@ class BibleHereReference {
     }
 
     onPrevClick(e) {
-        console.log("454 onPrevClick clicked!");
         e.preventDefault();
         e.stopPropagation();
         this.navigateChapter(-1);
     }
 
     onNextClick(e) {
-        console.log("461 onNextClick clicked!");
         e.preventDefault();
         e.stopPropagation();
         this.navigateChapter(1);
@@ -472,8 +544,8 @@ class BibleHereReference {
     }
     static start() {
         function start() {
-            const ref = new BibleHereReference();
-            ref.run();
+            window.BibleHereReference = new BibleHereReference();
+            window.BibleHereReference.run();
         }
         if (document.readyState === "complete" || document.readyState === "interactive") {
             setTimeout(start, 0);
