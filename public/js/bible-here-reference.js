@@ -119,28 +119,41 @@ class BibleHereReference {
             abbrMap[key].push(items[k]);
         }
         list.sort(function(a, b) { return b.length - a.length; });
-        function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-        const pattern = "(?:" + list.map(esc).join("|") + ")\\s*(\\d{1,3})\\s*[:：章]\\s*(\\d{1,3})";
+        const pattern = this.buildRegexPattern(list);
         const re = new RegExp(pattern, "gi");
-        function findInfo(match) {
-            const m = match.match(new RegExp("^(" + list.map(esc).join("|") + ")", "i"));
-            if (!m) return null;
-            const key = m[1].toLowerCase();
-            const arr = abbrMap[key] || [];
-            const chosen = arr.length ? arr[0] : null;
-            return chosen ? { abbreviation: chosen.abbreviation, book_number: chosen.book_number, language: chosen.language } : null;
+        return { re: re, list: list, abbrMap: abbrMap };
+    }
+
+    escapeRegex(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    buildRegexPattern(list) {
+        return "(?:" + list.map(this.escapeRegex.bind(this)).join("|") + ")\\s*(\\d{1,3})\\s*[:：章]\\s*(\\d{1,3})";
+    }
+
+    findAbbreviationInfo(match, list, abbrMap) {
+        const headRe = new RegExp("^(" + list.map(this.escapeRegex.bind(this)).join("|") + ")", "i");
+        const m = match.match(headRe);
+        if (!m) return null;
+        const key = m[1].toLowerCase();
+        const arr = abbrMap[key] || [];
+        const chosen = arr.length ? arr[0] : null;
+        return chosen ? { abbreviation: chosen.abbreviation, book_number: chosen.book_number, language: chosen.language } : null;
+    }
+
+    getLanguagesForAbbreviation(abbr, abbrMap) {
+        const key = (abbr || "").toLowerCase();
+        const arr = abbrMap[key] || [];
+        const langs = [];
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i].language && langs.indexOf(arr[i].language) < 0) langs.push(arr[i].language);
         }
-        function getLanguagesForAbbreviation(abbr) {
-            const key = (abbr || "").toLowerCase();
-            const arr = abbrMap[key] || [];
-            const langs = [];
-            for (let i = 0; i < arr.length; i++) {
-                if (arr[i].language && langs.indexOf(arr[i].language) < 0) langs.push(arr[i].language);
-            }
-            return langs;
-        }
-        function inRange(a, b) { a = +a; b = +b; return a >= 1 && a <= 150 && b >= 1 && b <= 176; }
-        return { re: re, list: list, findInfo: findInfo, getLanguagesForAbbreviation: getLanguagesForAbbreviation, inRange: inRange };
+        return langs;
+    }
+
+    inRange(a, b) {
+        a = +a; b = +b; return a >= 1 && a <= 150 && b >= 1 && b <= 176;
     }
 
     wrapReferences(ctx) {
@@ -171,15 +184,15 @@ class BibleHereReference {
                 const c = match[1];
                 const v = match[2];
                 if (match.index > last) frag.appendChild(document.createTextNode(t.slice(last, match.index)));
-                if (ctx.inRange(c, v)) {
-                    const info = ctx.findInfo(full);
+                if (this.inRange(c, v)) {
+                    const info = this.findAbbreviationInfo(full, ctx.list, ctx.abbrMap);
                     if (info) {
                         const spanRef = document.createElement("span");
                         spanRef.className = "bible-here-reference";
                         spanRef.dataset.bookNumber = String(info.book_number != null ? info.book_number : "");
                         spanRef.dataset.chapterNumber = String(c);
                         spanRef.dataset.verseNumber = String(v);
-                        const langs = ctx.getLanguagesForAbbreviation(info.abbreviation);
+                        const langs = this.getLanguagesForAbbreviation(info.abbreviation, ctx.abbrMap);
                         spanRef.dataset.languages = langs.join(",");
                         spanRef.textContent = full;
                         frag.appendChild(spanRef);
@@ -298,6 +311,7 @@ class BibleHereReference {
     }
 
     async navigateChapter(dir) {
+        console.log("314 in navigateChapter");
         if (!this.state.current) return;
         const navKey = dir < 0 ? "prev_chapter" : "next_chapter";
         const target = this.state.current.nav && this.state.current.nav[navKey];
@@ -438,12 +452,14 @@ class BibleHereReference {
     }
 
     onPrevClick(e) {
+        console.log("454 onPrevClick clicked!");
         e.preventDefault();
         e.stopPropagation();
         this.navigateChapter(-1);
     }
 
     onNextClick(e) {
+        console.log("461 onNextClick clicked!");
         e.preventDefault();
         e.stopPropagation();
         this.navigateChapter(1);
