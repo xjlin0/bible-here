@@ -31,7 +31,7 @@
                 <input type="hidden" name="bible_here_action" value="save_disabled_pages" />
 
                 <div class="bible-here-page-selection-div">
-                    <?php if (is_null($disabled_pages_option)) : ?>
+                    <?php if (empty($disabled_pages_option)) : ?>
                         <p style="color:#d63638;">Currently scripture reference linking is disabled across the entire site.</p>
                     <?php else : ?>
                         <p style="color:#46b450;">

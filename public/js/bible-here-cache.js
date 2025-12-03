@@ -694,18 +694,19 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
     }
 }
 
-// Create global database and cache manager instances
-window.bibleHereDB = new BibleHereDB();
-window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
-
-console.log('🌐 [BibleHereCache699] Global database and cache manager instances created');
-
 // Auto-initialize cache system when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            console.log('🎬 [BibleHereCache705] DOM loaded, initializing cache system...');
-            await window.bibleHereCacheManager.initialize();
+        try { 
+            const cfg = typeof window.bibleHereAjax === "object" ? window.bibleHereAjax : {};
+            const disabled = cfg.labelDisabledPages;
+            const currentId = parseInt(cfg.currentPostId || 0, 10);
+            if (disabled !== null && (Array.isArray(disabled) && disabled.indexOf(currentId) < 1)) {
+                console.log('🎬 [BibleHereCache705] DOM loaded, initializing cache system...');
+                window.bibleHereDB = new BibleHereDB();
+                window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
+                await window.bibleHereCacheManager.initialize();
+            }
         } catch (error) {
             console.error('❌ [BibleHereCache] Failed to auto-initialize cache system:', error);
         }

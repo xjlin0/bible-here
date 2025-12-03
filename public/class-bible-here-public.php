@@ -1090,7 +1090,7 @@ class Bible_Here_Public {
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
 				'nonce' => wp_create_nonce( 'bible_here_nonce' ),
 				'currentPostId' => $current_post_id,
-				'labelDisabledPages' => is_array( $disabled_pages_option ) ? array_map( 'intval', $disabled_pages_option ) : ( is_null( $disabled_pages_option ) ? null : array() )
+				'labelDisabledPages' => is_array( $disabled_pages_option ) ? array_map( 'intval', $disabled_pages_option ) : ( empty($disabled_pages_option) ? null : array() )
 			)
 		);
 

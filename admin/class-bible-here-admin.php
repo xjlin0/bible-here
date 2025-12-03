@@ -187,7 +187,7 @@ class Bible_Here_Admin {
                 echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
             } elseif ($action === 'disable_all') {
                 check_admin_referer('bible_here_label_settings_nonce');
-                update_option('bible_here_label_disabled_pages', null);
+                update_option('bible_here_label_disabled_pages', null);  // it will become empty string
                 $disabled_pages_option = null;
                 echo '<div class="notice notice-success is-dismissible"><p>Disabled scripture reference linking across all pages.</p></div>';
             } elseif ($action === 'enable_all') {
