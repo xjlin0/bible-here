@@ -52,15 +52,14 @@ class BibleHereReference {
         return false;
     }
 
-    async needsAbbreviationsRefresh(db) {
+    async needsDatabaseRefresh(db, table, expireInMs = 24 * 60 * 60 * 1000) {
         try {
-            const count = await db.abbreviations.count();
+            const count = await db[table].count();
             if (!count || count === 0) return true;
-            const latest = await db.abbreviations.orderBy("updatedAt").last();
+            const latest = await db[table].orderBy("updatedAt").last();
             if (!latest || !latest.updatedAt) return true;
             const ageMs = Date.now() - latest.updatedAt;
-            const DAY_MS = 24 * 60 * 60 * 1000;
-            return ageMs > DAY_MS;
+            return ageMs > expireInMs;
         } catch (e) {
             return true;
         }
@@ -93,7 +92,7 @@ class BibleHereReference {
     }
 
     async ensureAbbreviations(db) {
-        const refresh = await this.needsAbbreviationsRefresh(db);
+        const refresh = await this.needsDatabaseRefresh(db, "abbreviations");
         if (!refresh) return;
         const abbr = await this.fetchAbbreviations();
         await this.cacheAbbreviations(db, abbr);
@@ -211,13 +210,13 @@ class BibleHereReference {
             }
             if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
             nodes[n].parentNode.replaceChild(frag, nodes[n]);
-            this.fetchBooksForLanguages();
         }
+        this.fetchBooksForLanguages();
     }
 
     async fetchBooksForLanguages() {
         console.log("starting fetchBooksForLanguages here is this.allLanguagesSet: ", this.allLanguagesSet);
-        if (this.cacheManager) {
+        if (this.cacheManager && await this.needsDatabaseRefresh(window.bibleHereDB, "books")) {
             console.log('🌐 Fetching book data from API');
             const params = new URLSearchParams({
                 action: 'bible_here_public_get_books',
