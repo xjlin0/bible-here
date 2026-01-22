@@ -791,7 +791,7 @@ class Bible_Here_Public {
 				'code' => 'invalid_nonce'
 			), 401 );
 		}
-
+		$sanitized_languages = '';
 		$abbreviations_table = $wpdb->prefix . 'bible_here_abbreviations';
 		// Get parameters from GET request
 		$languages_param = sanitize_text_field( $_GET['languages'] ?? '' );
