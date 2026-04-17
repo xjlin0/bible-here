@@ -52,8 +52,19 @@ class BibleHereReference {
         return false;
     }
 
-    async needsDatabaseRefresh(db, table, expireInMs = 24 * 60 * 60 * 1000) {
+    isSuperset(superset, subset) {
+        for (const v of subset) {
+            if (!superset.has(v)) return false;
+        }
+        return true;
+    }
+
+    async needsDatabaseRefresh(db, table, langs= new Set(), expireInMs = 24 * 60 * 60 * 1000) {
         try {
+            if (langs.size > 0) {
+                const langsInDb = await db[table].toCollection().primaryKeys();
+                if (!this.isSuperset(langsInDb, langs)) return true;
+            }
             const count = await db[table].count();
             if (!count || count === 0) return true;
             const latest = await db[table].orderBy("updatedAt").last();
@@ -216,7 +227,7 @@ class BibleHereReference {
 
     async fetchBooksForLanguages() {
         console.log("starting fetchBooksForLanguages here is this.allLanguagesSet: ", this.allLanguagesSet);
-        if (this.cacheManager && await this.needsDatabaseRefresh(window.bibleHereDB, "books")) {
+        if (this.cacheManager && await this.needsDatabaseRefresh(window.bibleHereDB, "books", this.allLanguagesSet)) {
             console.log('🌐 Fetching book data from API');
             const params = new URLSearchParams({
                 action: 'bible_here_public_get_books',
