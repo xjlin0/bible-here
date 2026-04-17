@@ -272,27 +272,35 @@ class BibleHereReference {
             const pop = document.createElement("div");
             pop.className = "bh-ref-popover";
             pop.style.display = "none";
+
+            // 設定初始樣式，確保可以縮放
+            pop.style.position = "absolute";
+            pop.style.boxSizing = "border-box";
+            pop.style.overflow = "hidden"; // 防止內容溢出
+            pop.style.minWidth = "200px";
+            pop.style.minHeight = "100px";
+            pop.style.resize = "both";
+            pop.style.overflow = "hidden";
+
             const header = document.createElement("div");
             header.className = "bh-ref-header";
+            header.style.cursor = "move"; // 提示可拖動
+            header.style.userSelect = "none"; // 防止拖動時選中文字
+
             const title = document.createElement("div");
             title.className = "bh-ref-title";
+
             const controls = document.createElement("div");
             controls.className = "bh-ref-controls";
+
+            // 按鈕
             const btnPrev = document.createElement("button");
-            btnPrev.textContent = "<";
-            btnPrev.title = "Previous Chapter";
-            btnPrev.type = "button";
-            btnPrev.className = "bh-ref-prev";
+            btnPrev.textContent = "<"; btnPrev.className = "bh-ref-prev";
             const btnNext = document.createElement("button");
-            btnNext.textContent = ">";
-            btnNext.title = "Next Chapter";
-            btnNext.type = "button";
-            btnNext.className = "bh-ref-next";
+            btnNext.textContent = ">"; btnNext.className = "bh-ref-next";
             const btnClose = document.createElement("button");
-            btnClose.textContent = "X";
-            btnClose.title = "Close";
-            btnClose.type = "button";
-            btnClose.className = "bh-ref-close";
+            btnClose.textContent = "X"; btnClose.className = "bh-ref-close";
+
             controls.appendChild(btnPrev);
             controls.appendChild(btnNext);
             controls.appendChild(btnClose);
@@ -300,9 +308,64 @@ class BibleHereReference {
             header.appendChild(controls);
             const body = document.createElement("div");
             body.className = "bh-ref-body";
+            // body.style.flex = "1"; // 讓 body 填滿剩餘空間，方便縮放
+            body.style.height = "calc(100% - 45px)"; // 確保 body 填滿，45px 為 header 高度
+            body.style.overflow = "auto";
             pop.appendChild(header);
             pop.appendChild(body);
             document.body.appendChild(pop);
+
+            // --- 拖動邏輯 (Dragging) ---
+            let isDragging = false;
+            let offsetX, offsetY, startX, startY, startLeft, startTop, startWidth, startHeight;
+
+
+            header.addEventListener("mousedown", (e) => {
+                if (e.target.tagName === "BUTTON") return; // 按到按鈕不觸發拖拽
+                isDragging = true;
+                // 使用 pageX/pageY，這會自動包含捲動距離
+                // 這樣 startX/startY 就是相對於整個 Document 的座標
+                startX = e.pageX;
+                startY = e.pageY;
+                startLeft = pop.offsetLeft;
+                startTop = pop.offsetTop;
+                header.style.cursor = "grabbing";
+                e.preventDefault();
+            });
+
+            // 全域監聽移動與放開
+            window.addEventListener("mousemove", (e) => {
+                if (isDragging) {
+                    // 同樣使用 pageX/pageY 進行計算
+                    let newLeft = startLeft + (e.pageX - startX);
+                    let newTop = startTop + (e.pageY - startY);
+
+                    // 限制邊界 (不超出螢幕可見範圍)
+                    // 注意：邊界計算也要考慮捲動
+                    const minTop = window.scrollY;
+                    const maxTop = window.scrollY + window.innerHeight - pop.offsetHeight;
+                    const minLeft = window.scrollX;
+                    const maxLeft = window.scrollX + window.innerWidth - pop.offsetWidth;
+
+                    newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
+                    newTop = Math.max(minTop, Math.min(newTop, maxTop));
+
+                    pop.style.left = `${newLeft}px`;
+                    pop.style.top = `${newTop}px`;
+                }
+            });
+
+            window.addEventListener("mouseup", () => {
+                isDragging = false;
+                // isResizing = false;
+                header.style.cursor = "move";
+            });
+
+            // --- 全方位縮放解決方案 ---
+            // 雖然 CSS 'resize: both' 很方便，但若要「四個邊都能拉」，建議使用 CSS 的特定屬性：
+            pop.style.resize = "both";
+
+            // --- 原有事件綁定 ---
             btnClose.addEventListener("click", this.onCloseClick);
             btnPrev.addEventListener("click", this.onPrevClick);
             btnNext.addEventListener("click", this.onNextClick);
