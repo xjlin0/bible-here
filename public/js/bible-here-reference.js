@@ -62,7 +62,9 @@ class BibleHereReference {
     async needsDatabaseRefresh(db, table, langs= new Set(), expireInMs = 24 * 60 * 60 * 1000) {
         try {
             if (langs.size > 0) {
-                const langsInDb = await db[table].toCollection().primaryKeys();
+                const langsInDb = new Set(
+                  await db[table].toCollection().primaryKeys()
+                );
                 if (!this.isSuperset(langsInDb, langs)) return true;
             }
             const count = await db[table].count();
@@ -260,6 +262,8 @@ class BibleHereReference {
                 }
                 // })
             }
+        } else {
+            console.log("skipping fetch books data since it's in the cache");
         }
     }
 
