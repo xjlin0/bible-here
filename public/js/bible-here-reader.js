@@ -181,7 +181,7 @@ class BibleHereReader {
 			if(this.cacheManager){console.log('✅ [BibleHereReader] 快取管理器連接成功')}else{console.log('❌ [BibleHereReader] 快取管理器連接失敗')}
 			
 			// 等待快取管理器完全初始化（包括 seed data 載入）
-			if (!this.cacheManager.isInitialized) {
+			if (this.cacheManager && !this.cacheManager.isInitialized) {
 				console.log('⏳ [BibleHereReader] 等待快取管理器完全初始化（包括 seed data 載入）...');
 				await this.waitForCacheInitialization();
 			}

@@ -35,8 +35,8 @@ class BibleHereDB extends Dexie {
             // Strong dictionary table: primary key strong_number, value as object with updatedAt
             strongs: 'strong_number&, updatedAt',
 
-            // abbreviations table: primary key strong_number, value as object with updatedAt
-            abbreviations: '[abbreviation+language], updatedAt'
+            // abbreviations table: composite primary key language+abbreviation, value as object with updatedAt
+            abbreviations: '[language+abbreviation], updatedAt'
         });
         
         // // Version 2: Add bookmark field to verses table
@@ -693,32 +693,29 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
         }
     }
 }
+// 立刻建立物件並標記 isInitializing = true 好讓reader可用
+window.bibleHereDB = new BibleHereDB();
+window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
+window.bibleHereCacheManager.isInitializing = true;
 
-// Auto-initialize cache system when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', async () => {
-        try { 
-            const cfg = typeof window.bibleHereAjax === "object" ? window.bibleHereAjax : {};
-            const disabled = cfg.labelDisabledPages;
-            const currentId = parseInt(cfg.currentPostId || 0, 10);
-            if (disabled !== null && (Array.isArray(disabled) && disabled.indexOf(currentId) < 1)) {
-                console.log('🎬 [BibleHereCache705] DOM loaded, initializing cache system...');
-                window.bibleHereDB = new BibleHereDB();
-                window.bibleHereCacheManager = new BibleHereCacheManager(window.bibleHereDB);
-                await window.bibleHereCacheManager.initialize();
-            }
-        } catch (error) {
-            console.error('❌ [BibleHereCache] Failed to auto-initialize cache system:', error);
-        }
-    });
-} else {
-    // DOM already loaded - initialize immediately without delay
-    (async () => {
-        try {
-            console.log('🎬 [BibleHereCache715] DOM already loaded, initializing cache system immediately...');
+const _doInit = async () => {
+    try {
+        const cfg = typeof window.bibleHereAjax === "object" ? window.bibleHereAjax : {};
+        const disabled = cfg.labelDisabledPages;
+        const currentId = parseInt(cfg.currentPostId || 0, 10);
+        if (disabled !== null && (Array.isArray(disabled) && disabled.indexOf(currentId) < 1)) {
             await window.bibleHereCacheManager.initialize();
-        } catch (error) {
-            console.error('❌ [BibleHereCache718] Failed to auto-initialize cache system:', error);
+        } else {
+            window.bibleHereCacheManager.isInitializing = false;
         }
-    })();
+    } catch (error) {
+        console.error('❌ [BibleHereCache] 初始化失敗:', error);
+        window.bibleHereCacheManager.isInitializing = false;
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _doInit);
+} else {
+    _doInit();
 }

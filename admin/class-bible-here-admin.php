@@ -1469,7 +1469,7 @@ class Bible_Here_Admin {
 		
 		// Check current database status
 		if ($cross_ref_count > 0) {
-			echo '<p><strong>Status:</strong> <span style="color: green;">✓ Installed ' . number_format($cross_ref_count) . ' 筆交叉引用記錄</span></p>';
+			echo '<p><strong>Status:</strong> <span style="color: green;">✓ Installed ' . number_format($cross_ref_count) . ' records of cross references</span></p>';
 			
 			// Show uninstall form
 			echo '<form method="post" action="" style="display: inline-block; margin-right: 10px;">';

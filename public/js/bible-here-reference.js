@@ -95,8 +95,8 @@ class BibleHereReference {
         const now = Date.now();
         const records = items.map(function(item) {
             return {
-                abbreviation: item.abbreviation,
                 language: item.language,
+                abbreviation: item.abbreviation,
                 book_number: item.book_number,
                 updatedAt: now
             };
@@ -120,6 +120,7 @@ class BibleHereReference {
     }
 
     buildRegexContext(items) {
+        // console.log("hi 123 here is list for buildRegexPattern: ", items);
         const list = [];
         const seen = {};
         const abbrMap = {};
@@ -131,7 +132,8 @@ class BibleHereReference {
             if (!abbrMap[key]) abbrMap[key] = [];
             abbrMap[key].push(items[k]);
         }
-        list.sort(function(a, b) { return b.length - a.length; });
+        list.sort(function(a, b) { return b.length - a.length; });  // 詩篇 要在 詩 之前以免誤判 詩2篇
+        // console.log("hi 136 here is list for buildRegexPattern: ", list);
         const pattern = this.buildRegexPattern(list);
         const re = new RegExp(pattern, "gi");
         return { re: re, list: list, abbrMap: abbrMap };

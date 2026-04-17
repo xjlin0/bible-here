@@ -120,20 +120,20 @@ class Bible_Here_Public {
 			true 
 		);
 
+		// Enqueue seed data JavaScript
+		wp_enqueue_script(
+			$this->plugin_name . '-seed-data',
+			plugin_dir_url( __FILE__ ) . 'js/bible-here-seed-data.js',
+			array(),
+			$this->version,
+			true
+		);
+
 		// Enqueue cache management JavaScript
 		wp_enqueue_script( 
 			$this->plugin_name . '-cache', 
 			plugin_dir_url( __FILE__ ) . 'js/bible-here-cache.js', 
 			array( $this->plugin_name . '-dexie' ), 
-			$this->version, 
-			true 
-		);
-
-		// Enqueue seed data JavaScript
-		wp_enqueue_script( 
-			$this->plugin_name . '-seed-data', 
-			plugin_dir_url( __FILE__ ) . 'js/bible-here-seed-data.js', 
-			array(), 
 			$this->version, 
 			true 
 		);
