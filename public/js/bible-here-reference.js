@@ -142,7 +142,20 @@ class BibleHereReference {
     }
 
     buildRegexPattern(list) {
-        return "(?:" + list.map(this.escapeRegex.bind(this)).join("|") + ")\\s*(\\d{1,3})\\s*[:：章]\\s*(\\d{1,3})";
+        const books = "(?:" + list.map(this.escapeRegex.bind(this)).join("|") + ")";
+
+        const patterns = [
+            // 太3:5 / 太3：5 / Matt 3:5
+            "(?:" + books + "\\s*(?<c1>\\d{1,3})\\s*[:：]\\s*(?<v1>\\d{1,3}))",
+
+            // 馬太福音第3章5節 / 尼希米記第1章 / 詩篇第43篇
+            "(?:" + books + "\\s*(?:第)?\\s*(?<c2>\\d{1,3})\\s*[章篇](?:\\s*(?:第)?\\s*(?<v2>\\d{1,3})\\s*節?)?)",
+
+            // Matthew Chapter 3 Verse 5 / Matthew Chapter 3:5
+            "(?:" + books + "\\s*[Cc]hapter\\s*(?<c3>\\d{1,3})(?:\\s*[Vv]erse\\s*(?<v3>\\d{1,3})|\\s*[:：]\\s*(?<v4>\\d{1,3}))?)",
+        ];
+
+        return patterns.join("|");
     }
 
     findAbbreviationInfo(match, list, abbrMap) {
@@ -169,8 +182,14 @@ class BibleHereReference {
         return langs;
     }
 
-    inRange(a, b) {
-        a = +a; b = +b; return a >= 1 && a <= 150 && b >= 1 && b <= 176;
+    inRange(c, v) {
+        c = +c;  // convert string to number
+        if (!(c >= 1 && c <= 150)) return false;  // no chapter number bigger than 150
+        if (v !== null && v !== undefined && v !== "") {  // allows null as verse number for the whole chapter
+            v = +v;
+            if (!(v >= 1 && v <= 176)) return false;  // no verse number bigger than 176
+        }
+        return true;
     }
 
     wrapReferences(ctx) {
@@ -198,8 +217,9 @@ class BibleHereReference {
             let match;
             while ((match = ctx.re.exec(t)) !== null) {
                 const full = match[0];
-                const c = match[1];
-                const v = match[2];
+                const g = match.groups || {};
+                const c = g.c1 ?? g.c2 ?? g.c3 ?? "";
+                const v = g.v1 ?? g.v2 ?? g.v3 ?? g.v4 ?? null;
                 if (match.index > last) frag.appendChild(document.createTextNode(t.slice(last, match.index)));
                 if (this.inRange(c, v)) {
                     const info = this.findAbbreviationInfo(full, ctx.list, ctx.abbrMap);
