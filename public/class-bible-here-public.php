@@ -793,6 +793,7 @@ class Bible_Here_Public {
 		}
 		$sanitized_languages = '';
 		$abbreviations_table = $wpdb->prefix . 'bible_here_abbreviations';
+		$versions_table  = $wpdb->prefix . 'bible_here_versions';
 		// Get parameters from GET request
 		$languages_param = sanitize_text_field( $_GET['languages'] ?? '' );
 		$where_clause = '';
@@ -812,9 +813,11 @@ class Bible_Here_Public {
 
 			$placeholders = implode(',', array_fill(0, count($sanitized_languages), '%s'));
 			$where_clause = "WHERE language IN ($placeholders)";
+		} else {
+		    $where_clause = "WHERE language IN (SELECT language FROM $versions_table WHERE rank IS NOT null)";
 		}
 
-		$sql = "SELECT book_number, abbreviation, language
+		$sql = "SELECT language, rank, abbreviation, book_number
 			FROM $abbreviations_table
 			$where_clause
 			ORDER BY id";
@@ -831,9 +834,10 @@ class Bible_Here_Public {
 		if ( $results ) {
 			foreach ( $results as $entry ) {
 				$abbreviations[] = array(
-					'book_number' => intval( $entry['book_number'] ),
+					'language' => $entry['language'],
+					'rank' => intval($entry['rank']),
 					'abbreviation' => $entry['abbreviation'],
-					'language' => $entry['language']
+					'book_number' => intval( $entry['book_number'] )
 				);
 			}
 		}

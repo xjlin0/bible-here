@@ -36,20 +36,8 @@ class BibleHereDB extends Dexie {
             strongs: 'strong_number&, updatedAt',
 
             // abbreviations table: composite primary key language+abbreviation, value as object with updatedAt
-            abbreviations: '[language+abbreviation], updatedAt'
+            abbreviations: '[language+rank+abbreviation], updatedAt'
         });
-        
-        // // Version 2: Add bookmark field to verses table
-        // this.version(2).stores({
-        //     // Verses table: composite primary key [table_name+verse_id], with bookmark index
-        //     verses: '[table_name+verse_id], updatedAt, bookmark',
-            
-        //     // Books table: primary key language_code, value as object
-        //     books: 'language_code&, updatedAt',
-            
-        //     // Versions table: primary key table_name, value as object with updatedAt
-        //     versions: 'table_name&, updatedAt'
-        // });
         
         // Add hooks for console.log()
         this.verses.hook('creating', (primKey, obj, trans) => {

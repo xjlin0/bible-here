@@ -118,7 +118,7 @@ class Bible_Here_Activator {
 		$table_name = $wpdb->prefix . 'bible_here_abbreviations';
 		$sql = "CREATE TABLE IF NOT EXISTS  $table_name (
 			id INT AUTO_INCREMENT PRIMARY KEY,
-			is_primary BOOLEAN DEFAULT FALSE,
+			rank TINYINT(1) DEFAULT 9,
 			book_number TINYINT(1) unsigned NOT NULL,
 			language VARCHAR(10) NOT NULL,
 			abbreviation VARCHAR(20) NOT NULL,
@@ -573,13 +573,13 @@ class Bible_Here_Activator {
 							$sql_values[] = $abbreviation['language'] ?? '';
 							$sql_values[] = intval($abbreviation['book_number'] ?? 0);
 							$sql_values[] = $abbreviation['abbreviation'] ?? '';
-							$sql_values[] = self::convert_to_boolean($abbreviation['is_primary'] ?? 0);
+							$sql_values[] = intval($abbreviation['rank'] ?? 9);
 						}
 						
 						if (!empty($values_array)) {
 							$values_string = implode(', ', $values_array);
 							
-							$sql = "INSERT INTO $abbreviations_table (language, book_number, abbreviation, is_primary)
+							$sql = "INSERT INTO $abbreviations_table (language, book_number, abbreviation, rank)
 									VALUES $values_string 
 									ON DUPLICATE KEY UPDATE 
 									abbreviation = VALUES(abbreviation)";
