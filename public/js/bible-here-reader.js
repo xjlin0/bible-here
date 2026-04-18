@@ -202,10 +202,8 @@ class BibleHereReader {
 			// 語言2的書卷名（獨立查詢，確保語言正確）
 			if (this.isDualMode && this.currentLanguage2) {
 				const cachedBooks2 = await this.cacheManager.getCachedBooks(this.currentLanguage2);
-// console.log(`205 here is this.currentBook: ${this.currentBook} , typeof this.currentBook ${typeof this.currentBook} and cachedBooks2: `, cachedBooks2);
 				if (cachedBooks2 && cachedBooks2[this.currentBook]) {
 					const bookShort2 = cachedBooks2[this.currentBook].title_short;
-console.log(`208 here is bookShort2: ${bookShort2} , this.currentVersion2NameShort : ${this.currentVersion2NameShort} and this.elements.bookChapterText2: `, this.elements.bookChapterText2);
 					if (this.elements.bookChapterText2) {
 						this.elements.bookChapterText2.dataset.bookNameShort = bookShort2; // ← "太" 而非 "Matt"
 					}
@@ -581,39 +579,6 @@ console.log(`208 here is bookShort2: ${bookShort2} , this.currentVersion2NameSho
 		}
 	}
 
-		/**
-		 * Initialize selectors based on current state
-		 */
-		// initializeSelectors() {
-		// 	// 不在初始化時載入版本，避免重設 currentBook 和 currentChapter
-		// 	// 這些值已經在 constructor 中正確設定
-		// 	console.log('🔧 [BibleHereReader] initializeSelectors 跳過版本載入，保持現有設定');
-		// }
-
-	/**
-	 * Handle language change
-	 */
-	onLanguageChange() {
-		if (!this.currentLanguage || !this.currentLanguage1	|| !this.currentLanguage1) {
-			this.resetSelectors(['version', 'book', 'chapter']);
-			return;
-		}
-		
-		this.loadVersions();
-	}
-
-	/**
-	 * Handle version change
-	 */
-	onVersionChange() {
-		if (!this.currentVersion1 || !this.currentVersion2) {
-			this.resetSelectors(['book', 'chapter']);
-			return;
-		}
-		
-		this.loadBooks();
-	}
-
 	/**
 	 * Handle book change
 	 */
@@ -624,39 +589,6 @@ console.log(`208 here is bookShort2: ${bookShort2} , this.currentVersion2NameSho
 		}
 		
 		this.loadChapters();
-	}
-
-	/**
-	 * Load available versions for selected language
-	 */
-	loadVersions() {
-		this.showLoading();
-		console.log("loadVersions 490", this.currentLanguage, this.currentLanguage1, this.currentLanguage2)
-		const params = new URLSearchParams({
-			action: 'bible_here_public_get_versions',
-			language: this.currentLanguage1 || this.currentLanguage2,
-		});
-console.log("loadVersions() 578, params: ", this.params)
-		fetch(`${bibleHereAjax.ajaxurl}?${params}`, {
-			method: 'GET',
-			headers: {
-				"X-WP-Nonce": bibleHereAjax.nonce
-			}
-		})
-		.then(response => response.json())
-		.then(data => {
-			this.hideLoading();
-			
-			if (data.success) {
-				this.populateVersionSelect(data.data);
-			} else {
-				this.showError(data.data || 'Failed to load versions');
-			}
-		})
-		.catch(error => {
-			this.hideLoading();
-			this.showError('Network error: ' + error.message);
-		});
 	}
 
 	/**
@@ -1042,7 +974,7 @@ console.log("loadVersions() 578, params: ", this.params)
 		});
 
 		container.innerHTML = html;
-		
+		this.updatePageTitle();
 		// 經文顯示完成後，載入版本資料
 		this.loadVersionsAfterChapter();
 	}
@@ -1171,15 +1103,6 @@ console.log("loadVersions() 578, params: ", this.params)
 		
 		// 更新容器內容
 		versionsList.innerHTML = html;
-		
-		// 綁定點擊事件
-		const versionItems = versionsList.querySelectorAll('.version-item');
-		versionItems.forEach(item => {
-			item.addEventListener('click', (e) => {
-				console.log("🔄 [BibleHereReader] addEventListener at 1010");
-				this.selectVersionAndLoadBooksTab(e.currentTarget.dataset);
-			});
-		});
 		
 		console.log(`✅ [BibleHereReader] 版本列表顯示已更新 version1NameShort: ${this.currentVersion1NameShort} version2NameShort: ${this.currentVersion2NameShort}`);
 	}
@@ -2355,14 +2278,16 @@ console.log("loadVersions() 578, params: ", this.params)
 			});
 		});
 
-		// Version selection
-		const versionItems = this.elements.bookChapterMenu.querySelectorAll('.version-item');
-		versionItems.forEach(item => {
-			item.addEventListener('click', () => {
-				console.log("🔄 [BibleHereReader1813] addEventListener");
+		// Version items - delegate to versions tab content
+		const versionsTabContent = this.elements.bookChapterMenu.querySelector('.tab-content[data-content="versions"] .versions-list');
+		if (versionsTabContent) {
+			versionsTabContent.addEventListener('click', (e) => {
+				const item = e.target.closest('.version-item');
+				if (!item) return;
+				this[`currentVersion${this.activeSelector}NameShort`] = item.dataset.versionNameShort;
 				this.selectVersionAndLoadBooksTab(item.dataset);
 			});
-		});
+		}
 
 		// Book selection
 		const bookItems = this.elements.bookChapterMenu.querySelectorAll('.book-item');
@@ -2582,17 +2507,6 @@ console.log("loadVersions() 578, params: ", this.params)
 		});
 
 		container.innerHTML = html;
-
-		// Bind events for new version items
-		const versionItems = container.querySelectorAll('.version-item');
-		versionItems.forEach(item => {
-			item.addEventListener('click', () => {
-				console.log("🔄 [BibleHereReader] addEventListener at 2186 here is item.dataset: ", item.dataset);
-				this[`currentVersion${this.activeSelector}NameShort`] = item.dataset.versionNameShort;  // this.currentVersion1NameShort = item.dataset.versionNameShort;
-				console.log(`2188 this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
-				this.selectVersionAndLoadBooksTab(item.dataset);
-			});
-		});
 	}
 
 	/**
@@ -2606,14 +2520,6 @@ console.log("loadVersions() 578, params: ", this.params)
 			return;
 		}
 
-		// Check if content already exists (has books sections)
-		// const existingSections = booksContent.querySelectorAll('.books-section');
-		// if (existingSections.length > 0) {
-		// 	console.log('📖 書卷內容已存在，只更新 active 狀態');
-		// 	// Content already exists, just update active states
-		// 	this.updateBookActiveStates();
-		// 	return;
-		// }
 		const currentLanguageVariable = 'currentLanguage' + this.activeSelector;
 		const currentLanguage = this[currentLanguageVariable];
 		try {
@@ -2663,12 +2569,6 @@ console.log("loadVersions() 578, params: ", this.params)
 			// const booksArray = Object.values(books);
 			if (this.cacheManager && data.data && Object.keys(data.data).length > 0) {
 				console.log('💾 [BibleHereReader2593] cache fetched book data');
-				// data.data.forEach(language => {
-				// 	console.log('📊 [BibleHereReader] 準備快取的書卷資料:', {
-				// 		language: language,   // hi books may be in difference languages
-				// 		count: booksArray.length,
-				// 		sample: booksArray.slice(0, 2)
-				// 	});
 				try {
 					this.cacheManager.cacheBooks(data.data);
 					console.log('✅ [BibleHereReader] 書卷資料已開始存入快取');
@@ -2690,8 +2590,6 @@ console.log("loadVersions() 578, params: ", this.params)
 	 * Render books list from data
 	 */
 	renderBooksList(books, booksContent) {
-
-
 		// 分離舊約和新約書卷, genre_type可能不是英文, 故無法直接使用 genre_type 分離
 		const oldTestament = books.filter(book => book.book_number && book.book_number <= 39);  // 假設舊約書卷編號 1-39
 		const newTestament = books.filter(book => book.book_number && book.book_number >= 40);  // 假設新約書卷編號 40-66
@@ -2898,7 +2796,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
     	console.log('🔄 2524 swapVersions() 開始版本切換');
 		const version1BookNameShort = this.elements.bookChapterText1.dataset.bookNameShort;
 		const version2BookNameShort = this.elements.bookChapterText2.dataset.bookNameShort;
-
+		if (!version2BookNameShort) return;
     	console.log('🔄 切換前狀態:', {
 			language1: this.currentLanguage1,
 			language2: this.currentLanguage2,
@@ -3708,12 +3606,20 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 		}
 	}
 
-// loadDualVersionChapter() {  // 確保這個方法使用最新的 this.currentVersion1 和 this.currentVersion2
-	// 	// 載入第一版本
-	// 	this.loadChapterForVersion(this.currentVersion1, '.version-1');
-	// 	// 載入第二版本  
-	// 	this.loadChapterForVersion(this.currentVersion2, '.version-2');
-	// }
+	/**
+	 * Update page title to reflect current reading position
+	 */
+	updatePageTitle() {
+		const tagLine = this.container.dataset.tagLine;
+		const bookShort = this.elements.bookChapterText1
+			? this.elements.bookChapterText1.dataset.bookNameShort || ''
+			: '';
+		const chapter = this.currentChapter || '';
+
+		if (bookShort && chapter) {
+			document.title = `${tagLine} ${bookShort} ${chapter}`;
+		}
+	}
 }
 
 /**

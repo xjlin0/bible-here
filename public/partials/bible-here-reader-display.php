@@ -23,6 +23,7 @@ $default_book = !empty( $atts['book'] ) ? sanitize_text_field( $atts['book'] ) :
 $default_chapter = !empty( $atts['chapter'] ) ? intval( $atts['chapter'] ) : 117;
 $default_language = !empty( $atts['language'] ) ? sanitize_text_field( $atts['language'] ) : 'en';
 $default_version = !empty( $atts['version'] ) ? sanitize_text_field( $atts['version'] ) : 'bible_here_en_kjv';
+$tag_line = get_bloginfo( 'description' );
 
 // Book number to short name mapping for initial display - loaded from database
 global $wpdb;
@@ -46,7 +47,8 @@ $reference_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefi
 $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}bible_here_strong_dictionary LIMIT 1)");
 ?>
 
-<div id="<?php echo esc_attr( $reader_id ); ?>" class="bible-here-reader" 
+<div id="<?php echo esc_attr( $reader_id ); ?>" class="bible-here-reader"
+     data-tag-line="<?php echo esc_attr( $tag_line ); ?>"
      data-mode="<?php echo esc_attr( $initial_mode ); ?>"
      data-book="<?php echo esc_attr( $default_book ); ?>"
      data-chapter="<?php echo esc_attr( $default_chapter ); ?>"

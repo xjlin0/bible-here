@@ -83,47 +83,6 @@ class BibleHereDB extends Dexie {
             throw error;
         }
     }
-    
-    /**
-     * Get database statistics
-     */
-    async getStats() {
-        try {
-            const stats = {
-                verses: await this.verses.count(),
-                books: await this.books.count(),
-                versions: await this.versions.count(),
-                dbSize: await this.getDatabaseSize()
-            };
-            
-            console.log('📈 [BibleHereDB] Database statistics:', stats);
-            return stats;
-        } catch (error) {
-            console.error('❌ [BibleHereDB] Failed to get database statistics:', error);
-            throw error;
-        }
-    }
-    
-    /**
-     * Estimate database size (approximate)
-     */
-    async getDatabaseSize() {
-        try {
-            if ('storage' in navigator && 'estimate' in navigator.storage) {
-                const estimate = await navigator.storage.estimate();
-                return {
-                    used: estimate.usage,
-                    available: estimate.quota,
-                    usedMB: Math.round(estimate.usage / 1024 / 1024 * 100) / 100,
-                    availableMB: Math.round(estimate.quota / 1024 / 1024 * 100) / 100
-                };
-            }
-            return { message: 'Storage estimation not supported' };
-        } catch (error) {
-            console.warn('⚠️ [BibleHereDB] Could not estimate storage size:', error);
-            return { error: error.message };
-        }
-    }
 }
 
 /**
