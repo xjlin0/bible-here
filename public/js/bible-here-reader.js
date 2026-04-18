@@ -110,6 +110,7 @@ class BibleHereReader {
 			console.log('🔗 [init] 發現 URL 參數，應用設定:', urlParams);
 			// this.elements.reader.setAttribute('data-mode', urlParams.get('version2') ? 'dual' : 'single');
 			this.initFromParams(urlParams);
+			await this._resolveVersionNameShorts();
 			await this.applyURLParamsToReader(urlParams);
 		} else {  // Parse shortcode attributes from container
 			const shortcodeAttributes = this.parseShortcodeAttributes();
@@ -162,7 +163,67 @@ class BibleHereReader {
 		console.log('✅ BibleHereReader init() 完成');
 	}
 
-		/**
+	/**
+	 * 從 cache 查詢 version name short，找不到就從 API 補
+	 */
+	async _resolveVersionNameShorts() {
+		if (!this.cacheManager) return;
+
+		try {
+			const versions = await this.cacheManager.getVersions(
+				[this.currentLanguage1, this.currentLanguage2].filter(Boolean)
+			);
+
+			versions.forEach(v => {
+				if (v.table_name === this.currentVersion1) {
+					this.currentVersion1NameShort = v.name_short;
+					if (this.elements.bookChapterText1) {
+						this.elements.bookChapterText1.dataset.versionNameShort = v.name_short;
+					}
+				}
+				if (v.table_name === this.currentVersion2) {
+					this.currentVersion2NameShort = v.name_short;
+					if (this.elements.bookChapterText2) {
+						this.elements.bookChapterText2.dataset.versionNameShort = v.name_short;
+					}
+				}
+			});
+
+			// 語言1的書卷名
+			const cachedBooks1 = await this.cacheManager.getCachedBooks(this.currentLanguage1);
+			if (cachedBooks1 && cachedBooks1[this.currentBook]) {
+				const bookShort1 = cachedBooks1[this.currentBook].title_short;
+				if (this.elements.bookChapterText1) {
+					this.elements.bookChapterText1.dataset.bookNameShort = bookShort1;
+				}
+				this.updateBookChapterButton(this.currentVersion1NameShort, bookShort1, '1');
+			}
+
+			// 語言2的書卷名（獨立查詢，確保語言正確）
+			if (this.isDualMode && this.currentLanguage2) {
+				const cachedBooks2 = await this.cacheManager.getCachedBooks(this.currentLanguage2);
+// console.log(`205 here is this.currentBook: ${this.currentBook} , typeof this.currentBook ${typeof this.currentBook} and cachedBooks2: `, cachedBooks2);
+				if (cachedBooks2 && cachedBooks2[this.currentBook]) {
+					const bookShort2 = cachedBooks2[this.currentBook].title_short;
+console.log(`208 here is bookShort2: ${bookShort2} , this.currentVersion2NameShort : ${this.currentVersion2NameShort} and this.elements.bookChapterText2: `, this.elements.bookChapterText2);
+					if (this.elements.bookChapterText2) {
+						this.elements.bookChapterText2.dataset.bookNameShort = bookShort2; // ← "太" 而非 "Matt"
+					}
+					this.updateBookChapterButton(this.currentVersion2NameShort, bookShort2, '2');
+				}
+			}
+
+			console.log('✅ [_resolveVersionNameShorts] 更新完成:', {
+				version1NameShort: this.currentVersion1NameShort,
+				version2NameShort: this.currentVersion2NameShort
+			});
+
+		} catch (error) {
+			console.warn('⚠️ [_resolveVersionNameShorts] 查詢失敗:', error);
+		}
+	}
+
+	/**
 	 * Initialize cache manager
 	 */
 	async initializeCacheManager() {
@@ -1147,7 +1208,7 @@ console.log("loadVersions() 578, params: ", this.params)
 	 */
 	updateBookChapterButton(versionLabel, bookLabel, selector) {
 		const targetElement = this.elements['bookChapterText' + (selector || this.activeSelector)];
-		console.log(`hi updateBookChapterButton() 1042, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}`);
+		console.log(`hi updateBookChapterButton() 1211, versionLabel: ${versionLabel} this.activeSelector: ${this.activeSelector}, 'bookChapterText' + this.activeSelector: ${'bookChapterText' + this.activeSelector}, selector: ${selector}, bookLabel: ${bookLabel}`);
 		console.log(`hi updateBookChapterButton() 1043, targetElement: ${targetElement}, this.currentVersion1NameShort: ${this.currentVersion1NameShort}, this.currentVersion2NameShort: ${this.currentVersion2NameShort}`);
 		if (targetElement) {
 			if (versionLabel) {
@@ -1687,9 +1748,18 @@ console.log("loadVersions() 578, params: ", this.params)
 		if (this.isDualMode && !this.currentVersion2) {
 			this.initializeSecondVersion();
 		}
-		
+
+		const params = {
+			version1: this.currentVersion1,
+			book: this.currentBook,
+			chapter: this.currentChapter,
+			mode: this.isDualMode ? 'dual' : 'single',
+			language1: this.currentLanguage1,
+		}
 		// Load content for the current mode - 載入真實 API 資料
 		if (this.isDualMode) {
+			params['version2'] = this.currentVersion2;
+			params['language2'] = this.currentLanguage2;
 			// 載入真實 API 資料
 			await this.loadChapter();
 			// Initialize resizable divider for dual mode
@@ -1700,6 +1770,8 @@ console.log("loadVersions() 578, params: ", this.params)
 			// 載入真實 API 資料
 			await this.loadChapter();
 		}
+
+		this.updateURLParams(params);
 	}
 
 	/**
@@ -3241,6 +3313,34 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 		if (urlParams.chapter) {
 			this.currentChapter = parseInt(urlParams.chapter);
 		}
+		if (this.isDualMode) {
+			if (this.elements.singleMode) this.elements.singleMode.style.display = 'none';
+			if (this.elements.dualMode) this.elements.dualMode.style.display = 'block';
+			if (this.elements.bookChapterSelector2) {
+				this.elements.bookChapterSelector2.style.display = 'block';
+			}
+			const versionsButton = this.elements.versionsButton;
+			if (versionsButton) {
+				const versionsText = versionsButton.querySelector('.versions-text');
+				if (versionsText) versionsText.textContent = '- version';
+				versionsButton.style.display = 'none';
+			}
+			if (this.elements.bookChapterText1) {
+				this.elements.bookChapterText1.dataset.versionNameShort = this.currentVersion1NameShort || '';
+				// 書卷名稱等 loadChapter 後會由 loadBooksTabAndUpdateBookChapterButton 更新
+				// 但章節號碼可以先設定
+				const bookShort = this.elements.bookChapterText1.dataset.bookNameShort || '';
+				this.elements.bookChapterText1.textContent =
+					`${this.currentVersion1NameShort || ''} ${bookShort} ${this.currentChapter}`.trim();
+			}
+
+			if (this.elements.bookChapterText2) {
+				this.elements.bookChapterText2.dataset.versionNameShort = this.currentVersion2NameShort || '';
+				const bookShort = this.elements.bookChapterText2.dataset.bookNameShort || '';
+				this.elements.bookChapterText2.textContent =
+					`${this.currentVersion2NameShort || ''} ${bookShort}`.trim();
+			}
+		}
 	}  // do we need to set this.currentVersion1NameShort?
 
 	/**
@@ -3510,6 +3610,49 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 				console.log('✅ [applyURLParamsToReader] 更新模式:', urlParams.mode);
 			}
 
+			if (urlParams.mode === 'dual' && !this.isDualMode) {
+				this.isDualMode = true;
+
+				// 更新版本按鈕文字
+				const versionsButton = this.elements.versionsButton;
+				if (versionsButton) {
+					const versionsText = versionsButton.querySelector('.versions-text');
+					if (versionsText) versionsText.textContent = '- version';
+					versionsButton.style.display = 'none';
+				}
+
+				// 顯示第二版本選擇器
+				if (this.elements.bookChapterSelector2) {
+					this.elements.bookChapterSelector2.style.display = 'block';
+				}
+
+				// 設定 data-mode
+				this.elements.reader.setAttribute('data-mode', 'dual');
+
+				// 切換顯示容器
+				if (this.elements.singleMode) this.elements.singleMode.style.display = 'none';
+				if (this.elements.dualMode) this.elements.dualMode.style.display = 'block';
+
+				// 初始化第二版本（如果還沒設定）
+				if (!this.currentVersion2) {
+					this.initializeSecondVersion();
+				}
+			} else if (urlParams.mode === 'single' && this.isDualMode) {
+				this.isDualMode = false;
+				this.elements.reader.setAttribute('data-mode', 'single');
+				if (this.elements.singleMode) this.elements.singleMode.style.display = 'block';
+				if (this.elements.dualMode) this.elements.dualMode.style.display = 'none';
+				if (this.elements.bookChapterSelector2) {
+					this.elements.bookChapterSelector2.style.display = 'none';
+				}
+				const versionsButton = this.elements.versionsButton;
+				if (versionsButton) {
+					const versionsText = versionsButton.querySelector('.versions-text');
+					if (versionsText) versionsText.textContent = '+ version';
+					versionsButton.style.display = 'inline-block';
+				}
+			}
+
 			// Reload content if any parameter changed
 			if (needsReload) {
 				console.log('🔄 [applyURLParamsToReader] 參數已變更，重新載入內容');
@@ -3524,17 +3667,23 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 				// Step 3: Update book chapter button with correct book name
 				if (this.currentBook && cachedBooks && cachedBooks[this.currentBook]) {
 					try {
-						const bookNameShort = cachedBooks[this.currentBook].title_short;
-						console.log('📖 [applyURLParamsToReader] 更新書卷名稱按鈕:', {
-							book: this.currentBook,
-							bookNameShort: bookNameShort,
-							version1: this.currentVersion1NameShort
-						});
-						
-						this.updateBookChapterButton(this.currentVersion1NameShort, bookNameShort, '1');
-						if (this.currentMode === 'dual' && this.currentVersion2NameShort) {
-							this.updateBookChapterButton(this.currentVersion2NameShort, bookNameShort, '2');
+						const bookNameShort1 = cachedBooks[this.currentBook].title_short;
+
+						// 先處理語言2，把正確書卷名寫入 dataset，防止後面 button1 的副作用覆蓋
+						if (this.isDualMode && this.currentLanguage2) {
+							const cachedBooks2 = await this.ensureBooksInCache(this.currentLanguage2);
+							const bookNameShort2 = cachedBooks2 && cachedBooks2[this.currentBook]
+								? cachedBooks2[this.currentBook].title_short
+								: bookNameShort1;
+							if (this.elements.bookChapterText2) {
+								this.elements.bookChapterText2.dataset.bookNameShort = bookNameShort2; // 先寫入「太」
+							}
+							this.updateBookChapterButton(this.currentVersion2NameShort, bookNameShort2, '2');
 						}
+
+						// 語言1最後更新，此時 button2 的 dataset 已是正確值
+						this.updateBookChapterButton(this.currentVersion1NameShort, bookNameShort1, '1');
+
 					} catch (error) {
 						console.warn('⚠️ [applyURLParamsToReader] 無法更新書卷名稱:', error);
 					}
@@ -3548,11 +3697,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 
 				// Step 4: Load chapter content (don't update URL since we're applying URL params)
 				if (this.currentBook && this.currentChapter) {
-					if (this.currentMode === 'dual' && this.currentVersion2) {
-						this.loadDualVersionChapter();
-					} else {
-						this.loadChapter(false); // Don't update URL to avoid duplicate updates
-					}
+					this.loadChapter(false);
 				}
 			} else {
 				console.log('ℹ️ [applyURLParamsToReader] 無參數變更，不需重新載入');
