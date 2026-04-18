@@ -2807,7 +2807,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 
 		await this.loadChaptersTab();
 		this.updateBookChapterButton(null, item.dataset.book);
-		this.hideBookChapterMenu();
+		this.switchBookChapterTab('chapters');
 		this.loadChapter();
 	}
 
@@ -3960,15 +3960,17 @@ class StrongNumberModal {
 		
 		// Add event delegation for strong-number-reference and book icon clicks
 		this.modalContent.addEventListener('click', (e) => {
-			if (e.target.classList.contains('strong-number-book-icon')) {
+			const bookIcon = e.target.closest('.strong-number-book-icon');
+			if (bookIcon) {
 				e.preventDefault();
 				e.stopPropagation();
-				this.handleStrongNumberBookIconClick(e.target);
+				this.handleStrongNumberBookIconClick(bookIcon);
 				return;
 			}
-			if (e.target.classList.contains('strong-number-reference')) {
+			const strongRef = e.target.closest('.strong-number-reference');
+			if (strongRef) {
 				e.preventDefault();
-				this.handleStrongNumberReferenceClick(e.target);
+				this.handleStrongNumberReferenceClick(strongRef);
 			}
 		});
 		
@@ -4389,6 +4391,7 @@ class StrongNumberModal {
 	async handleStrongNumberBookIconClick(element) {
 		try {
 			const strongNumber = element.dataset.strongNumber;
+console.log("hi 4392 here is strongNumber: ", strongNumber);
 			if (!strongNumber) { return; }
 			console.log('📖 [StrongNumberModal] Book icon clicked for:', strongNumber);
 			this.showPopover(`Strong: ${strongNumber}`, element);
