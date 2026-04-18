@@ -311,9 +311,6 @@ $strong_installed = $wpdb->get_var("SELECT EXISTS(SELECT 1 FROM {$wpdb->prefix}b
             <div class="modal-header">
                 <div class="search-header-controls">
                     <input type="search" id="search-modal-input" class="search-modal-input" placeholder="<?php _e( 'Search verses...', 'bible-here' ); ?>" maxlength="100">
-                    <!-- <button type="button" class="search-clear-btn" style="display: none;" title="<?php _e( 'Clear', 'bible-here' ); ?>">
-                        <span class="clear-icon">🔄</span>
-                    </button> -->
                     <button type="button" class="search-modal-btn" title="<?php _e( 'Search', 'bible-here' ); ?>">
                         <span class="search-icon">🔍</span>
                     </button>

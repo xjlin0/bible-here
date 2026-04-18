@@ -974,7 +974,7 @@ class BibleHereReader {
 		});
 
 		container.innerHTML = html;
-		this.updatePageTitle();
+		this.updatePageTitleAndSearchBar();
 		// 經文顯示完成後，載入版本資料
 		this.loadVersionsAfterChapter();
 	}
@@ -1355,17 +1355,6 @@ class BibleHereReader {
 		});
 	}
 
-	/**
-	 * Open search interface (legacy method for backward compatibility)
-	 */
-	// openSearch() {
-	// 	console.log('Search button clicked');
-	// 	// This method is kept for backward compatibility
-	// 	// The actual search functionality is handled by hover events
-	// }
-	
-
-	
 	/**
 	 * Perform search
 	 * @param {string} searchTerm - The search term (optional, will use input value if not provided)
@@ -3609,7 +3598,10 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 	/**
 	 * Update page title to reflect current reading position
 	 */
-	updatePageTitle() {
+	updatePageTitleAndSearchBar() {
+		const version = this.currentVersion1NameShort || '';
+		const language = this.currentLanguage1 || '';
+		const searchBar = document.querySelector('input#search-modal-input');
 		const tagLine = this.container.dataset.tagLine;
 		const bookShort = this.elements.bookChapterText1
 			? this.elements.bookChapterText1.dataset.bookNameShort || ''
@@ -3618,6 +3610,9 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 
 		if (bookShort && chapter) {
 			document.title = `${tagLine} ${bookShort} ${chapter}`;
+		}
+		if (searchBar && version && language) {
+			searchBar.placeholder = `Search ${version} in ${language} ...`;
 		}
 	}
 }
