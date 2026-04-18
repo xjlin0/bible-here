@@ -2736,7 +2736,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
 			console.log("✅ 第一版本已更新為:", versionDataset.version);
 		}
 		console.log(`✅ 版本列表顯示已更新 version1NameShort: ${this.currentVersion1NameShort} version2NameShort: ${this.currentVersion2NameShort}`);
-		this.hideBookChapterMenu();
+		this.switchBookChapterTab('books');
 		this.loadChapter();
 	}
 

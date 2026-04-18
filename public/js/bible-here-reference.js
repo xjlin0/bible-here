@@ -24,7 +24,7 @@ class BibleHereReference {
         const ok = await this.ensureCacheInitialized();
         if (!ok || !this.db) return;
         await this.ensureAbbreviations(this.db);
-        const needVersions = await this.needsVersionsRefresh();
+        const needVersions = await this.cacheManager.needsVersionsRefresh();
         if (needVersions) await this.prefetchVersions();
         const items = await this.getAbbreviations(this.db);
         if (!items || items.length === 0) return;
@@ -52,32 +52,6 @@ class BibleHereReference {
         return false;
     }
 
-    isSuperset(superset, subset) {
-        for (const v of subset) {
-            if (!superset.has(v)) return false;
-        }
-        return true;
-    }
-
-    async needsDatabaseRefresh(db, table, langs= new Set(), expireInMs = 24 * 60 * 60 * 1000) {
-        try {
-            if (langs.size > 0) {
-                const langsInDb = new Set(
-                  await db[table].toCollection().primaryKeys()
-                );
-                if (!this.isSuperset(langsInDb, langs)) return true;
-            }
-            const count = await db[table].count();
-            if (!count || count === 0) return true;
-            const latest = await db[table].orderBy("updatedAt").last();
-            if (!latest || !latest.updatedAt) return true;
-            const ageMs = Date.now() - latest.updatedAt;
-            return ageMs > expireInMs;
-        } catch (e) {
-            return true;
-        }
-    }
-
     async fetchAbbreviations() {
         const url = new URL(window.bibleHereAjax.ajaxurl);
         url.searchParams.set("action", "bible_here_public_get_abbreviations");
@@ -91,25 +65,11 @@ class BibleHereReference {
         return data.data.abbreviations;
     }
 
-    async cacheAbbreviations(db, items) {
-        const now = Date.now();
-        const records = items.map(function(item) {
-            return {
-                language: item.language,
-                rank: item.rank,
-                abbreviation: item.abbreviation,
-                book_number: item.book_number,
-                updatedAt: now
-            };
-        });
-        if (records.length > 0) await db.abbreviations.bulkPut(records);
-    }
-
-    async ensureAbbreviations(db) {
-        const refresh = await this.needsDatabaseRefresh(db, "abbreviations");
+    async ensureAbbreviations() {
+        const refresh = await this.cacheManager.needsDatabaseRefresh("abbreviations");
         if (!refresh) return;
         const abbr = await this.fetchAbbreviations();
-        await this.cacheAbbreviations(db, abbr);
+        await this.cacheManager.cacheAbbreviations(abbr);
     }
 
     async getAbbreviations(db) {
@@ -249,7 +209,7 @@ class BibleHereReference {
 
     async fetchBooksForLanguages() {
         console.log("starting fetchBooksForLanguages here is this.allLanguagesSet: ", this.allLanguagesSet);
-        if (this.cacheManager && await this.needsDatabaseRefresh(window.bibleHereDB, "books", this.allLanguagesSet)) {
+        if (this.cacheManager && await this.cacheManager.needsDatabaseRefresh("books", this.allLanguagesSet)) {
             console.log('🌐 Fetching book data from API');
             const params = new URLSearchParams({
                 action: 'bible_here_public_get_books',
@@ -599,20 +559,6 @@ class BibleHereReference {
             const versions = data && data.data && Array.isArray(data.data.versions) ? data.data.versions : [];
             if (this.cacheManager && versions.length > 0) this.cacheManager.cacheVersions(versions);
         } catch (e) {
-        }
-    }
-
-    async needsVersionsRefresh() {
-        try {
-            const count = await this.db.versions.count();
-            if (!count || count === 0) return true;
-            const latest = await this.db.versions.orderBy("updatedAt").last();
-            if (!latest || !latest.updatedAt) return true;
-            const ageMs = Date.now() - latest.updatedAt;
-            const DAY_MS = 24 * 60 * 60 * 1000;
-            return ageMs > DAY_MS;
-        } catch (e) {
-            return true;
         }
     }
 

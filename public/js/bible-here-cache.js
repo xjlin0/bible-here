@@ -21,22 +21,24 @@ class BibleHereDB extends Dexie {
 
         console.log('🗄️ [BibleHereDB] Initializing IndexedDB database...');
 
-        // Define database schema according to technical document
+        // Define database keys/indexes according to technical document
         this.version(1).stores({
             // Verses table: composite primary key [table_name+verse_id], value as object
-            verses: '[table_name+verse_id], bookmark, updatedAt',
+            verses: '[table_name+verse_id]', // store text, bookmark, read, etc.
 
             // Books table: primary key language_code, value as object
-            books: 'language_code&, updatedAt',
+            books: 'language_code&',
 
             // Versions table: primary key table_name, value as object with updatedAt
-            versions: 'table_name&, updatedAt',
+            versions: 'table_name&',  // this is backend table name
 
             // Strong dictionary table: primary key strong_number, value as object with updatedAt
-            strongs: 'strong_number&, updatedAt',
+            strongs: 'strong_number&',
 
             // abbreviations table: composite primary key language+abbreviation, value as object with updatedAt
-            abbreviations: '[language+rank+abbreviation], updatedAt'
+            abbreviations: '[language+rank+abbreviation]',
+
+            metadata: '[table+field]&'  // this is IndexedDB table name in browsers
         });
         
         // Add hooks for console.log()
@@ -261,11 +263,15 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
                 booksCacheEntry.push({
                     language_code: language,
                     value: booksData[language],
-                    updatedAt: now,
                 })
             })
+            await this.db.transaction('rw', [this.db.books, this.db.metadata], async () => {
+                await this.db.books.bulkPut(booksCacheEntry);
+                const now = Date.now();
+                await this.db.metadata.put({ table: 'books',   field: 'lastUpdated', value: now });
+                await this.db.metadata.put({ table: 'overall', field: 'lastUpdated', value: now });
 
-            await this.db.books.bulkPut(booksCacheEntry);
+            });
             console.log('✅ [CacheManager] Successfully cached many books in ', booksCacheEntry.length, ' languages');
 
             return Object.keys(booksData);
@@ -367,18 +373,22 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
                 versesToCache.push({
                     table_name: versionTable,
                     verse_id: verseId,
-                    // version_table: versionTable,
-                    // book_number: verse.book_number,
-                    // chapter_number: verse.chapter_number,
                     verse_number: verse.verse_number,
                     text: verse.text,
                     reference: verse.reference,  // add empty reference field in verse cache for store future cross-reference data
                     bookmark: null,  // Add default bookmark value
-                    updatedAt: now
+                    read: null, // add empty reference field in verse cache for store future reading data
                 });
             });
 
-            await this.db.verses.bulkPut(versesToCache);
+            // await this.db.verses.bulkPut(versesToCache);
+            await this.db.transaction('rw', [this.db.verses, this.db.metadata], async () => {
+                await this.db.verses.bulkPut(versesToCache);
+                const now = Date.now();
+                await this.db.metadata.put({ table: 'verses',   field: 'lastUpdated', value: now });
+                await this.db.metadata.put({ table: 'overall', field: 'lastUpdated', value: now });
+            });
+
             console.log('✅ [CacheManager] Successfully cached', versesToCache.length, 'verses');
             if (window.BibleHereReference) {console.log('🔍 [DEBUG] window.BibleHereReference.state.current:', window.BibleHereReference.state.current);}
             return versesToCache.length;
@@ -424,12 +434,15 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
             versions.forEach(version => {
                 versionsToCache.push({
                     table_name: version.table_name,
-                    value: version,
-                    updatedAt: now
+                    value: version
                 });
             });
-            
-            await this.db.versions.bulkPut(versionsToCache);
+            await this.db.transaction('rw', [this.db.versions, this.db.metadata], async () => {
+                await this.db.versions.bulkPut(versionsToCache);
+                const now = Date.now();
+                await this.db.metadata.put({ table: 'versions',   field: 'lastUpdated', value: now });
+                await this.db.metadata.put({ table: 'overall', field: 'lastUpdated', value: now });
+            });
             console.log('✅ [CacheManager] Successfully cached', versionsToCache.length, 'versions');
             
             return versionsToCache.length;
@@ -541,8 +554,12 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
                     updatedAt: now
                 });
             });
-            
-            await this.db.strongs.bulkPut(strongsToCache);
+            await this.db.transaction('rw', [this.db.strongs, this.db.metadata], async () => {
+                await this.db.strongs.bulkPut(strongsToCache);
+                const now = Date.now();
+                await this.db.metadata.put({ table: 'strongs',   field: 'lastUpdated', value: now });
+                await this.db.metadata.put({ table: 'overall', field: 'lastUpdated', value: now });
+            });
             console.log('✅ [CacheManager] Successfully cached', strongsToCache.length, 'Strong Numbers');
             
             return strongsToCache.length;
@@ -582,6 +599,69 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
         }
     }
 
+    async cacheAbbreviations(items) {
+        try {
+            const records = items.map(function (item) {
+                return {
+                    language: item.language,
+                    rank: item.rank,
+                    abbreviation: item.abbreviation,
+                    book_number: item.book_number,
+                };
+            });
+            if (records.length > 0) {
+                await this.db.transaction('rw', [this.db.abbreviations, this.db.metadata], async () => {
+                    await this.db.abbreviations.bulkPut(records);
+                    const now = Date.now();
+                    await this.db.metadata.put({ table: 'abbreviations',   field: 'lastUpdated', value: Date.now() });
+                    await this.db.metadata.put({ table: 'overall', field: 'lastUpdated', value: now });
+                });
+            }
+        } catch (error) {
+            console.error('❌ [CacheManager] Failed to cache Abbreviations:', error);
+            throw error;
+        }
+    }
+
+    async needsVersionsRefresh(day_ms = 24 * 60 * 60 * 1000) {
+        try {
+            const count = await this.db.versions.count();
+            if (!count || count === 0) return true;
+            const meta = await this.db.metadata.get(['versions', 'lastUpdated']);
+            if (!meta || !meta.value) return true;
+            const ageMs = Date.now() - meta.value;
+            return ageMs > day_ms;
+        } catch (e) {
+            return true;
+        }
+    }
+
+    isSuperset(superset, subset) {
+        for (const v of subset) {
+            if (!superset.has(v)) return false;
+        }
+        return true;
+    }
+
+    async needsDatabaseRefresh(table, langs= new Set(), expireInMs = 24 * 60 * 60 * 1000) {
+        try {
+            if (langs.size > 0) {
+                const langsInDb = new Set(
+                  await this.db[table].toCollection().primaryKeys()  // for abbriviations
+                );
+                if (!this.isSuperset(langsInDb, langs)) return true;
+            }
+            const count = await this.db[table].count();
+            if (!count || count === 0) return true;
+            const meta = await this.db.metadata.get([table, 'lastUpdated']);
+            if (!meta || !meta.value) return true;
+            const ageMs = Date.now() - meta.value;
+            return ageMs > expireInMs;
+        } catch (e) {
+            return true;
+        }
+    }
+
     /**
      * Get cache statistics
      * @returns {Promise<Object>} Cache statistics including counts and database size
@@ -597,10 +677,12 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
                     verses: 0,
                     books: 0,
                     versions: 0,
-                    strongs: 0
+                    strongs: 0,
+                    abbreviations: 0,
+                    metadata: 0,
                 },
                 databaseSize: 0,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date()
             };
             
             // Get counts for each table
@@ -609,19 +691,24 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
                 stats.counts.books = await this.db.books.count();
                 stats.counts.versions = await this.db.versions.count();
                 stats.counts.strongs = await this.db.strongs.count();
-                
-                // Calculate approximate database size
+                stats.counts.abbreviations = await this.db.abbreviations.count();
+                stats.counts.metadata = await this.db.metadata.count();
                 const allVerses = await this.db.verses.toArray();
                 const allBooks = await this.db.books.toArray();
                 const allVersions = await this.db.versions.toArray();
                 const allStrongs = await this.db.strongs.toArray();
-                
+                const allAbbreviations = await this.db.abbreviations.toArray();
+                const allmetadatas = await this.db.metadata.toArray();
                 const versesSize = JSON.stringify(allVerses).length;
                 const booksSize = JSON.stringify(allBooks).length;
                 const versionsSize = JSON.stringify(allVersions).length;
                 const strongsSize = JSON.stringify(allStrongs).length;
-                
-                stats.databaseSize = versesSize + booksSize + versionsSize + strongsSize;
+                const abbreviationsSize = JSON.stringify(allAbbreviations).length;
+                const metadatasSize = JSON.stringify(allmetadatas).length;
+                stats.databaseSize = versesSize + booksSize + versionsSize + strongsSize + abbreviationsSize + metadatasSize;
+
+                const meta = await this.db.metadata.get(['cache', 'lastUpdated']);
+                stats.lastUpdated = meta && meta.value ? meta.value : new Date();
             }
             
             console.log('📊 [CacheManager] Cache statistics:', stats);
@@ -632,8 +719,8 @@ console.log('💾 [CacheManager312] Caching books for language: ', Object.keys(b
             return {
                 isInitialized: false,
                 cacheExpiry: this.versionsExpiry,
-                counts: { verses: 0, books: 0, versions: 0, strongs: 0 },
-                databaseSize: 0,
+                counts: { verses: null, books: null, versions: null, strongs: null, abbreviations: null, metadata: null },
+                databaseSize: null,
                 error: error.message,
                 lastUpdated: new Date().toISOString()
             };
@@ -647,7 +734,7 @@ window.bibleHereCacheManager.isInitializing = true;
 
 const _doInit = async () => {
     try {
-        const cfg = typeof window.bibleHereAjax === "object" ? window.bibleHereAjax : {};
+        const cfg = typeof window.bibleHereAjax === 'object' ? window.bibleHereAjax : {};
         const disabled = cfg.labelDisabledPages;
         const currentId = parseInt(cfg.currentPostId || 0, 10);
         if (disabled !== null && (Array.isArray(disabled) && disabled.indexOf(currentId) < 1)) {
