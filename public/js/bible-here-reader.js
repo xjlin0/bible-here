@@ -4318,6 +4318,22 @@ class StrongNumberModal {
 
 	showPopover(title, triggerEl) {
 		this.ensurePopoverElements();
+
+		// 同步 dark theme class
+		const isDark = this.readerInstance.container.classList.contains('theme-dark');
+		this.popover.classList.toggle('theme-dark', isDark);
+		this.popoverOverlay.classList.toggle('theme-dark', isDark);
+
+		// Visual styles 根據主題設定
+		this.popover.style.background = isDark ? '#1f2937' : '#fff';
+		this.popover.style.boxShadow = isDark
+			? '0 8px 24px rgba(0,0,0,0.4)'
+			: '0 8px 24px rgba(0,0,0,0.18)';
+		this.popover.style.borderRadius = '8px';
+		this.popover.style.border = isDark
+			? '1px solid #374151'
+			: '1px solid rgba(0,0,0,0.08)';
+
 		this.popover.querySelector('.strong-popover-title').textContent = title;
 		this.currentPopoverTrigger = triggerEl;
 		const margin = 8; // space between icon and popover
@@ -4339,7 +4355,7 @@ class StrongNumberModal {
         body.style.lineHeight = '1.5';
 
 		// Visual styles
-		this.popover.style.background = '#fff';
+		// this.popover.style.background = '#fff';  // controlled by css
 		this.popover.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
 		this.popover.style.borderRadius = '8px';
 		this.popover.style.border = '1px solid rgba(0,0,0,0.08)';
@@ -4420,7 +4436,20 @@ class StrongNumberModal {
 		const regex = strongNumber && strongNumber.trim() ? new RegExp(`(${strongNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
 
 		// Header with total count
-		let html = `<div class="cross-refs-header" style="padding:8px 12px; font-weight:600; border-bottom:1px solid rgba(0,0,0,0.06);">Found ${verses.length} verses</div>`;
+		const isDark = this.readerInstance.container.classList.contains('theme-dark');
+		const headerBorderColor = isDark ? '#374151' : 'rgba(0,0,0,0.06)';
+		const headerBg = isDark ? '#1f2937' : '';
+		const headerColor = isDark ? '#f9fafb' : '';
+
+		let html = `<div
+      class="cross-refs-header"
+      style="padding:8px 12px;
+          font-weight:600;
+          border-bottom:1px solid ${headerBorderColor};
+          background:${headerBg}; color:${headerColor};">
+        Found ${verses.length} verses
+      </div>`;
+
 		verses.forEach(ref => {
 			const highlightedText = regex ? (ref.strong_text || ref.text).replace(regex, '<strong>$1</strong>') : ref.strong_text || ref.text;
 			const url = new URL(window.location.href);

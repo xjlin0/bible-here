@@ -1027,6 +1027,46 @@ body .bible-here-reader.theme-dark .verses-container {
 	color: #ffffff;
 }
 
+/* scroll bars  */
+body .bible-here-reader.theme-dark .verses-container,
+body .bible-here-reader.theme-dark .book-chapter-menu-content,
+body .bible-here-reader.theme-dark .strong-numbers-list,
+body .bible-here-reader.theme-dark .modal-content,
+.strong-popover.theme-dark,
+.strong-popover.theme-dark .strong-popover-body {
+	scrollbar-color: #555555 #1a1a1a;
+	scrollbar-width: thin;
+}
+
+body .bible-here-reader.theme-dark .verses-container::-webkit-scrollbar,
+body .bible-here-reader.theme-dark .book-chapter-menu-content::-webkit-scrollbar,
+body .bible-here-reader.theme-dark .strong-numbers-list::-webkit-scrollbar,
+body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+body .bible-here-reader.theme-dark .verses-container::-webkit-scrollbar-track,
+body .bible-here-reader.theme-dark .book-chapter-menu-content::-webkit-scrollbar-track,
+body .bible-here-reader.theme-dark .strong-numbers-list::-webkit-scrollbar-track,
+body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-track {
+	background: #1a1a1a;
+}
+
+body .bible-here-reader.theme-dark .verses-container::-webkit-scrollbar-thumb,
+body .bible-here-reader.theme-dark .book-chapter-menu-content::-webkit-scrollbar-thumb,
+body .bible-here-reader.theme-dark .strong-numbers-list::-webkit-scrollbar-thumb,
+body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb {
+	background: #555555;
+	border-radius: 4px;
+}
+
+body .bible-here-reader.theme-dark .verses-container::-webkit-scrollbar-thumb:hover,
+body .bible-here-reader.theme-dark .book-chapter-menu-content::-webkit-scrollbar-thumb:hover,
+body .bible-here-reader.theme-dark .strong-numbers-list::-webkit-scrollbar-thumb:hover,
+body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb:hover {
+	background: #777777;
+}
+
 /* Settings button and theme menu styles */
 .settings-group {
 	position: relative;
@@ -2524,6 +2564,15 @@ body .bible-here-reader.theme-dark .verses-container {
     background: #1f2937;
 }
 
+.strong-popover.theme-dark .cross-ref-item:hover {
+	border-color: #60a5fa;
+	background: #374151;
+}
+
+.strong-popover.theme-dark .cross-ref-link:hover {
+	background: #374151;
+}
+
 .bible-here-reader.theme-dark .cross-ref-link:hover {
     background: #374151;
 }
@@ -3120,10 +3169,49 @@ body .bible-here-reader.theme-dark .verses-container {
 }
 
 /* Dark theme styles for Strong Number popover */
-.bible-here-reader.theme-dark .strong-popover {
-    background: #1f2937;
-    border-color: #374151;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+/*.bible-here-reader.theme-dark .strong-popover {*/
+/*    background: #1f2937;*/
+/*    border-color: #374151;*/
+/*    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);*/
+/*}*/
+
+/* 改成（不依賴父容器）*/
+.strong-popover.theme-dark {
+	background: #1f2937;
+	border-color: #374151;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+	color: #f9fafb;
+}
+
+.strong-popover.theme-dark .cross-ref-reference {
+	color: #60a5fa;
+}
+
+.strong-popover.theme-dark .cross-ref-text {
+	color: #d1d5db;
+}
+
+.strong-popover.theme-dark .cross-ref-item {
+	border-color: #374151;
+	background: #111827;
+}
+
+.strong-popover.theme-dark .cross-ref-item:hover {
+	border-color: #60a5fa;
+	background: #1f2937;
+}
+
+.strong-popover.theme-dark .cross-refs-header {
+	color: #f9fafb;
+	border-bottom-color: #374151;
+}
+
+.strong-popover.theme-dark::-webkit-scrollbar-track {
+	background: #1f2937;
+}
+
+.strong-popover.theme-dark::-webkit-scrollbar-thumb {
+	background: #555555;
 }
 
 .bible-here-reader.theme-dark .strong-number-link {
