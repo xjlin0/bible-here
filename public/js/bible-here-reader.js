@@ -146,7 +146,7 @@ class BibleHereReader {
 			console.log('🔄 [init] Popstate 事件觸發');
 			this.handlePopState(event);
 		});
-
+	  this.hideOtherFontResizer();
 
 		// Initialize cross reference modal
 		this.initializeCrossReferenceModal();
@@ -161,6 +161,13 @@ class BibleHereReader {
 		this.loadChapter();
 
 		console.log('✅ BibleHereReader init() 完成');
+	}
+
+	hideOtherFontResizer() {
+		const simpleFontResizer = document.querySelector('div.font_resizer_plus');
+		if (simpleFontResizer) {
+			simpleFontResizer.style.visibility = 'hidden';
+		}  // simple font resizer does not work on verse text
 	}
 
 	/**
@@ -2785,7 +2792,7 @@ console.log("🎯 2445 this.currentVersion1NameShort:", this.currentVersion1Name
     	console.log('🔄 2524 swapVersions() 開始版本切換');
 		const version1BookNameShort = this.elements.bookChapterText1.dataset.bookNameShort;
 		const version2BookNameShort = this.elements.bookChapterText2.dataset.bookNameShort;
-		if (!version2BookNameShort) return;
+		if (!this.isDualMode) return;
     	console.log('🔄 切換前狀態:', {
 			language1: this.currentLanguage1,
 			language2: this.currentLanguage2,
