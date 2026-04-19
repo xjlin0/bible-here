@@ -1,37 +1,37 @@
 language,abbreviation,book_number,rank
-en,Genesis,01,1
+en,Genesis,01,255
 en,Gen,01,9
 en,Ge,01,9
 en,Gn,01,9
-en,Exodus,02,1
+en,Exodus,02,255
 en,Exo,02,9
 en,Ex,02,9
 en,Exod,02,9
-en,Leviticus,03,1
+en,Leviticus,03,255
 en,Lev,03,9
 en,Le,03,9
 en,Lv,03,9
-en,Numbers,04,1
+en,Numbers,04,255
 en,Num,04,9
 en,Nu,04,9
 en,Nm,04,9
 en,Nb,04,9
-en,Deuteronomy,05,1
+en,Deuteronomy,05,255
 en,Deut,05,9
 en,Dt,05,9
-en,Joshua,06,1
+en,Joshua,06,255
 en,Josh,06,9
 en,Jos,06,9
 en,Jsh,06,9
-en,Judges,07,1
+en,Judges,07,255
 en,Judg,07,9
 en,Jdg,07,9
 en,Jg,07,9
 en,Jdgs,07,9
-en,Ruth,08,1
+en,Ruth,08,255
 en,Rth,08,9
 en,Ru,08,9
-en,1 Samuel,09,1
+en,1 Samuel,09,255
 en,1 Sam,09,9
 en,1 Sa,09,9
 en,1Samuel,09,9
@@ -44,7 +44,7 @@ en,1Sam,09,9
 en,I Samuel,09,9
 en,1st Samuel,09,9
 en,First Samuel,09,9
-en,2 Samuel,10,1
+en,2 Samuel,10,255
 en,2 Sam,10,9
 en,2 Sa,10,9
 en,2S,10,9
@@ -57,7 +57,7 @@ en,II Samuel,10,9
 en,2Samuel,10,9
 en,2nd Samuel,10,9
 en,Second Samuel,10,9
-en,1 Kings,11,1
+en,1 Kings,11,255
 en,1 Kgs,11,9
 en,1 Ki,11,9
 en,1K,11,9
@@ -72,7 +72,7 @@ en,1st Kings,11,9
 en,First Kings,11,9
 en,First Kgs,11,9
 en,1Kin,11,9
-en,2 Kings,12,1
+en,2 Kings,12,255
 en,2 Kgs,12,9
 en,2 Ki,12,9
 en,2K,12,9
@@ -87,7 +87,7 @@ en,2nd Kings,12,9
 en,Second Kings,12,9
 en,Second Kgs,12,9
 en,2Kin,12,9
-en,1 Chronicles,13,1
+en,1 Chronicles,13,255
 en,1 Chron,13,9
 en,1 Ch,13,9
 en,I Ch,13,9
@@ -101,7 +101,7 @@ en,I Chronicles,13,9
 en,1Chronicles,13,9
 en,1st Chronicles,13,9
 en,First Chronicles,13,9
-en,2 Chronicles,14,1
+en,2 Chronicles,14,255
 en,2 Chron,14,9
 en,2 Ch,14,9
 en,II Ch,14,9
@@ -114,115 +114,115 @@ en,II Chronicles,14,9
 en,2Chronicles,14,9
 en,2nd Chronicles,14,9
 en,Second Chronicles,14,9
-en,Ezra,15,1
+en,Ezra,15,255
 en,Ezr,15,9
 en,Ez,15,9
-en,Nehemiah,16,1
+en,Nehemiah,16,255
 en,Neh,16,9
 en,Ne,16,9
-en,Esther,17,1
+en,Esther,17,255
 en,Esth,17,9
 en,Es,17,9
-en,Job,18,1
+en,Job,18,255
 en,Jb,18,9
-en,Psalms,19,1
+en,Psalms,19,255
 en,Pslm,19,9
 en,Ps,19,9
 en,Psa,19,9
 en,Psm,19,9
 en,Pss,19,9
 en,Psalm,19,9
-en,Proverbs,20,1
+en,Proverbs,20,255
 en,Prov,20,9
 en,Pr,20,9
 en,Prv,20,9
-en,Ecclesiastes,21,1
+en,Ecclesiastes,21,255
 en,Eccles,21,9
 en,Ec,21,9
 en,Qoh,21,9
 en,Qoheleth,21,9
-en,Song of Solomon,22,1
+en,Song of Solomon,22,255
 en,Song,22,9
 en,So,22,9
 en,Canticle of Canticle,22,9
 en,Canticles,22,9
 en,Song of Songs,22,9
 en,SOS,22,9
-en,Isaiah,23,1
+en,Isaiah,23,255
 en,Isa,23,9
 en,Is,23,9
-en,Jeremiah,24,1
+en,Jeremiah,24,255
 en,Jer,24,9
 en,Je,24,9
 en,Jr,24,9
-en,Lamentations,25,1
+en,Lamentations,25,255
 en,Lam,25,9
 en,La,25,9
-en,Ezekiel,26,1
+en,Ezekiel,26,255
 en,Ezek,26,9
 en,Eze,26,9
 en,Ezk,26,9
-en,Daniel,27,1
+en,Daniel,27,255
 en,Dan,27,9
 en,Da,27,9
 en,Dn,27,9
-en,Hosea,28,1
+en,Hosea,28,255
 en,Hos,28,9
 en,Ho,28,9
-en,Joel,29,1
+en,Joel,29,255
 en,Joe,29,9
 en,Jl,29,9
-en,Amos,30,1
+en,Amos,30,255
 en,Am,30,9
-en,Obadiah,31,1
+en,Obadiah,31,255
 en,Obad,31,9
 en,Ob,31,9
-en,Jonah,32,1
+en,Jonah,32,255
 en,Jnh,32,9
 en,Jon,32,9
-en,Micah,33,1
+en,Micah,33,255
 en,Mic,33,9
 en,Mc,33,9
-en,Nah,34,1
-en,Nahum,34,1
+en,Nah,34,255
+en,Nahum,34,255
 en,Na,34,9
-en,Habakkuk,35,1
+en,Habakkuk,35,255
 en,Hab,35,9
-en,Zephaniah,36,1
+en,Zephaniah,36,255
 en,Zeph,36,9
 en,Zep,36,9
 en,Zp,36,9
-en,Haggai,37,1
+en,Haggai,37,255
 en,Hag,37,9
 en,Hg,37,9
-en,Zechariah,38,1
+en,Zechariah,38,255
 en,Zech,38,9
 en,Zec,38,9
 en,Zc,38,9
-en,Malachi,39,1
+en,Malachi,39,255
 en,Mal,39,9
 en,Ml,39,9
-en,Matthew,40,1
+en,Matthew,40,255
 en,Matt,40,9
 en,Mt,40,9
-en,Mark,41,1
+en,Mark,41,255
 en,Mrk,41,9
 en,Mk,41,9
 en,Mr,41,9
-en,Luke,42,1
+en,Luke,42,255
 en,Luk,42,9
 en,Lk,42,9
-en,John,43,1
+en,John,43,255
 en,Jn,43,9
 en,Jhn,43,9
-en,Acts,44,1
+en,Acts,44,255
 en,Ac,44,9
 en,Act,44,9
-en,Romans,45,1
+en,Romans,45,255
 en,Rom,45,9
 en,Ro,45,9
 en,Rm,45,9
-en,1 Corinthians,46,1
+en,1 Corinthians,46,255
 en,1 Cor,46,9
 en,1 Co,46,9
 en,I Co,46,9
@@ -233,7 +233,7 @@ en,I Corinthians,46,9
 en,1Corinthians,46,9
 en,1st Corinthians,46,9
 en,First Corinthians,46,9
-en,2 Corinthians,47,1
+en,2 Corinthians,47,255
 en,2 Cor,47,9
 en,2 Co,47,9
 en,II Co,47,9
@@ -244,19 +244,19 @@ en,II Corinthians,47,9
 en,2Corinthians,47,9
 en,2nd Corinthians,47,9
 en,Second Corinthians,47,9
-en,Galatians,48,1
+en,Galatians,48,255
 en,Gal,48,9
 en,Ga,48,9
-en,Ephesians,49,1
+en,Ephesians,49,255
 en,Ephes,49,9
 en,Eph,49,9
-en,Philippians,50,1
+en,Philippians,50,255
 en,Phil,50,9
 en,Php,50,9
-en,Colossians,51,1
+en,Colossians,51,255
 en,Col,51,9
 en,Co,51,9
-en,1 Thessalonians,52,1
+en,1 Thessalonians,52,255
 en,1 Thess,52,9
 en,1 Th,52,9
 en,I Th,52,9
@@ -269,7 +269,7 @@ en,I Thessalonians,52,9
 en,1Thessalonians,52,9
 en,1st Thessalonians,52,9
 en,First Thessalonians,52,9
-en,2 Thessalonians,53,1
+en,2 Thessalonians,53,255
 en,2 Thess,53,9
 en,2 Th,53,9
 en,II Th,53,9
@@ -282,7 +282,7 @@ en,II Thessalonians,53,9
 en,2Thessalonians,53,9
 en,2nd Thessalonians,53,9
 en,Second Thessalonians,53,9
-en,1 Timothy,54,1
+en,1 Timothy,54,255
 en,1 Tim,54,9
 en,1 Ti,54,9
 en,I Ti,54,9
@@ -293,7 +293,7 @@ en,I Timothy,54,9
 en,1Timothy,54,9
 en,1st Timothy,54,9
 en,First Timothy,54,9
-en,2 Timothy,55,1
+en,2 Timothy,55,255
 en,2 Tim,55,9
 en,2 Ti,55,9
 en,II Ti,55,9
@@ -304,18 +304,18 @@ en,II Timothy,55,9
 en,2Timothy,55,9
 en,2nd Timothy,55,9
 en,Second Timothy,55,9
-en,Titus,56,1
+en,Titus,56,255
 en,Tit,56,9
 en,ti,56,9
-en,Philemon,57,1
+en,Philemon,57,255
 en,Philem,57,9
 en,Phm,57,9
-en,Hebrews,58,1
+en,Hebrews,58,255
 en,Heb,58,9
-en,James,59,1
+en,James,59,255
 en,Jas,59,9
 en,Jm,59,9
-en,1 Peter,60,1
+en,1 Peter,60,255
 en,1 Pet,60,9
 en,1 Pe,60,9
 en,I Pe,60,9
@@ -329,7 +329,7 @@ en,I Peter,60,9
 en,1Peter,60,9
 en,1st Peter,60,9
 en,First Peter,60,9
-en,2 Peter,61,1
+en,2 Peter,61,255
 en,2 Pet,61,9
 en,2 Pe,61,9
 en,II Pe,61,9
@@ -343,7 +343,7 @@ en,II Peter,61,9
 en,2Peter,61,9
 en,2nd Peter,61,9
 en,Second Peter,61,9
-en,1 John,62,1
+en,1 John,62,255
 en,1 Jn,62,9
 en,I Jn,62,9
 en,1Jn,62,9
@@ -359,7 +359,7 @@ en,1John,62,9
 en,1st John,62,9
 en,First John,62,9
 en,1 Joh,62,9
-en,2 John,63,1
+en,2 John,63,255
 en,2 Jn,63,9
 en,II Jn,63,9
 en,2Jn,63,9
@@ -375,7 +375,7 @@ en,2John,63,9
 en,2nd John,63,9
 en,Second John,63,9
 en,2 Joh,63,9
-en,3 John,64,1
+en,3 John,64,255
 en,3 Jn,64,9
 en,III Jn,64,9
 en,3Jn,64,9
@@ -391,1197 +391,1197 @@ en,3John,64,9
 en,3rd John,64,9
 en,Third John,64,9
 en,3 Joh,64,9
-en,Jude,65,1
+en,Jude,65,255
 en,Jud,65,9
 en,Jd,65,9
-en,Revelation,66,1
+en,Revelation,66,255
 en,Rev,66,9
 en,Re,66,9
-zh-TW,創世記,1,1
+zh-TW,創世記,1,255
 zh-TW,創,1,9
-zh-TW,出埃及記,2,1
+zh-TW,出埃及記,2,255
 zh-TW,出,2,9
-zh-TW,利未記,3,1
+zh-TW,利未記,3,255
 zh-TW,利,3,9
-zh-TW,民數記,4,1
+zh-TW,民數記,4,255
 zh-TW,民,4,9
-zh-TW,申命記,5,1
+zh-TW,申命記,5,255
 zh-TW,申,5,9
-zh-TW,約書亞記,6,1
+zh-TW,約書亞記,6,255
 zh-TW,書,6,9
-zh-TW,士師記,7,1
+zh-TW,士師記,7,255
 zh-TW,士,7,9
-zh-TW,路得記,8,1
+zh-TW,路得記,8,255
 zh-TW,得,8,9
-zh-TW,撒母耳記上,9,1
+zh-TW,撒母耳記上,9,255
 zh-TW,撒上,9,9
-zh-TW,撒母耳記下,10,1
+zh-TW,撒母耳記下,10,255
 zh-TW,撒下,10,9
-zh-TW,列王紀上,11,1
+zh-TW,列王紀上,11,255
 zh-TW,王上,11,9
-zh-TW,列王紀下,12,1
+zh-TW,列王紀下,12,255
 zh-TW,王下,12,9
-zh-TW,歷代志上,13,1
+zh-TW,歷代志上,13,255
 zh-TW,代上,13,9
-zh-TW,歷代志下,14,1
+zh-TW,歷代志下,14,255
 zh-TW,代下,14,9
-zh-TW,以斯拉記,15,1
+zh-TW,以斯拉記,15,255
 zh-TW,拉,15,9
-zh-TW,尼希米記,16,1
+zh-TW,尼希米記,16,255
 zh-TW,尼,16,9
-zh-TW,以斯帖記,17,1
+zh-TW,以斯帖記,17,255
 zh-TW,斯,17,9
-zh-TW,約伯記,18,1
+zh-TW,約伯記,18,255
 zh-TW,伯,18,9
-zh-TW,詩篇,19,1
+zh-TW,詩篇,19,255
 zh-TW,詩,19,9
-zh-TW,箴言,20,1
+zh-TW,箴言,20,255
 zh-TW,箴,20,9
-zh-TW,傳道書,21,1
+zh-TW,傳道書,21,255
 zh-TW,傳,21,9
-zh-TW,雅歌,22,1
+zh-TW,雅歌,22,255
 zh-TW,歌,22,9
-zh-TW,以賽亞書,23,1
+zh-TW,以賽亞書,23,255
 zh-TW,賽,23,9
-zh-TW,耶利米書,24,1
+zh-TW,耶利米書,24,255
 zh-TW,耶,24,9
-zh-TW,耶利米哀歌,25,1
+zh-TW,耶利米哀歌,25,255
 zh-TW,哀,25,9
-zh-TW,以西結書,26,1
+zh-TW,以西結書,26,255
 zh-TW,結,26,9
-zh-TW,但以理書,27,1
+zh-TW,但以理書,27,255
 zh-TW,但,27,9
-zh-TW,何西阿書,28,1
+zh-TW,何西阿書,28,255
 zh-TW,何,28,9
-zh-TW,約珥書,29,1
+zh-TW,約珥書,29,255
 zh-TW,珥,29,9
-zh-TW,阿摩司書,30,1
+zh-TW,阿摩司書,30,255
 zh-TW,摩,30,9
-zh-TW,俄巴底亞書,31,1
+zh-TW,俄巴底亞書,31,255
 zh-TW,俄,31,9
-zh-TW,約拿書,32,1
+zh-TW,約拿書,32,255
 zh-TW,拿,32,9
-zh-TW,彌迦書,33,1
+zh-TW,彌迦書,33,255
 zh-TW,彌,33,9
-zh-TW,那鴻書,34,1
+zh-TW,那鴻書,34,255
 zh-TW,鴻,34,9
-zh-TW,哈巴谷書,35,1
+zh-TW,哈巴谷書,35,255
 zh-TW,哈,35,9
-zh-TW,西番雅書,36,1
+zh-TW,西番雅書,36,255
 zh-TW,番,36,9
-zh-TW,哈該書,37,1
+zh-TW,哈該書,37,255
 zh-TW,該,37,9
-zh-TW,撒迦利亞書,38,1
+zh-TW,撒迦利亞書,38,255
 zh-TW,亞,38,9
-zh-TW,瑪拉基書,39,1
+zh-TW,瑪拉基書,39,255
 zh-TW,瑪,39,9
-zh-TW,馬太福音,40,1
+zh-TW,馬太福音,40,255
 zh-TW,太,40,9
-zh-TW,馬可福音,41,1
+zh-TW,馬可福音,41,255
 zh-TW,可,41,9
-zh-TW,路加福音,42,1
+zh-TW,路加福音,42,255
 zh-TW,路,42,9
-zh-TW,約翰福音,43,1
+zh-TW,約翰福音,43,255
 zh-TW,約,43,9
-zh-TW,使徒行傳,44,1
+zh-TW,使徒行傳,44,255
 zh-TW,徒,44,9
-zh-TW,羅馬書,45,1
+zh-TW,羅馬書,45,255
 zh-TW,羅,45,9
-zh-TW,哥林多前書,46,1
+zh-TW,哥林多前書,46,255
 zh-TW,林前,46,9
-zh-TW,哥林多後書,47,1
+zh-TW,哥林多後書,47,255
 zh-TW,林後,47,9
-zh-TW,加拉太書,48,1
+zh-TW,加拉太書,48,255
 zh-TW,加,48,9
-zh-TW,以弗所書,49,1
+zh-TW,以弗所書,49,255
 zh-TW,弗,49,9
-zh-TW,腓立比書,50,1
+zh-TW,腓立比書,50,255
 zh-TW,腓,50,9
-zh-TW,歌羅西書,51,1
+zh-TW,歌羅西書,51,255
 zh-TW,西,51,9
-zh-TW,帖撒羅尼迦前書,52,1
+zh-TW,帖撒羅尼迦前書,52,255
 zh-TW,帖前,52,9
-zh-TW,帖撒羅尼迦後書,53,1
+zh-TW,帖撒羅尼迦後書,53,255
 zh-TW,帖後,53,9
-zh-TW,提摩太前書,54,1
+zh-TW,提摩太前書,54,255
 zh-TW,提前,54,9
-zh-TW,提摩太後書,55,1
+zh-TW,提摩太後書,55,255
 zh-TW,提後,55,9
-zh-TW,提多書,56,1
+zh-TW,提多書,56,255
 zh-TW,多,56,9
-zh-TW,腓利門書,57,1
+zh-TW,腓利門書,57,255
 zh-TW,門,57,9
-zh-TW,希伯來書,58,1
+zh-TW,希伯來書,58,255
 zh-TW,來,58,9
-zh-TW,雅各書,59,1
+zh-TW,雅各書,59,255
 zh-TW,雅,59,9
-zh-TW,彼得前書,60,1
+zh-TW,彼得前書,60,255
 zh-TW,彼前,60,9
-zh-TW,彼得後書,61,1
+zh-TW,彼得後書,61,255
 zh-TW,彼後,61,9
-zh-TW,約翰一書,62,1
+zh-TW,約翰一書,62,255
 zh-TW,約壹,62,9
-zh-TW,約翰二書,63,1
+zh-TW,約翰二書,63,255
 zh-TW,約貳,63,9
-zh-TW,約翰三書,64,1
+zh-TW,約翰三書,64,255
 zh-TW,約參,64,9
-zh-TW,猶大書,65,1
+zh-TW,猶大書,65,255
 zh-TW,猶,65,9
-zh-TW,啟示錄,66,1
+zh-TW,啟示錄,66,255
 zh-TW,啟,66,9
-zh-CN,创世记,1,1
+zh-CN,创世记,1,255
 zh-CN,创,1,9
-zh-CN,出埃及记,2,1
+zh-CN,出埃及记,2,255
 zh-CN,出,2,9
-zh-CN,利未记,3,1
+zh-CN,利未记,3,255
 zh-CN,利,3,9
-zh-CN,民数记,4,1
+zh-CN,民数记,4,255
 zh-CN,民,4,9
-zh-CN,申命记,5,1
+zh-CN,申命记,5,255
 zh-CN,申,5,9
-zh-CN,约书亚记,6,1
+zh-CN,约书亚记,6,255
 zh-CN,书,6,9
-zh-CN,士师记,7,1
+zh-CN,士师记,7,255
 zh-CN,士,7,9
-zh-CN,路得记,8,1
+zh-CN,路得记,8,255
 zh-CN,得,8,9
-zh-CN,撒母耳记上,9,1
+zh-CN,撒母耳记上,9,255
 zh-CN,撒上,9,9
-zh-CN,撒母耳记下,10,1
+zh-CN,撒母耳记下,10,255
 zh-CN,撒下,10,9
-zh-CN,列王纪上,11,1
+zh-CN,列王纪上,11,255
 zh-CN,王上,11,9
-zh-CN,列王纪下,12,1
+zh-CN,列王纪下,12,255
 zh-CN,王下,12,9
-zh-CN,历代志上,13,1
+zh-CN,历代志上,13,255
 zh-CN,代上,13,9
-zh-CN,历代志下,14,1
+zh-CN,历代志下,14,255
 zh-CN,代下,14,9
-zh-CN,以斯拉记,15,1
+zh-CN,以斯拉记,15,255
 zh-CN,拉,15,9
-zh-CN,尼希米记,16,1
+zh-CN,尼希米记,16,255
 zh-CN,尼,16,9
-zh-CN,以斯帖记,17,1
+zh-CN,以斯帖记,17,255
 zh-CN,斯,17,9
-zh-CN,约伯记,18,1
+zh-CN,约伯记,18,255
 zh-CN,伯,18,9
-zh-CN,诗篇,19,1
+zh-CN,诗篇,19,255
 zh-CN,诗,19,9
-zh-CN,箴言,20,1
+zh-CN,箴言,20,255
 zh-CN,箴,20,9
-zh-CN,传道书,21,1
+zh-CN,传道书,21,255
 zh-CN,传,21,9
-zh-CN,雅歌,22,1
+zh-CN,雅歌,22,255
 zh-CN,歌,22,9
-zh-CN,以赛亚书,23,1
+zh-CN,以赛亚书,23,255
 zh-CN,赛,23,9
-zh-CN,耶利米书,24,1
+zh-CN,耶利米书,24,255
 zh-CN,耶,24,9
-zh-CN,耶利米哀歌,25,1
+zh-CN,耶利米哀歌,25,255
 zh-CN,哀,25,9
-zh-CN,以西结书,26,1
+zh-CN,以西结书,26,255
 zh-CN,结,26,9
-zh-CN,但以理书,27,1
+zh-CN,但以理书,27,255
 zh-CN,但,27,9
-zh-CN,何西阿书,28,1
+zh-CN,何西阿书,28,255
 zh-CN,何,28,9
-zh-CN,约珥书,29,1
+zh-CN,约珥书,29,255
 zh-CN,珥,29,9
-zh-CN,阿摩司书,30,1
+zh-CN,阿摩司书,30,255
 zh-CN,摩,30,9
-zh-CN,俄巴底亚书,31,1
+zh-CN,俄巴底亚书,31,255
 zh-CN,俄,31,9
-zh-CN,约拿书,32,1
+zh-CN,约拿书,32,255
 zh-CN,拿,32,9
-zh-CN,弥迦书,33,1
+zh-CN,弥迦书,33,255
 zh-CN,弥,33,9
-zh-CN,那鸿书,34,1
+zh-CN,那鸿书,34,255
 zh-CN,鸿,34,9
-zh-CN,哈巴谷书,35,1
+zh-CN,哈巴谷书,35,255
 zh-CN,哈,35,9
-zh-CN,西番雅书,36,1
+zh-CN,西番雅书,36,255
 zh-CN,番,36,9
-zh-CN,哈该书,37,1
+zh-CN,哈该书,37,255
 zh-CN,该,37,9
-zh-CN,撒迦利亚书,38,1
+zh-CN,撒迦利亚书,38,255
 zh-CN,亚,38,9
-zh-CN,玛拉基书,39,1
+zh-CN,玛拉基书,39,255
 zh-CN,玛,39,9
-zh-CN,马太福音,40,1
+zh-CN,马太福音,40,255
 zh-CN,太,40,9
-zh-CN,马可福音,41,1
+zh-CN,马可福音,41,255
 zh-CN,可,41,9
-zh-CN,路加福音,42,1
+zh-CN,路加福音,42,255
 zh-CN,路,42,9
-zh-CN,约翰福音,43,1
+zh-CN,约翰福音,43,255
 zh-CN,约,43,9
-zh-CN,使徒行传,44,1
+zh-CN,使徒行传,44,255
 zh-CN,徒,44,9
-zh-CN,罗马书,45,1
+zh-CN,罗马书,45,255
 zh-CN,罗,45,9
-zh-CN,哥林多前书,46,1
+zh-CN,哥林多前书,46,255
 zh-CN,林前,46,9
-zh-CN,哥林多后书,47,1
+zh-CN,哥林多后书,47,255
 zh-CN,林后,47,9
-zh-CN,加拉太书,48,1
+zh-CN,加拉太书,48,255
 zh-CN,加,48,9
-zh-CN,以弗所书,49,1
+zh-CN,以弗所书,49,255
 zh-CN,弗,49,9
-zh-CN,腓立比书,50,1
+zh-CN,腓立比书,50,255
 zh-CN,腓,50,9
-zh-CN,歌罗西书,51,1
+zh-CN,歌罗西书,51,255
 zh-CN,西,51,9
-zh-CN,帖撒罗尼迦前书,52,1
+zh-CN,帖撒罗尼迦前书,52,255
 zh-CN,帖前,52,9
-zh-CN,帖撒罗尼迦后书,53,1
+zh-CN,帖撒罗尼迦后书,53,255
 zh-CN,帖后,53,9
-zh-CN,提摩太前书,54,1
+zh-CN,提摩太前书,54,255
 zh-CN,提前,54,9
-zh-CN,提摩太后书,55,1
+zh-CN,提摩太后书,55,255
 zh-CN,提后,55,9
-zh-CN,提多书,56,1
+zh-CN,提多书,56,255
 zh-CN,多,56,9
-zh-CN,腓利门书,57,1
+zh-CN,腓利门书,57,255
 zh-CN,门,57,9
-zh-CN,希伯来书,58,1
+zh-CN,希伯来书,58,255
 zh-CN,来,58,9
-zh-CN,雅各书,59,1
+zh-CN,雅各书,59,255
 zh-CN,雅,59,9
-zh-CN,彼得前书,60,1
+zh-CN,彼得前书,60,255
 zh-CN,彼前,60,9
-zh-CN,彼得后书,61,1
+zh-CN,彼得后书,61,255
 zh-CN,彼后,61,9
-zh-CN,约翰一书,62,1
+zh-CN,约翰一书,62,255
 zh-CN,约一,62,9
-zh-CN,约翰二书,63,1
+zh-CN,约翰二书,63,255
 zh-CN,约二,63,9
-zh-CN,约翰三书,64,1
+zh-CN,约翰三书,64,255
 zh-CN,约三,64,9
-zh-CN,犹大书,65,1
+zh-CN,犹大书,65,255
 zh-CN,犹,65,9
-zh-CN,启示录,66,1
+zh-CN,启示录,66,255
 zh-CN,启,66,9
-fr,Genèse,1,1
+fr,Genèse,1,255
 fr,Gen,1,9
-fr,Exode,2,1
+fr,Exode,2,255
 fr,Ex,2,9
-fr,Lévitique,3,1
+fr,Lévitique,3,255
 fr,Lév,3,9
-fr,Nombres,4,1
+fr,Nombres,4,255
 fr,Nb,4,9
-fr,Deutéronome,5,1
+fr,Deutéronome,5,255
 fr,Deut,5,9
-fr,Josué,6,1
+fr,Josué,6,255
 fr,Jos,6,9
-fr,Juges,7,1
+fr,Juges,7,255
 fr,Jug,7,9
-fr,Ruth,8,1
+fr,Ruth,8,255
 fr,Rut,8,9
-fr,1 Samuel,9,1
+fr,1 Samuel,9,255
 fr,1 Sam,9,9
-fr,2 Samuel,10,1
+fr,2 Samuel,10,255
 fr,2 Sam,10,9
-fr,1 Rois,11,1
+fr,1 Rois,11,255
 fr,1 Rois,11,9
-fr,2 Rois,12,1
+fr,2 Rois,12,255
 fr,2 Rois,12,9
-fr,1 Chroniques,13,1
+fr,1 Chroniques,13,255
 fr,1 Chr,13,9
-fr,2 Chroniques,14,1
+fr,2 Chroniques,14,255
 fr,2 Chr,14,9
-fr,Esdras,15,1
+fr,Esdras,15,255
 fr,Esd,15,9
-fr,Néhémie,16,1
+fr,Néhémie,16,255
 fr,Néh,16,9
-fr,Esther,17,1
+fr,Esther,17,255
 fr,Est,17,9
-fr,Job,18,1
+fr,Job,18,255
 fr,Job,18,9
-fr,Psaumes,19,1
+fr,Psaumes,19,255
 fr,Ps,19,9
-fr,Proverbes,20,1
+fr,Proverbes,20,255
 fr,Prov,20,9
-fr,Ecclésiaste,21,1
+fr,Ecclésiaste,21,255
 fr,Eccl,21,9
-fr,Cantique des Cantiques,22,1
+fr,Cantique des Cantiques,22,255
 fr,Cant,22,9
-fr,Ésaïe,23,1
+fr,Ésaïe,23,255
 fr,És,23,9
-fr,Jérémie,24,1
+fr,Jérémie,24,255
 fr,Jér,24,9
-fr,Lamentations de Jérémie,25,1
+fr,Lamentations de Jérémie,25,255
 fr,Lam,25,9
-fr,Ézéchiel,26,1
+fr,Ézéchiel,26,255
 fr,Éz,26,9
-fr,Daniel,27,1
+fr,Daniel,27,255
 fr,Dan,27,9
-fr,Osée,28,1
+fr,Osée,28,255
 fr,Os,28,9
-fr,Joël,29,1
+fr,Joël,29,255
 fr,Joël,29,9
-fr,Amos,30,1
+fr,Amos,30,255
 fr,Am,30,9
-fr,Abdias,31,1
+fr,Abdias,31,255
 fr,Abd,31,9
-fr,Jonas,32,1
+fr,Jonas,32,255
 fr,Jon,32,9
-fr,Michée,33,1
+fr,Michée,33,255
 fr,Mic,33,9
-fr,Nahum,34,1
+fr,Nahum,34,255
 fr,Nah,34,9
-fr,Habacuc,35,1
+fr,Habacuc,35,255
 fr,Hab,35,9
-fr,Sophonie,36,1
+fr,Sophonie,36,255
 fr,Soph,36,9
-fr,Aggée,37,1
+fr,Aggée,37,255
 fr,Agg,37,9
-fr,Zacharie,38,1
+fr,Zacharie,38,255
 fr,Zach,38,9
-fr,Malachie,39,1
+fr,Malachie,39,255
 fr,Mal,39,9
-fr,Matthieu,40,1
+fr,Matthieu,40,255
 fr,Mt,40,9
-fr,Marc,41,1
+fr,Marc,41,255
 fr,Mc,41,9
-fr,Luc,42,1
+fr,Luc,42,255
 fr,Lc,42,9
-fr,Jean,43,1
+fr,Jean,43,255
 fr,Jn,43,9
-fr,Actes des Apôtres,44,1
+fr,Actes des Apôtres,44,255
 fr,Act,44,9
-fr,Romains,45,1
+fr,Romains,45,255
 fr,Rm,45,9
-fr,1 Corinthiens,46,1
+fr,1 Corinthiens,46,255
 fr,1 Co,46,9
-fr,2 Corinthiens,47,1
+fr,2 Corinthiens,47,255
 fr,2 Co,47,9
-fr,Galates,48,1
+fr,Galates,48,255
 fr,Ga,48,9
-fr,Éphésiens,49,1
+fr,Éphésiens,49,255
 fr,Ép,49,9
-fr,Philippiens,50,1
+fr,Philippiens,50,255
 fr,Ph,50,9
-fr,Colossiens,51,1
+fr,Colossiens,51,255
 fr,Col,51,9
-fr,1 Thessaloniciens,52,1
+fr,1 Thessaloniciens,52,255
 fr,1 Th,52,9
-fr,2 Thessaloniciens,53,1
+fr,2 Thessaloniciens,53,255
 fr,2 Th,53,9
-fr,1 Timothée,54,1
+fr,1 Timothée,54,255
 fr,1 Ti,54,9
-fr,2 Timothée,55,1
+fr,2 Timothée,55,255
 fr,2 Ti,55,9
-fr,Tite,56,1
+fr,Tite,56,255
 fr,Tt,56,9
-fr,Philémon,57,1
+fr,Philémon,57,255
 fr,Phm,57,9
-fr,Hébreux,58,1
+fr,Hébreux,58,255
 fr,Héb,58,9
-fr,Jacques,59,1
+fr,Jacques,59,255
 fr,Jac,59,9
-fr,1 Pierre,60,1
+fr,1 Pierre,60,255
 fr,1 Pi,60,9
-fr,2 Pierre,61,1
+fr,2 Pierre,61,255
 fr,2 Pi,61,9
-fr,1 Jean,62,1
+fr,1 Jean,62,255
 fr,1 Jn,62,9
-fr,2 Jean,63,1
+fr,2 Jean,63,255
 fr,2 Jn,63,9
-fr,3 Jean,64,1
+fr,3 Jean,64,255
 fr,3 Jn,64,9
-fr,Jude,65,1
+fr,Jude,65,255
 fr,Jude,65,9
-fr,Apocalypse,66,1
+fr,Apocalypse,66,255
 fr,Ap,66,9
-es,Génesis,1,1
+es,Génesis,1,255
 es,Gn,1,9
-es,Éxodo,2,1
+es,Éxodo,2,255
 es,Éx,2,9
-es,Levítico,3,1
+es,Levítico,3,255
 es,Lv,3,9
-es,Números,4,1
+es,Números,4,255
 es,Nm,4,9
-es,Deuteronomio,5,1
+es,Deuteronomio,5,255
 es,Dt,5,9
-es,Josué,6,1
+es,Josué,6,255
 es,Jos,6,9
-es,Jueces,7,1
+es,Jueces,7,255
 es,Jue,7,9
-es,Rut,8,1
+es,Rut,8,255
 es,Rut,8,9
-es,1 Samuel,9,1
+es,1 Samuel,9,255
 es,1 S,9,9
-es,2 Samuel,10,1
+es,2 Samuel,10,255
 es,2 S,10,9
-es,1 Reyes,11,1
+es,1 Reyes,11,255
 es,1 R,11,9
-es,2 Reyes,12,1
+es,2 Reyes,12,255
 es,2 R,12,9
-es,1 Crónicas,13,1
+es,1 Crónicas,13,255
 es,1 Cr,13,9
-es,2 Crónicas,14,1
+es,2 Crónicas,14,255
 es,2 Cr,14,9
-es,Esdras,15,1
+es,Esdras,15,255
 es,Esd,15,9
-es,Nehemías,16,1
+es,Nehemías,16,255
 es,Neh,16,9
-es,Ester,17,1
+es,Ester,17,255
 es,Est,17,9
-es,Job,18,1
+es,Job,18,255
 es,Job,18,9
-es,Salmos,19,1
+es,Salmos,19,255
 es,Sal,19,9
-es,Proverbios,20,1
+es,Proverbios,20,255
 es,Pr,20,9
-es,Eclesiastés,21,1
+es,Eclesiastés,21,255
 es,Ec,21,9
-es,Cantares,22,1
+es,Cantares,22,255
 es,Cant,22,9
-es,Isaías,23,1
+es,Isaías,23,255
 es,Is,23,9
-es,Jeremías,24,1
+es,Jeremías,24,255
 es,Jer,24,9
-es,Lamentaciones,25,1
+es,Lamentaciones,25,255
 es,Lm,25,9
-es,Ezequiel,26,1
+es,Ezequiel,26,255
 es,Ez,26,9
-es,Daniel,27,1
+es,Daniel,27,255
 es,Dn,27,9
-es,Oseas,28,1
+es,Oseas,28,255
 es,Os,28,9
-es,Joel,29,1
+es,Joel,29,255
 es,Jl,29,9
-es,Amós,30,1
+es,Amós,30,255
 es,Am,30,9
-es,Abdías,31,1
+es,Abdías,31,255
 es,Abd,31,9
-es,Jonás,32,1
+es,Jonás,32,255
 es,Jon,32,9
-es,Miqueas,33,1
+es,Miqueas,33,255
 es,Mi,33,9
-es,Nahum,34,1
+es,Nahum,34,255
 es,Nah,34,9
-es,Habacuc,35,1
+es,Habacuc,35,255
 es,Hab,35,9
-es,Sofonías,36,1
+es,Sofonías,36,255
 es,So,36,9
-es,Hageo,37,1
+es,Hageo,37,255
 es,Hg,37,9
-es,Zacarías,38,1
+es,Zacarías,38,255
 es,Zac,38,9
-es,Malaquías,39,1
+es,Malaquías,39,255
 es,Mal,39,9
-es,Mateo,40,1
+es,Mateo,40,255
 es,Mt,40,9
-es,Marcos,41,1
+es,Marcos,41,255
 es,Mc,41,9
-es,Lucas,42,1
+es,Lucas,42,255
 es,Lc,42,9
-es,Juan,43,1
+es,Juan,43,255
 es,Jn,43,9
-es,Hechos,44,1
+es,Hechos,44,255
 es,Hch,44,9
-es,Romanos,45,1
+es,Romanos,45,255
 es,Ro,45,9
-es,1 Corintios,46,1
+es,1 Corintios,46,255
 es,1 Co,46,9
-es,2 Corintios,47,1
+es,2 Corintios,47,255
 es,2 Co,47,9
-es,Gálatas,48,1
+es,Gálatas,48,255
 es,Gá,48,9
-es,Efesios,49,1
+es,Efesios,49,255
 es,Ef,49,9
-es,Filipenses,50,1
+es,Filipenses,50,255
 es,Flp,50,9
-es,Colosenses,51,1
+es,Colosenses,51,255
 es,Col,51,9
-es,1 Tesalonicenses,52,1
+es,1 Tesalonicenses,52,255
 es,1 Ts,52,9
-es,2 Tesalonicenses,53,1
+es,2 Tesalonicenses,53,255
 es,2 Ts,53,9
-es,1 Timoteo,54,1
+es,1 Timoteo,54,255
 es,1 Ti,54,9
-es,2 Timoteo,55,1
+es,2 Timoteo,55,255
 es,2 Ti,55,9
-es,Tito,56,1
+es,Tito,56,255
 es,Tit,56,9
-es,Filemón,57,1
+es,Filemón,57,255
 es,Flm,57,9
-es,Hebreos,58,1
+es,Hebreos,58,255
 es,Heb,58,9
-es,Santiago,59,1
+es,Santiago,59,255
 es,Stg,59,9
-es,1 Pedro,60,1
+es,1 Pedro,60,255
 es,1 P,60,9
-es,2 Pedro,61,1
+es,2 Pedro,61,255
 es,2 P,61,9
-es,1 Juan,62,1
+es,1 Juan,62,255
 es,1 Jn,62,9
-es,2 Juan,63,1
+es,2 Juan,63,255
 es,2 Jn,63,9
-es,3 Juan,64,1
+es,3 Juan,64,255
 es,3 Jn,64,9
-es,Judas,65,1
+es,Judas,65,255
 es,Jud,65,9
-es,Apocalipsis,66,1
+es,Apocalipsis,66,255
 es,Ap,66,9
-ru,Бытие,1,1
+ru,Бытие,1,255
 ru,Быт,1,9
-ru,Исход,2,1
+ru,Исход,2,255
 ru,Исх,2,9
-ru,Левит,3,1
+ru,Левит,3,255
 ru,Лев,3,9
-ru,Числа,4,1
+ru,Числа,4,255
 ru,Чис,4,9
-ru,Второзаконие,5,1
+ru,Второзаконие,5,255
 ru,Втор,5,9
-ru,Иисус Навин,6,1
+ru,Иисус Навин,6,255
 ru,Нав,6,9
-ru,Судьи,7,1
+ru,Судьи,7,255
 ru,Суд,7,9
-ru,Руфь,8,1
+ru,Руфь,8,255
 ru,Руф,8,9
-ru,1 Царств,9,1
+ru,1 Царств,9,255
 ru,1 Цар,9,9
-ru,2 Царств,10,1
+ru,2 Царств,10,255
 ru,2 Цар,10,9
-ru,3 Царств,11,1
+ru,3 Царств,11,255
 ru,3 Цар,11,9
-ru,4 Царств,12,1
+ru,4 Царств,12,255
 ru,4 Цар,12,9
-ru,1 Паралипоменон,13,1
+ru,1 Паралипоменон,13,255
 ru,1 Пар,13,9
-ru,2 Паралипоменон,14,1
+ru,2 Паралипоменон,14,255
 ru,2 Пар,14,9
-ru,Ездра,15,1
+ru,Ездра,15,255
 ru,Езд,15,9
-ru,Неемия,16,1
+ru,Неемия,16,255
 ru,Неем,16,9
-ru,Есфирь,17,1
+ru,Есфирь,17,255
 ru,Есф,17,9
-ru,Иов,18,1
+ru,Иов,18,255
 ru,Иов,18,9
-ru,Псалтирь,19,1
+ru,Псалтирь,19,255
 ru,Пс,19,9
-ru,Притчи,20,1
+ru,Притчи,20,255
 ru,Прит,20,9
-ru,Екклесиаст,21,1
+ru,Екклесиаст,21,255
 ru,Еккл,21,9
-ru,Песнь Песней,22,1
+ru,Песнь Песней,22,255
 ru,Песн,22,9
-ru,Исаия,23,1
+ru,Исаия,23,255
 ru,Ис,23,9
-ru,Иеремия,24,1
+ru,Иеремия,24,255
 ru,Иер,24,9
-ru,Плач Иеремии,25,1
+ru,Плач Иеремии,25,255
 ru,Плач,25,9
-ru,Иезекииль,26,1
+ru,Иезекииль,26,255
 ru,Иез,26,9
-ru,Даниил,27,1
+ru,Даниил,27,255
 ru,Дан,27,9
-ru,Осия,28,1
+ru,Осия,28,255
 ru,Ос,28,9
-ru,Иоиль,29,1
+ru,Иоиль,29,255
 ru,Иоил,29,9
-ru,Амос,30,1
+ru,Амос,30,255
 ru,Ам,30,9
-ru,Авдий,31,1
+ru,Авдий,31,255
 ru,Авд,31,9
-ru,Иона,32,1
+ru,Иона,32,255
 ru,Ион,32,9
-ru,Михей,33,1
+ru,Михей,33,255
 ru,Мих,33,9
-ru,Наум,34,1
+ru,Наум,34,255
 ru,Наум,34,9
-ru,Аввакум,35,1
+ru,Аввакум,35,255
 ru,Авв,35,9
-ru,Софония,36,1
+ru,Софония,36,255
 ru,Соф,36,9
-ru,Аггей,37,1
+ru,Аггей,37,255
 ru,Агг,37,9
-ru,Захария,38,1
+ru,Захария,38,255
 ru,Зах,38,9
-ru,Малахия,39,1
+ru,Малахия,39,255
 ru,Мал,39,9
-ru,От Матфея,40,1
+ru,От Матфея,40,255
 ru,Мф,40,9
-ru,От Марка,41,1
+ru,От Марка,41,255
 ru,Мк,41,9
-ru,От Луки,42,1
+ru,От Луки,42,255
 ru,Лк,42,9
-ru,От Иоанна,43,1
+ru,От Иоанна,43,255
 ru,Ин,43,9
-ru,Деяния,44,1
+ru,Деяния,44,255
 ru,Деян,44,9
-ru,Римлянам,45,1
+ru,Римлянам,45,255
 ru,Рим,45,9
-ru,1 Коринфянам,46,1
+ru,1 Коринфянам,46,255
 ru,1 Кор,46,9
-ru,2 Коринфянам,47,1
+ru,2 Коринфянам,47,255
 ru,2 Кор,47,9
-ru,Галатам,48,1
+ru,Галатам,48,255
 ru,Гал,48,9
-ru,Ефесянам,49,1
+ru,Ефесянам,49,255
 ru,Еф,49,9
-ru,Филиппийцам,50,1
+ru,Филиппийцам,50,255
 ru,Флп,50,9
-ru,Колоссянам,51,1
+ru,Колоссянам,51,255
 ru,Кол,51,9
-ru,1 Фессалоникийцам,52,1
+ru,1 Фессалоникийцам,52,255
 ru,1 Фес,52,9
-ru,2 Фессалоникийцам,53,1
+ru,2 Фессалоникийцам,53,255
 ru,2 Фес,53,9
-ru,1 Тимофею,54,1
+ru,1 Тимофею,54,255
 ru,1 Тим,54,9
-ru,2 Тимофею,55,1
+ru,2 Тимофею,55,255
 ru,2 Тим,55,9
-ru,Титу,56,1
+ru,Титу,56,255
 ru,Тит,56,9
-ru,Филимону,57,1
+ru,Филимону,57,255
 ru,Флм,57,9
-ru,Евреям,58,1
+ru,Евреям,58,255
 ru,Евр,58,9
-ru,Иакова,59,1
+ru,Иакова,59,255
 ru,Иак,59,9
-ru,1 Петра,60,1
+ru,1 Петра,60,255
 ru,1 Пет,60,9
-ru,2 Петра,61,1
+ru,2 Петра,61,255
 ru,2 Пет,61,9
-ru,1 Иоанна,62,1
+ru,1 Иоанна,62,255
 ru,1 Ин,62,9
-ru,2 Иоанна,63,1
+ru,2 Иоанна,63,255
 ru,2 Ин,63,9
-ru,3 Иоанна,64,1
+ru,3 Иоанна,64,255
 ru,3 Ин,64,9
-ru,Иуды,65,1
+ru,Иуды,65,255
 ru,Иуд,65,9
-ru,Откровение,66,1
+ru,Откровение,66,255
 ru,Откр,66,9
-hi,उत्पत्ति,1,1
+hi,उत्पत्ति,1,255
 hi,उत्प,1,9
-hi,निर्गमन,2,1
+hi,निर्गमन,2,255
 hi,निर्,2,9
-hi,लैव्यव्यवस्था,3,1
+hi,लैव्यव्यवस्था,3,255
 hi,लैव्य,3,9
-hi,गिनती,4,1
+hi,गिनती,4,255
 hi,गि,4,9
-hi,व्यवस्थाविवरण,5,1
+hi,व्यवस्थाविवरण,5,255
 hi,व्य,5,9
-hi,यहोशू,6,1
+hi,यहोशू,6,255
 hi,यहो,6,9
-hi,न्यायियों,7,1
+hi,न्यायियों,7,255
 hi,न्या,7,9
-hi,रूत,8,1
+hi,रूत,8,255
 hi,रू,8,9
-hi,1 शमूएल,9,1
+hi,1 शमूएल,9,255
 hi,1 शमू,9,9
-hi,2 शमूएल,10,1
+hi,2 शमूएल,10,255
 hi,2 शमू,10,9
-hi,1 राजा,11,1
+hi,1 राजा,11,255
 hi,1 रा,11,9
-hi,2 राजा,12,1
+hi,2 राजा,12,255
 hi,2 रा,12,9
-hi,1 इतिहास,13,1
+hi,1 इतिहास,13,255
 hi,1 इति,13,9
-hi,2 इतिहास,14,1
+hi,2 इतिहास,14,255
 hi,2 इति,14,9
-hi,एज्रा,15,1
+hi,एज्रा,15,255
 hi,एज्रा,15,9
-hi,नहेम्याह,16,1
+hi,नहेम्याह,16,255
 hi,नहे,16,9
-hi,एस्तेर,17,1
+hi,एस्तेर,17,255
 hi,एस्तेर,17,9
-hi,अय्यूब,18,1
+hi,अय्यूब,18,255
 hi,अय्,18,9
-hi,भजन संहिता,19,1
+hi,भजन संहिता,19,255
 hi,भज,19,9
-hi,नीतिवचन,20,1
+hi,नीतिवचन,20,255
 hi,नीति,20,9
-hi,सभोपदेशक,21,1
+hi,सभोपदेशक,21,255
 hi,सभो,21,9
-hi,श्रेष्ठगीत,22,1
+hi,श्रेष्ठगीत,22,255
 hi,श्रे,22,9
-hi,यशायाह,23,1
+hi,यशायाह,23,255
 hi,यश,23,9
-hi,यिर्मयाह,24,1
+hi,यिर्मयाह,24,255
 hi,यिर्म,24,9
-hi,विलापगीत,25,1
+hi,विलापगीत,25,255
 hi,विला,25,9
-hi,यहेजकेल,26,1
+hi,यहेजकेल,26,255
 hi,यहे,26,9
-hi,दानिय्येल,27,1
+hi,दानिय्येल,27,255
 hi,दा,27,9
-hi,होशे,28,1
+hi,होशे,28,255
 hi,होशे,28,9
-hi,योएल,29,1
+hi,योएल,29,255
 hi,योए,29,9
-hi,आमोस,30,1
+hi,आमोस,30,255
 hi,आमो,30,9
-hi,ओबद्याह,31,1
+hi,ओबद्याह,31,255
 hi,ओब,31,9
-hi,योना,32,1
+hi,योना,32,255
 hi,योना,32,9
-hi,मीका,33,1
+hi,मीका,33,255
 hi,मीका,33,9
-hi,नहूम,34,1
+hi,नहूम,34,255
 hi,नहू,34,9
-hi,हबक्कूक,35,1
+hi,हबक्कूक,35,255
 hi,हब,35,9
-hi,सपन्याह,36,1
+hi,सपन्याह,36,255
 hi,सप,36,9
-hi,हाग्गै,37,1
+hi,हाग्गै,37,255
 hi,हाग्गै,37,9
-hi,जकर्याह,38,1
+hi,जकर्याह,38,255
 hi,जक,38,9
-hi,मलाकी,39,1
+hi,मलाकी,39,255
 hi,मला,39,9
-hi,मत्ती,40,1
+hi,मत्ती,40,255
 hi,मत्ती,40,9
-hi,मरकुस,41,1
+hi,मरकुस,41,255
 hi,मरकुस,41,9
-hi,लूका,42,1
+hi,लूका,42,255
 hi,लूका,42,9
-hi,यूहन्ना,43,1
+hi,यूहन्ना,43,255
 hi,यू,43,9
-hi,प्रेरितों के काम,44,1
+hi,प्रेरितों के काम,44,255
 hi,प्रे,44,9
-hi,रोमियो,45,1
+hi,रोमियो,45,255
 hi,रोमी,45,9
-hi,1 कुरिन्थियों,46,1
+hi,1 कुरिन्थियों,46,255
 hi,1 कुरि,46,9
-hi,2 कुरिन्थियों,47,1
+hi,2 कुरिन्थियों,47,255
 hi,2 कुरि,47,9
-hi,गलातियों,48,1
+hi,गलातियों,48,255
 hi,गला,48,9
-hi,इफिसियों,49,1
+hi,इफिसियों,49,255
 hi,इफि,49,9
-hi,फिलिप्पियों,50,1
+hi,फिलिप्पियों,50,255
 hi,फि,50,9
-hi,कुलुस्सियों,51,1
+hi,कुलुस्सियों,51,255
 hi,कुलु,51,9
-hi,1 थिस्सलुनीकियों,52,1
+hi,1 थिस्सलुनीकियों,52,255
 hi,1 थिस्स,52,9
-hi,2 थिस्सलुनीकियों,53,1
+hi,2 थिस्सलुनीकियों,53,255
 hi,2 थिस्स,53,9
-hi,1 तीमुथियुस,54,1
+hi,1 तीमुथियुस,54,255
 hi,1 तीमु,54,9
-hi,2 तीमुथियुस,55,1
+hi,2 तीमुथियुस,55,255
 hi,2 तीमु,55,9
-hi,तीतुस,56,1
+hi,तीतुस,56,255
 hi,तीतुस,56,9
-hi,फिलेमोन,57,1
+hi,फिलेमोन,57,255
 hi,फिले,57,9
-hi,इब्रानियों,58,1
+hi,इब्रानियों,58,255
 hi,इब्रा,58,9
-hi,याकूब,59,1
+hi,याकूब,59,255
 hi,याकू,59,9
-hi,1 पतरस,60,1
+hi,1 पतरस,60,255
 hi,1 पत,60,9
-hi,2 पतरस,61,1
+hi,2 पतरस,61,255
 hi,2 पत,61,9
-hi,1 यूहन्ना,62,1
+hi,1 यूहन्ना,62,255
 hi,1 यू,62,9
-hi,2 यूहन्ना,63,1
+hi,2 यूहन्ना,63,255
 hi,2 यू,63,9
-hi,3 यूहन्ना,64,1
+hi,3 यूहन्ना,64,255
 hi,3 यू,64,9
-hi,यहूदा,65,1
+hi,यहूदा,65,255
 hi,यहू,65,9
-hi,प्रकाशितवाक्य,66,1
+hi,प्रकाशितवाक्य,66,255
 hi,प्रका,66,9
-ar,التكوين,1,1
+ar,التكوين,1,255
 ar,تك,1,9
-ar,الخروج,2,1
+ar,الخروج,2,255
 ar,خر,2,9
-ar,اللاويين,3,1
+ar,اللاويين,3,255
 ar,لا,3,9
-ar,العدد,4,1
+ar,العدد,4,255
 ar,عد,4,9
-ar,التثنية,5,1
+ar,التثنية,5,255
 ar,تث,5,9
-ar,يشوع,6,1
+ar,يشوع,6,255
 ar,يش,6,9
-ar,القضاة,7,1
+ar,القضاة,7,255
 ar,قض,7,9
-ar,راعوث,8,1
+ar,راعوث,8,255
 ar,را,8,9
-ar,1 صموئيل,9,1
+ar,1 صموئيل,9,255
 ar,1 صم,9,9
-ar,2 صموئيل,10,1
+ar,2 صموئيل,10,255
 ar,2 صم,10,9
-ar,1 ملوك,11,1
+ar,1 ملوك,11,255
 ar,1 مل,11,9
-ar,2 ملوك,12,1
+ar,2 ملوك,12,255
 ar,2 مل,12,9
-ar,1 أخبار الأيام,13,1
+ar,1 أخبار الأيام,13,255
 ar,1 أخ,13,9
-ar,2 أخبار الأيام,14,1
+ar,2 أخبار الأيام,14,255
 ar,2 أخ,14,9
-ar,عزرا,15,1
+ar,عزرا,15,255
 ar,عز,15,9
-ar,نحميا,16,1
+ar,نحميا,16,255
 ar,نح,16,9
-ar,أستير,17,1
+ar,أستير,17,255
 ar,أس,17,9
-ar,أيوب,18,1
+ar,أيوب,18,255
 ar,أي,18,9
-ar,المزامير,19,1
+ar,المزامير,19,255
 ar,مز,19,9
-ar,الأمثال,20,1
+ar,الأمثال,20,255
 ar,أم,20,9
-ar,الجامعة,21,1
+ar,الجامعة,21,255
 ar,جا,21,9
-ar,نشيد الأناشيد,22,1
+ar,نشيد الأناشيد,22,255
 ar,نش,22,9
-ar,إشعياء,23,1
+ar,إشعياء,23,255
 ar,إش,23,9
-ar,إرميا,24,1
+ar,إرميا,24,255
 ar,إر,24,9
-ar,مراثي إرميا,25,1
+ar,مراثي إرميا,25,255
 ar,مرا,25,9
-ar,حزقيال,26,1
+ar,حزقيال,26,255
 ar,حز,26,9
-ar,دانيال,27,1
+ar,دانيال,27,255
 ar,دا,27,9
-ar,هوشع,28,1
+ar,هوشع,28,255
 ar,هو,28,9
-ar,يوئيل,29,1
+ar,يوئيل,29,255
 ar,يؤ,29,9
-ar,عاموس,30,1
+ar,عاموس,30,255
 ar,عا,30,9
-ar,عوبديا,31,1
+ar,عوبديا,31,255
 ar,عو,31,9
-ar,يونان,32,1
+ar,يونان,32,255
 ar,يون,32,9
-ar,ميخا,33,1
+ar,ميخا,33,255
 ar,مي,33,9
-ar,ناحوم,34,1
+ar,ناحوم,34,255
 ar,نا,34,9
-ar,حبقوق,35,1
+ar,حبقوق,35,255
 ar,حب,35,9
-ar,صفنيا,36,1
+ar,صفنيا,36,255
 ar,صف,36,9
-ar,حجي,37,1
+ar,حجي,37,255
 ar,حج,37,9
-ar,زكريا,38,1
+ar,زكريا,38,255
 ar,زك,38,9
-ar,ملاخي,39,1
+ar,ملاخي,39,255
 ar,مل,39,9
-ar,متى,40,1
+ar,متى,40,255
 ar,مت,40,9
-ar,مرقس,41,1
+ar,مرقس,41,255
 ar,مر,41,9
-ar,لوقا,42,1
+ar,لوقا,42,255
 ar,لو,42,9
-ar,يوحنا,43,1
+ar,يوحنا,43,255
 ar,يو,43,9
-ar,أعمال الرسل,44,1
+ar,أعمال الرسل,44,255
 ar,أع,44,9
-ar,رومية,45,1
+ar,رومية,45,255
 ar,رو,45,9
-ar,1 كورنثوس,46,1
+ar,1 كورنثوس,46,255
 ar,1 كو,46,9
-ar,2 كورنثوس,47,1
+ar,2 كورنثوس,47,255
 ar,2 كو,47,9
-ar,غلاطية,48,1
+ar,غلاطية,48,255
 ar,غل,48,9
-ar,أفسس,49,1
+ar,أفسس,49,255
 ar,أف,49,9
-ar,فيلبي,50,1
+ar,فيلبي,50,255
 ar,في,50,9
-ar,كولوسي,51,1
+ar,كولوسي,51,255
 ar,كو,51,9
-ar,1 تسالونيكي,52,1
+ar,1 تسالونيكي,52,255
 ar,1 تس,52,9
-ar,2 تسالونيكي,53,1
+ar,2 تسالونيكي,53,255
 ar,2 تس,53,9
-ar,1 تيموثاوس,54,1
+ar,1 تيموثاوس,54,255
 ar,1 تي,54,9
-ar,2 تيموثاوس,55,1
+ar,2 تيموثاوس,55,255
 ar,2 تي,55,9
-ar,تيطس,56,1
+ar,تيطس,56,255
 ar,تي,56,9
-ar,فليمون,57,1
+ar,فليمون,57,255
 ar,فل,57,9
-ar,عبرانيين,58,1
+ar,عبرانيين,58,255
 ar,عب,58,9
-ar,يعقوب,59,1
+ar,يعقوب,59,255
 ar,يع,59,9
-ar,1 بطرس,60,1
+ar,1 بطرس,60,255
 ar,1 بط,60,9
-ar,2 بطرس,61,1
+ar,2 بطرس,61,255
 ar,2 بط,61,9
-ar,1 يوحنا,62,1
+ar,1 يوحنا,62,255
 ar,1 يو,62,9
-ar,2 يوحنا,63,1
+ar,2 يوحنا,63,255
 ar,2 يو,63,9
-ar,3 يوحنا,64,1
+ar,3 يوحنا,64,255
 ar,3 يو,64,9
-ar,يهوذا,65,1
+ar,يهوذا,65,255
 ar,يه,65,9
-ar,رؤيا يوحنا,66,1
+ar,رؤيا يوحنا,66,255
 ar,رؤ,66,9
-id,Kejadian,1,1
+id,Kejadian,1,255
 id,Kej,1,9
-id,Keluaran,2,1
+id,Keluaran,2,255
 id,Kel,2,9
-id,Imamat,3,1
+id,Imamat,3,255
 id,Ima,3,9
-id,Bilangan,4,1
+id,Bilangan,4,255
 id,Bil,4,9
-id,Ulangan,5,1
+id,Ulangan,5,255
 id,Ula,5,9
-id,Yosua,6,1
+id,Yosua,6,255
 id,Yos,6,9
-id,Hakim-hakim,7,1
+id,Hakim-hakim,7,255
 id,Hak,7,9
-id,Rut,8,1
+id,Rut,8,255
 id,Rut,8,9
-id,1 Samuel,9,1
+id,1 Samuel,9,255
 id,1 Sam,9,9
-id,2 Samuel,10,1
+id,2 Samuel,10,255
 id,2 Sam,10,9
-id,1 Raja-raja,11,1
+id,1 Raja-raja,11,255
 id,1 Raj,11,9
-id,2 Raja-raja,12,1
+id,2 Raja-raja,12,255
 id,2 Raj,12,9
-id,1 Tawarikh,13,1
+id,1 Tawarikh,13,255
 id,1 Taw,13,9
-id,2 Tawarikh,14,1
+id,2 Tawarikh,14,255
 id,2 Taw,14,9
-id,Ezra,15,1
+id,Ezra,15,255
 id,Ezr,15,9
-id,Nehemia,16,1
+id,Nehemia,16,255
 id,Neh,16,9
-id,Ester,17,1
+id,Ester,17,255
 id,Est,17,9
-id,Ayub,18,1
+id,Ayub,18,255
 id,Ayb,18,9
-id,Mazmur,19,1
+id,Mazmur,19,255
 id,Mzm,19,9
-id,Amsal,20,1
+id,Amsal,20,255
 id,Ams,20,9
-id,Pengkhotbah,21,1
+id,Pengkhotbah,21,255
 id,Pkh,21,9
-id,Kidung Agung,22,1
+id,Kidung Agung,22,255
 id,Kid,22,9
-id,Yesaya,23,1
+id,Yesaya,23,255
 id,Yes,23,9
-id,Yeremia,24,1
+id,Yeremia,24,255
 id,Yer,24,9
-id,Ratapan,25,1
+id,Ratapan,25,255
 id,Rat,25,9
-id,Yehezkiel,26,1
+id,Yehezkiel,26,255
 id,Yeh,26,9
-id,Daniel,27,1
+id,Daniel,27,255
 id,Dan,27,9
-id,Hosea,28,1
+id,Hosea,28,255
 id,Hos,28,9
-id,Yoel,29,1
+id,Yoel,29,255
 id,Yoe,29,9
-id,Amos,30,1
+id,Amos,30,255
 id,Amo,30,9
-id,Obaja,31,1
+id,Obaja,31,255
 id,Oba,31,9
-id,Yunus,32,1
+id,Yunus,32,255
 id,Yun,32,9
-id,Mikha,33,1
+id,Mikha,33,255
 id,Mik,33,9
-id,Nahum,34,1
+id,Nahum,34,255
 id,Nah,34,9
-id,Habakuk,35,1
+id,Habakuk,35,255
 id,Hab,35,9
-id,Zefanya,36,1
+id,Zefanya,36,255
 id,Zef,36,9
-id,Hagai,37,1
+id,Hagai,37,255
 id,Hag,37,9
-id,Zakharia,38,1
+id,Zakharia,38,255
 id,Zak,38,9
-id,Maleakhi,39,1
+id,Maleakhi,39,255
 id,Mal,39,9
-id,Matius,40,1
+id,Matius,40,255
 id,Mat,40,9
-id,Markus,41,1
+id,Markus,41,255
 id,Mar,41,9
-id,Lukas,42,1
+id,Lukas,42,255
 id,Luk,42,9
-id,Yohanes,43,1
+id,Yohanes,43,255
 id,Yoh,43,9
-id,Kisah Para Rasul,44,1
+id,Kisah Para Rasul,44,255
 id,Kis,44,9
-id,Roma,45,1
+id,Roma,45,255
 id,Rom,45,9
-id,1 Korintus,46,1
+id,1 Korintus,46,255
 id,1 Kor,46,9
-id,2 Korintus,47,1
+id,2 Korintus,47,255
 id,2 Kor,47,9
-id,Galatia,48,1
+id,Galatia,48,255
 id,Gal,48,9
-id,Efesus,49,1
+id,Efesus,49,255
 id,Efe,49,9
-id,Filipi,50,1
+id,Filipi,50,255
 id,Fil,50,9
-id,Kolose,51,1
+id,Kolose,51,255
 id,Kol,51,9
-id,1 Tesalonika,52,1
+id,1 Tesalonika,52,255
 id,1 Tes,52,9
-id,2 Tesalonika,53,1
+id,2 Tesalonika,53,255
 id,2 Tes,53,9
-id,1 Timotius,54,1
+id,1 Timotius,54,255
 id,1 Tim,54,9
-id,2 Timotius,55,1
+id,2 Timotius,55,255
 id,2 Tim,55,9
-id,Titus,56,1
+id,Titus,56,255
 id,Tit,56,9
-id,Filemon,57,1
+id,Filemon,57,255
 id,Flm,57,9
-id,Ibrani,58,1
+id,Ibrani,58,255
 id,Ibr,58,9
-id,Yakobus,59,1
+id,Yakobus,59,255
 id,Yak,59,9
-id,1 Petrus,60,1
+id,1 Petrus,60,255
 id,1 Pet,60,9
-id,2 Petrus,61,1
+id,2 Petrus,61,255
 id,2 Pet,61,9
-id,1 Yohanes,62,1
+id,1 Yohanes,62,255
 id,1 Yoh,62,9
-id,2 Yohanes,63,1
+id,2 Yohanes,63,255
 id,2 Yoh,63,9
-id,3 Yohanes,64,1
+id,3 Yohanes,64,255
 id,3 Yoh,64,9
-id,Yudas,65,1
+id,Yudas,65,255
 id,Yud,65,9
-id,Wahyu,66,1
+id,Wahyu,66,255
 id,Why,66,9
-de,1. Mose,1,1
+de,1. Mose,1,255
 de,Gen,1,9
-de,2. Mose,2,1
+de,2. Mose,2,255
 de,Ex,2,9
-de,3. Mose,3,1
+de,3. Mose,3,255
 de,Lev,3,9
-de,4. Mose,4,1
+de,4. Mose,4,255
 de,Num,4,9
-de,5. Mose,5,1
+de,5. Mose,5,255
 de,Dt,5,9
-de,Josua,6,1
+de,Josua,6,255
 de,Jos,6,9
-de,Richter,7,1
+de,Richter,7,255
 de,Ri,7,9
-de,Rut,8,1
+de,Rut,8,255
 de,Rut,8,9
-de,1. Samuel,9,1
+de,1. Samuel,9,255
 de,1Sam,9,9
-de,2. Samuel,10,1
+de,2. Samuel,10,255
 de,2Sam,10,9
-de,1. Könige,11,1
+de,1. Könige,11,255
 de,1Kön,11,9
-de,2. Könige,12,1
+de,2. Könige,12,255
 de,2Kön,12,9
-de,1. Chronik,13,1
+de,1. Chronik,13,255
 de,1Chr,13,9
-de,2. Chronik,14,1
+de,2. Chronik,14,255
 de,2Chr,14,9
-de,Esra,15,1
+de,Esra,15,255
 de,Esr,15,9
-de,Nehemia,16,1
+de,Nehemia,16,255
 de,Neh,16,9
-de,Ester,17,1
+de,Ester,17,255
 de,Est,17,9
-de,Hiob,18,1
+de,Hiob,18,255
 de,Hiob,18,9
-de,Psalmen,19,1
+de,Psalmen,19,255
 de,Ps,19,9
-de,Sprüche,20,1
+de,Sprüche,20,255
 de,Spr,20,9
-de,Prediger,21,1
+de,Prediger,21,255
 de,Pred,21,9
-de,Hohelied,22,1
+de,Hohelied,22,255
 de,Hl,22,9
-de,Jesaja,23,1
+de,Jesaja,23,255
 de,Jes,23,9
-de,Jeremia,24,1
+de,Jeremia,24,255
 de,Jer,24,9
-de,Klagelieder,25,1
+de,Klagelieder,25,255
 de,Kla,25,9
-de,Hesekiel,26,1
+de,Hesekiel,26,255
 de,Hes,26,9
-de,Daniel,27,1
+de,Daniel,27,255
 de,Dan,27,9
-de,Hosea,28,1
+de,Hosea,28,255
 de,Hos,28,9
-de,Joel,29,1
+de,Joel,29,255
 de,Joel,29,9
-de,Amos,30,1
+de,Amos,30,255
 de,Am,30,9
-de,Obadja,31,1
+de,Obadja,31,255
 de,Ob,31,9
-de,Jona,32,1
+de,Jona,32,255
 de,Jon,32,9
-de,Micha,33,1
+de,Micha,33,255
 de,Mi,33,9
-de,Nahum,34,1
+de,Nahum,34,255
 de,Nah,34,9
-de,Habakuk,35,1
+de,Habakuk,35,255
 de,Hab,35,9
-de,Zefanja,36,1
+de,Zefanja,36,255
 de,Zef,36,9
-de,Haggai,37,1
+de,Haggai,37,255
 de,Hag,37,9
-de,Sacharja,38,1
+de,Sacharja,38,255
 de,Sach,38,9
-de,Maleachi,39,1
+de,Maleachi,39,255
 de,Mal,39,9
-de,Matthäus,40,1
+de,Matthäus,40,255
 de,Mt,40,9
-de,Markus,41,1
+de,Markus,41,255
 de,Mk,41,9
-de,Lukas,42,1
+de,Lukas,42,255
 de,Lk,42,9
-de,Johannes,43,1
+de,Johannes,43,255
 de,Joh,43,9
-de,Apostelgeschichte,44,1
+de,Apostelgeschichte,44,255
 de,Apg,44,9
-de,Römer,45,1
+de,Römer,45,255
 de,Röm,45,9
-de,1. Korinther,46,1
+de,1. Korinther,46,255
 de,1Kor,46,9
-de,2. Korinther,47,1
+de,2. Korinther,47,255
 de,2Kor,47,9
-de,Galater,48,1
+de,Galater,48,255
 de,Gal,48,9
-de,Epheser,49,1
+de,Epheser,49,255
 de,Eph,49,9
-de,Philipper,50,1
+de,Philipper,50,255
 de,Phil,50,9
-de,Kolosser,51,1
+de,Kolosser,51,255
 de,Kol,51,9
-de,1. Thessalonicher,52,1
+de,1. Thessalonicher,52,255
 de,1Th,52,9
-de,2. Thessalonicher,53,1
+de,2. Thessalonicher,53,255
 de,2Th,53,9
-de,1. Timotheus,54,1
+de,1. Timotheus,54,255
 de,1Tim,54,9
-de,2. Timotheus,55,1
+de,2. Timotheus,55,255
 de,2Tim,55,9
-de,Titus,56,1
+de,Titus,56,255
 de,Tit,56,9
-de,Philemon,57,1
+de,Philemon,57,255
 de,Phlm,57,9
-de,Hebräer,58,1
+de,Hebräer,58,255
 de,Hebr,58,9
-de,Jakobus,59,1
+de,Jakobus,59,255
 de,Jak,59,9
-de,1. Petrus,60,1
+de,1. Petrus,60,255
 de,1Petr,60,9
-de,2. Petrus,61,1
+de,2. Petrus,61,255
 de,2Petr,61,9
-de,1. Johannes,62,1
+de,1. Johannes,62,255
 de,1Joh,62,9
-de,2. Johannes,63,1
+de,2. Johannes,63,255
 de,2Joh,63,9
-de,3. Johannes,64,1
+de,3. Johannes,64,255
 de,3Joh,64,9
-de,Judas,65,1
+de,Judas,65,255
 de,Jud,65,9
-de,Offenbarung,66,1
+de,Offenbarung,66,255
 de,Offb,66,9

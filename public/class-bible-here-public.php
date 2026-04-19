@@ -357,7 +357,7 @@ class Bible_Here_Public {
 	 */
 	private function get_version_verses( $bible_table, $commentary_table, $book_number_start, $book_number_end, $chapter_number_start, $chapter_number_end, $verse_number_start, $verse_number_end, $search = '', $strong_search = '' ) {
 		global $wpdb;
-// error_log('got get_version_verses here is $search: ' . $search);
+
 		// Check if bible table exists
 		$table_exists = $wpdb->get_var( $wpdb->prepare( 
 			"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s",
@@ -439,14 +439,7 @@ class Bible_Here_Public {
 			}
 		}
 
-		// Search condition (optional)
-		// if ( ! empty( $search ) ) {
-		// 	$where_conditions[] = 'verse_text LIKE %s';
-		// 	$query_params[] = '%' . $wpdb->esc_like( $search ) . '%';
-		// }
-		error_log('441 here is the $where_conditions '); error_log(print_r($where_conditions, true));
 		$where_clause = implode( ' AND ', $where_conditions );
-// error_log('got get_version_verses here is $commentary_table: ' . $commentary_table);
 		// Build main query
 		$sql = "SELECT 
 				CAST(verse_number AS UNSIGNED) as verse_number,
@@ -462,18 +455,12 @@ class Bible_Here_Public {
 			    ON b.language = '$language' AND h.book_number = b.book_number
 			WHERE $where_clause
 			ORDER BY h.book_number, h.chapter_number, h.verse_number";
-// error_log('got get_version_verses here is $sql: ' . $sql);
 		$prepared_sql = $wpdb->prepare( $sql, $query_params );
 		$verses = $wpdb->get_results( $prepared_sql, ARRAY_A );
-// error_log('got get_version_verses here is $prepared_sql: ' . $prepared_sql);
 		// Handle database errors
 		if ( $wpdb->last_error ) {
 			return new WP_Error( 'database_error', 'Database error: ' . $wpdb->last_error );
 		}
-
-		// foreach ( $verses as &$verse ) {
-		// 	$verse['verse_number'] = intval( $verse['verse_number'] );
-		// }   // Convert verse field to integer since everything is string now
 
 		// Add commentary if provided
 		if ( ! empty( $commentary_table ) && $verses ) {
@@ -495,8 +482,6 @@ class Bible_Here_Public {
 
 		 $results = array(
 			'table_name' => $table_name_for_query,
-			// 'book_number' => $book_number_start,
-			// 'book_name' => $book_info['title_full'] ?? 'Unknown',
 			'chapter_number' => $chapter_number_start,
 			'version_name' => $version_info['name'] ?? 'Unknown Version',
 			'verses' => $verses ?: array()
@@ -734,7 +719,7 @@ class Bible_Here_Public {
 		if ( ! empty( $strong_number ) && empty( $strong_numbers ) ) {
 			$strong_numbers = array( $strong_number );
 		}
-// error_log('686a: $strong_numbers: ');	error_log(print_r( $strong_numbers, true ));	error_log('686b: $strong_number: ' . $strong_number);		
+
 		// Validate required parameters
 		if ( empty( $strong_numbers ) ) {
 			wp_send_json_error( array( 'message' => 'Missing required parameter: strong_numbers or strong_number' ) );
@@ -823,7 +808,7 @@ class Bible_Here_Public {
 			ORDER BY id";
 		
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, $sanitized_languages ), ARRAY_A );
-		
+
 		// Handle database errors
 		if ( $wpdb->last_error ) {
 			wp_send_json_error( array( 'message' => 'Database error: ' . $wpdb->last_error ), 500 );

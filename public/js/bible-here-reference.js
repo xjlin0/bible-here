@@ -74,7 +74,7 @@ class BibleHereReference {
 
     async getAbbreviations(db) {
         try {
-            return db.abbreviations.orderBy('[language+rank+abbreviation]').toArray();  // 詩篇 要在 詩 之前以免誤判 詩2篇
+            return db.abbreviations.orderBy('[language+rank+abbreviation]').reverse().toArray();  // 詩篇 要在 詩 之前以免誤判 詩2篇
         } catch (e) {
             return [];
         }
