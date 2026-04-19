@@ -1396,10 +1396,15 @@ body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb:hover
 	background: #343a40;
 }
 
+.bible-here-reader.theme-dark .book-chapter-menu-content {
+	background: #2d2d2d; /* for dark theme */
+}
+
 .bible-here-reader.theme-dark .menu-tab {
 	color: #adb5bd;
 	border: none;
 	border-bottom: 1px solid #495057;
+	background: #343a40;
 }
 
 .bible-here-reader.theme-dark .menu-tab:hover {
