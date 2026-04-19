@@ -1449,8 +1449,16 @@ body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb:hover
 	gap: 8px;
 }
 
+.versions-list {
+	overflow-x: hidden; /* ← 加這行 */
+	width: 100%;
+	box-sizing: border-box;
+}
+
 /* Language Group Styles */
 .language-group {
+	overflow-x: hidden; /* too wide in mobile */
+	box-sizing: border-box;
 	margin-bottom: 20px;
 }
 
@@ -1489,6 +1497,9 @@ body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb:hover
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	word-break: break-word; /* too wide in mobile */
+	overflow-wrap: break-word; /* too wide in mobile */
+	min-width: 0; /* ← too wide in mobile */
 }
 
 .version-item:last-child {
@@ -1736,7 +1747,11 @@ body .bible-here-reader.theme-dark .modal-content::-webkit-scrollbar-thumb:hover
 		left: 50%;
 		transform: translateX(-50%);
 	}
-	
+
+	.book-chapter-menu-content {
+		padding: 40px;  /* narrow in mobile */
+	}
+
 	.books-grid {
 		/* grid-template-columns: repeat(5, 1fr); */
 		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
