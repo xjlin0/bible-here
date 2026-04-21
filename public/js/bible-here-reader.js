@@ -146,7 +146,6 @@ class BibleHereReader {
 			console.log('🔄 [init] Popstate 事件觸發');
 			this.handlePopState(event);
 		});
-	  this.hideOtherFontResizer();
 
 		// Initialize cross reference modal
 		this.initializeCrossReferenceModal();
@@ -159,15 +158,55 @@ class BibleHereReader {
 
 		// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
 		this.loadChapter();
-
+		this.initializeFontResizerIntegration();
 		console.log('✅ BibleHereReader init() 完成');
 	}
 
-	hideOtherFontResizer() {
-		const simpleFontResizer = document.querySelector('div.font_resizer_plus');
-		if (simpleFontResizer) {
-			simpleFontResizer.style.visibility = 'hidden';
-		}  // simple font resizer does not work on verse text
+	initializeFontResizerIntegration() {
+		const resizerEl = document.querySelector('.font_resizer_plus');
+		if (!resizerEl) {
+			console.log('ℹ️ Simple Font Resizer plugin not found');
+			return;
+		}
+		console.log('🔗 Simple Font Resizer detected, initializing MutationObserver');
+
+		// 監聽 simple font resizer 按鈕點擊
+		// 因為它改的是 body 的 font-size，我們監聽 body
+		const increaseBtn = document.querySelector('#btn-increase_wp_font_rp');
+		const decreaseBtn = document.querySelector('#btn-decrease_wp_font_rp');
+		const origBtn = document.querySelector('#btn-orig_wp_font_rp');
+
+		const applyResizerFontSize = (direction) => {
+			// 取得 body 目前 font-size（simple font resizer 會改 body）
+			const bodyFontSize = parseInt(window.getComputedStyle(document.body).fontSize) || 20;
+			const newSize = bodyFontSize + direction;
+
+			// 直接套用到 reader 的所有 verse-text 和 verse-number
+			const verseTexts = this.container.querySelectorAll('.verse-text, .verse-number');
+			verseTexts.forEach(el => {
+				el.style.fontSize = newSize + 'px';
+			});
+
+			console.log(`🔡 Font size synced from Simple Font Resizer: ${newSize}px`);
+		};
+
+		if (increaseBtn) {
+			increaseBtn.addEventListener('click', () => applyResizerFontSize(1));
+		}
+		if (decreaseBtn) {
+			decreaseBtn.addEventListener('click', () => applyResizerFontSize(-1));
+		}
+		if (origBtn) {
+			origBtn.addEventListener('click', () => {
+				// 重設為原始大小，移除 inline style 讓 CSS class 接管
+				const verseTexts = this.container.querySelectorAll('.verse-text, .verse-number');
+				verseTexts.forEach(el => {
+					el.style.fontSize = '';
+				});
+			});
+		}
+
+		console.log('✅ Simple Font Resizer integration ready');
 	}
 
 	/**
