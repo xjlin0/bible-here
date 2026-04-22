@@ -157,6 +157,7 @@ class BibleHereReader {
 		this.initializeSearchModal();
 
 		// Load default KJV Genesis Chapter 1 (unless already loaded from shortcode/URL)
+		this.applyStoredFontSize();
 		this.loadChapter();
 		this.initializeFontResizerIntegration();
 		console.log('✅ BibleHereReader init() 完成');
@@ -1421,20 +1422,6 @@ class BibleHereReader {
 			return;
 		}
 		
-		// Create cache key that includes exact match option
-		// const cacheKey = `${searchTerm}_${exactMatch ? 'exact' : 'normal'}`;
-		
-		// // Check cache first
-		// if (this.searchCache && this.searchCache[cacheKey]) {
-		// 	console.log('使用緩存的搜索結果:', cacheKey);
-		// 	const results = this.searchCache[cacheKey];
-		// 	// Only display results if this is legacy call (no searchTerm parameter)
-		// 	if (arguments.length === 0) {
-		// 		this.displaySearchResults(searchTerm, results);
-		// 	}
-		// 	return results;
-		// }
-		
 		// Show loading only for legacy calls
 		if (arguments.length === 0) {
 			this.showLoading();
@@ -1443,12 +1430,7 @@ class BibleHereReader {
 		try {
 			// Build search URL with all books and chapters for full text search
 			let searchUrl = `${bibleHereAjax.ajaxurl}?action=bible_here_public_get_verses&version1_bible=${encodeURIComponent(this.currentVersion1)}&search=${encodeURIComponent(searchTerm)}`;
-			
-			// Add exact match parameter if requested
-			// if (exactMatch) {
-			// 	searchUrl += '&exact_match=1';
-			// }
-			
+
 			const response = await fetch(searchUrl, {
 				method: 'GET',
 				headers: {
@@ -1456,25 +1438,18 @@ class BibleHereReader {
 					"X-WP-Nonce": bibleHereAjax.nonce
 				},
 			});
-			
+
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			
+
 			const data = await response.json();
-			
+
 			if (data.success && data.data && data.data.version1) {
-				// Cache the results with the cache key that includes exact match option
-				// if (!this.searchCache) {
-				// 	this.searchCache = {};
-				// }
-				// this.searchCache[cacheKey] = data.data.version1;
-				
 				// Only display results for legacy calls
 			if (arguments.length === 0) {
 				this.displaySearchResults(searchTerm, data.data.version1);
 			}
-				
 				return data.data.version1;
 			} else {
 				throw new Error(data.data || 'Not found');
@@ -1956,24 +1931,24 @@ class BibleHereReader {
 	 */
 	setFontSize(sizeIndex) {
 		console.log('🔧 setFontSize called with index:', sizeIndex);
-		
+
 		const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
 		const fontSizePixels = ['8px', '12px', '16px', '20px', '24px', '28px', '30px', '32px'];
-		
+
 		// Validate index
 		const index = parseInt(sizeIndex);
 		if (isNaN(index) || index < 0 || index >= fontSizes.length) {
 			console.error('❌ Invalid font size index:', sizeIndex);
 			return;
 		}
-		
+
 		const size = fontSizes[index];
 		const pixelSize = fontSizePixels[index];
-		
+
 		console.log('📏 Setting font size to:', size, '(' + pixelSize + ')');
-		
+
 		this.fontSizePreference = size;
-		
+
 		// Save to localStorage with error handling
 		try {
 			localStorage.setItem('bible-here-font-size', size);
@@ -1981,9 +1956,9 @@ class BibleHereReader {
 		} catch (error) {
 			console.error('❌ Failed to save font size to localStorage:', error);
 		}
-		
+
 		this.applyFontSize(size);
-		
+
 		// Update the display value
 		const fontSizeValue = this.container.querySelector('.font-size-value');
 		if (fontSizeValue) {
@@ -1993,7 +1968,18 @@ class BibleHereReader {
 			console.warn('⚠️ Font size value display element not found');
 		}
 	}
-	
+
+	applyStoredFontSize() {
+		const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+		// const fontSizePixels = [8, 12, 16, 20, 24, 28, 30, 32];
+
+		const stored = localStorage.getItem('bible-here-font-size') || 'base';
+		const index = fontSizes.indexOf(stored);
+		const closestIndex = index !== -1 ? index : 2;
+
+		this.setFontSize(closestIndex);
+	}
+
 	/**
 	 * Apply font size to the reader
 	 */

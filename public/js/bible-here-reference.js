@@ -13,7 +13,6 @@ class BibleHereReference {
         this.cacheManager = typeof window.bibleHereCacheManager !== "undefined" ? window.bibleHereCacheManager : null;
         this.regexContext = null;
         this.onDocumentClick = this.onDocumentClick.bind(this);
-        this.onOverlayClick = this.onOverlayClick.bind(this);
         this.onPrevClick = this.onPrevClick.bind(this);
         this.onNextClick = this.onNextClick.bind(this);
         this.onCloseClick = this.onCloseClick.bind(this);
@@ -31,6 +30,37 @@ class BibleHereReference {
         this.regexContext = this.buildRegexContext(items);
         this.wrapReferences(this.regexContext);
         document.addEventListener("click", this.onDocumentClick);
+        this.initializeFontResizerIntegration();
+    }
+
+    initializeFontResizerIntegration() {
+        const resizerEl = document.querySelector('.font_resizer_plus');
+        if (!resizerEl) return;
+
+        const increaseBtn = document.querySelector('#btn-increase_wp_font_rp');
+        const decreaseBtn = document.querySelector('#btn-decrease_wp_font_rp');
+        const origBtn = document.querySelector('#btn-orig_wp_font_rp');
+
+        const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+        const fontSizePixels = [8, 12, 16, 20, 24, 28, 30, 32];
+
+        const changeAndSave = (delta) => {
+            const current = this._currentFontSizePx || this.getStoredFontSize();
+            const currentIndex = fontSizePixels.indexOf(current);
+            const newIndex = Math.max(0, Math.min(7, currentIndex + delta));
+            const newPx = fontSizePixels[newIndex];
+            const newSize = fontSizes[newIndex];
+            this.applyFontSizeToPx(newPx);
+            localStorage.setItem('bible-here-font-size', newSize); // ← 寫入 localStorage
+        };
+
+        if (increaseBtn) increaseBtn.addEventListener('click', () => changeAndSave(1));
+        if (decreaseBtn) decreaseBtn.addEventListener('click', () => changeAndSave(-1));
+        if (origBtn) origBtn.addEventListener('click', () => {
+            const defaultIndex = 2; // 'base' = 16px
+            this.applyFontSizeToPx(fontSizePixels[defaultIndex]);
+            localStorage.setItem('bible-here-font-size', fontSizes[defaultIndex]);
+        });
     }
 
     async ensureCacheInitialized() {
@@ -256,13 +286,6 @@ class BibleHereReference {
     }
 
     ensurePopover() {
-        if (!this.state.overlay) {
-            const ov = document.createElement("div");
-            ov.className = "bh-ref-overlay";
-            document.body.appendChild(ov);
-            ov.addEventListener("click", this.onOverlayClick);
-            this.state.overlay = ov;
-        }
         if (!this.state.openPopover) {
             const pop = document.createElement("div");
             pop.className = "bh-ref-popover";
@@ -289,6 +312,10 @@ class BibleHereReference {
             controls.className = "bh-ref-controls";
 
             // 按鈕
+            const btnIncrease = document.createElement("button");
+            btnIncrease.textContent = "A+"; btnIncrease.className = "bh-ref-increase-fontsize";
+            const btnDecrease = document.createElement("button");
+            btnDecrease.textContent = "A-"; btnDecrease.className = "bh-ref-decrease-fontsize";
             const btnPrev = document.createElement("button");
             btnPrev.textContent = "<"; btnPrev.className = "bh-ref-prev";
             const btnNext = document.createElement("button");
@@ -296,6 +323,8 @@ class BibleHereReference {
             const btnClose = document.createElement("button");
             btnClose.textContent = "X"; btnClose.className = "bh-ref-close";
 
+            controls.appendChild(btnIncrease);
+            controls.appendChild(btnDecrease);
             controls.appendChild(btnPrev);
             controls.appendChild(btnNext);
             controls.appendChild(btnClose);
@@ -361,6 +390,14 @@ class BibleHereReference {
             pop.style.resize = "both";
 
             // --- 原有事件綁定 ---
+            btnIncrease.addEventListener("click", (e) => {
+                e.preventDefault(); e.stopPropagation();
+                this.changeFontSize(2);
+            });
+            btnDecrease.addEventListener("click", (e) => {
+                e.preventDefault(); e.stopPropagation();
+                this.changeFontSize(-2);
+            });
             btnClose.addEventListener("click", this.onCloseClick);
             btnPrev.addEventListener("click", this.onPrevClick);
             btnNext.addEventListener("click", this.onNextClick);
@@ -385,7 +422,7 @@ class BibleHereReference {
         if (top < window.scrollY + margin) top = window.scrollY + margin;
         this.state.openPopover.style.left = Math.round(left) + "px";
         this.state.openPopover.style.top = Math.round(top) + "px";
-        this.state.overlay.style.display = "block";
+        // this.state.overlay.style.display = "block";
         this.state.openPopover.style.display = "block";
         const langs = [
             ...(el.dataset.languages || "").split(",").map(function(s) { return s.trim(); }).filter(Boolean),
@@ -404,11 +441,11 @@ class BibleHereReference {
         const titleFull = await this.getBookTitleFull(lang, book);
         this.state.titleEl.textContent = (titleFull || ("Book " + book)) + " " + chapter;
         this.renderChapterBody(data.version1 && data.version1.verses ? data.version1.verses : [], verse);
+        await this.applyStoredFontSize();
     }
 
     closePopover() {
         if (this.state.openPopover) this.state.openPopover.style.display = "none";
-        if (this.state.overlay) this.state.overlay.style.display = "none";
         this.state.current = null;
     }
 
@@ -562,12 +599,6 @@ class BibleHereReference {
         }
     }
 
-    onOverlayClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.closePopover();
-    }
-
     onPrevClick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -585,6 +616,42 @@ class BibleHereReference {
         e.stopPropagation();
         this.closePopover();
     }
+
+    /**
+     * 讀取並套用儲存的字型大小
+     */
+    getStoredFontSize() {
+        const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+        const fontSizePixels = [8, 12, 16, 20, 24, 28, 30, 32];
+        const stored = localStorage.getItem('bible-here-font-size') || 'base';
+        const index = fontSizes.indexOf(stored);
+        return fontSizePixels[index !== -1 ? index : 2];
+    }
+
+    applyStoredFontSize() {
+        const px = this.getStoredFontSize();
+        this.applyFontSizeToPx(px);
+    }
+
+    applyFontSizeToPx(px) {
+        if (!this.state.bodyEl) return;
+        this.state.bodyEl.style.fontSize = px + 'px';
+        this._currentFontSizePx = px;
+    }
+
+    changeFontSize(delta) {
+        const fontSizePixels = [8, 12, 16, 20, 24, 28, 30, 32];
+        const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+        const current = this._currentFontSizePx || this.getStoredFontSize();
+        const currentIndex = fontSizePixels.indexOf(current);
+        const newIndex = Math.max(0, Math.min(7, currentIndex + delta));
+        const newPx = fontSizePixels[newIndex];
+        const newSize = fontSizes[newIndex];
+
+        this.applyFontSizeToPx(newPx);
+        localStorage.setItem('bible-here-font-size', newSize); // ← 寫入 localStorage
+    }
+
     static start() {
         function start() {
             window.BibleHereReference = new BibleHereReference();
