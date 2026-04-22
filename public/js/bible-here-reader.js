@@ -1874,6 +1874,17 @@ class BibleHereReader {
 					radioButton.checked = true;
 					console.log('✅ Radio button updated for theme:', this.themePreference);
 				}
+				const fontSizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+				const fontSizePixels = [8, 12, 16, 20, 24, 28, 30, 32];
+				const stored = localStorage.getItem('bible-here-font-size') || 'base';
+				const index = fontSizes.indexOf(stored);
+				const currentIndex = index !== -1 ? index : 2;
+
+				const slider = this.container.querySelector('.font-size-slider');
+				if (slider) slider.value = currentIndex;
+
+				const fontSizeValue = this.container.querySelector('.font-size-value');
+				if (fontSizeValue) fontSizeValue.textContent = fontSizePixels[currentIndex] + 'px';
 			}
 		} else {
 			console.error('❌ Theme menu element not found!');
